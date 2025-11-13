@@ -1,0 +1,72 @@
+export default {
+    locale: "en-GB",
+    language: "English",
+    languages: {
+        "en-GB": "English",
+        "tr-TR": "Turkish",
+    },
+    general: {
+        yes: "Yes",
+        no: "No",
+    },
+    header: {
+        optionsMenu: {
+            profile: "Profile",
+            theme: "Theme",
+            system: "System",
+            light: "Light",
+            dark: "Dark",
+            account: "Account",
+            logout: "Logout",
+        }
+    },
+    sidemenu: {
+        projects: "Projects",
+        defaultProject: "Default Project",
+        createNewProject: "Create New Project",
+        createNewProjectDescription: "Create a new project to manage members and billing separately, and add unlimited surveys.",
+        projectName: "Project Name",
+        cancel: "Cancel",
+        create: "Create",
+        renameProject: "Change Project Name",
+        rename: "Rename",
+        surveys: "Surveys",
+        createNewSurvey: "Create New Survey",
+        projectSettings: "Project Settings",
+        overview: "Overview",
+        members: "Members",
+        billing: "Billing",
+    },
+    pages: {
+        signUp: {
+            title: "Sign up",
+            emailInvalid: "Please enter a valid email address.",
+            email: "Email",
+            sendMagicLink: "Send Magic Link",
+            sendindgMagicLink: "Sending Magic Link",
+            or: "or",
+            withGoogle: "Sign up with Google",
+            withMicrosoft: "Sign up with Microsoft",
+            alreadyHaveAnAccount: "Already have an account?",
+            signIn: "Sign in",
+        },
+        signIn: {
+            title: "Sign in",
+            emailInvalid: "Please enter a valid email address.",
+            email: "Email",
+            sendMagicLink: "Send Magic Link",
+            sendindgMagicLink: "Sending Magic Link",
+            or: "or",
+            withGoogle: "Sign in with Google",
+            withMicrosoft: "Sign in with Microsoft",
+            dontHaveAnAccount: "Don't have an account?",
+            signUp: "Sign up",
+        },
+        magicLinkSent: {
+            title: "Magic link sent",
+            description1: "We've sent a secure link to your email.",
+            description2: "Please check your inbox (and spam folder if needed) to continue.",
+            goBack: "Go back",
+        }
+    },
+}

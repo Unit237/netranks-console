@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ffffff; /* light background */
+  --text: #000000; /* light text */
+  --primary: #ea580c;
+  --primary-hover: #cc460a;
+}
+
+.dark {
+  --bg: #141414; /* dark background */
+  --text: #ffffff; /* dark text */
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.btn-primary {
+  @apply px-4 py-2 rounded-md font-medium;
+  background-color: var(--primary); /* not a tailwind class, but fine in CSS */
+  color: white;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}

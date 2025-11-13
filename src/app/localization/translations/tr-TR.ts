@@ -1,0 +1,72 @@
+export default {
+    locale: "tr-TR",
+    language: "Türkçe",
+    languages: {
+        "en-GB": "İngilizce",
+        "tr-TR": "Türkçe",
+    },
+    general: {
+        yes: "Evet",
+        no: "Hayır",
+    },
+    header: {
+        optionsMenu: {
+            profile: "Profil",
+            theme: "Tema",
+            system: "Sistem",
+            light: "Açık",
+            dark: "Koyu",
+            account: "Hesap",
+            logout: "Çıkış",
+        }
+    },
+    sidemenu: {
+        projects: "Projeler",
+        defaultProject: "Varsayılan Proje",
+        createNewProject: "Yeni Proje Oluştur",
+        createNewProjectDescription: "Üyeleri ve faturalandırmayı ayrı ayrı yönetmek için yeni bir proje oluşturun ve sınırsız anket ekleyin.",
+        projectName: "Proje Adı",
+        cancel: "İptal",
+        create: "Oluştur",
+        renameProject: "Proje Adını Değiştir",
+        rename: "Adı Değiştir",
+        surveys: "Anketler",
+        createNewSurvey: "Yeni Anket Oluştur",
+        projectSettings: "Proje Ayarları",
+        overview: "Genel Bakış",
+        members: "Üyeler",
+        billing: "Faturalandırma",
+    },
+    pages: {
+        signUp: {
+            title: "Kayıt ol",
+            emailInvalid: "Lütfen geçerli bir e-posta adresi girin.",
+            email: "E-posta",
+            sendMagicLink: "Sihirli Bağlantıyı Gönder",
+            sendindgMagicLink: "Sihirli Bağlantı Gönderiliyor",
+            or: "veya",
+            withGoogle: "Google ile kayıt ol",
+            withMicrosoft: "Microsoft ile kayıt ol",
+            alreadyHaveAnAccount: "Zaten bir hesabınız var mı?",
+            signIn: "Giriş yap",
+        },
+        signIn: {
+            title: "Giriş yap",
+            emailInvalid: "Lütfen geçerli bir e-posta adresi girin.",
+            email: "E-posta",
+            sendMagicLink: "Sihirli Bağlantıyı Gönder",
+            sendindgMagicLink: "Sihirli Bağlantı Gönderiliyor",
+            or: "veya",
+            withGoogle: "Google ile oturum aç",
+            withMicrosoft: "Microsoft ile oturum aç",
+            dontHaveAnAccount: "Hesabınız yok mu?",
+            signUp: "Kayıt ol",
+        },
+        magicLinkSent: {
+            title: "Sihirli bağlantı gönderildi",
+            description1: "E-postanıza güvenli bir bağlantı gönderdik.",
+            description2: "Devam etmek için lütfen gelen kutunuzu (ve gerekirse spam klasörünüzü) kontrol edin.",
+            goBack: "Geri dön",
+        }
+    },
+}
