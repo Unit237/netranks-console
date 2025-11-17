@@ -1,10 +1,20 @@
 import { Route, Routes } from "react-router-dom";
+import MagicLinkHandler from "../../features/auth/components/MagicLinkHandler";
+import ProtectedRoute from "../../features/auth/components/ProtectedRoute";
 import MagicLinkSent from "../../features/auth/pages/MagicLinkSent";
 import Signin from "../../features/auth/pages/Signin";
 import Layout from "../../features/brand-rank/components/Layout";
 import BrandRank from "../../features/brand-rank/pages";
+import Brand from "../../features/brand-rank/pages/Brand";
 import BrandRankSurveyRun from "../../features/brand-rank/pages/BrandRankRunSurvey";
 import Questions from "../../features/brand-rank/pages/Questions";
+import Alerts from "../../features/console/pages/Alerts";
+import Console from "../../features/console/pages/Console";
+import Dashboard from "../../features/console/pages/Dashboard";
+import Members from "../../features/console/pages/Members";
+import Project from "../../features/console/pages/Project";
+import Settings from "../../features/console/pages/Settings";
+import Support from "../../features/console/pages/Support";
 
 const Router = () => {
   return (
@@ -19,6 +29,24 @@ const Router = () => {
       </Route>
       <Route path="signin" element={<Signin />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
+      <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
+      <Route
+        path="console"
+        element={
+          <ProtectedRoute>
+            <Console />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="alerts" element={<Alerts />} />
+        <Route path="members" element={<Members />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="support" element={<Support />} />
+        <Route path="brand" element={<Brand />} />
+        <Route path="project/:projectId" element={<Project />} />
+      </Route>
     </Routes>
   );
 };

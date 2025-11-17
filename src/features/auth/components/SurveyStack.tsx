@@ -56,7 +56,7 @@ const SurveyStack: React.FC = () => {
           <div
             key={index}
             role="article"
-            className="absolute left-0 right-0 mx-auto rounded-xl bg-white dark:bg-[#141414] transition-all duration-300 cursor-pointer hover:shadow-xl shadow-md"
+            className="absolute left-0 right-0 mx-auto rounded-xl bg-white dark:bg-[#202020] transition-all duration-300 cursor-pointer hover:shadow-xl shadow-md"
             style={{
               top,
               width,

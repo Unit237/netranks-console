@@ -8,7 +8,7 @@ function MagicLinkSent() {
   const l = useLanguage().pages.magicLinkSent;
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-between p-4 sm:p-8 bg-gradient-to-b from-[hsl(210,100%,97%)] to-white dark:from-[hsla(210,100%,16%,0.5)] dark:to-[hsl(220,30%,5%)] transition-colors duration-300">
+    <div className="relative min-h-screen flex flex-col justify-center p-4 sm:p-8 bg-gradient-to-b from-[hsl(210,100%,97%)] to-white dark:from-[hsla(210,100%,16%,0.5)] dark:to-[hsl(220,30%,5%)] transition-colors duration-300">
       {/* Floating Theme Toggle Placeholder */}
       <div className="fixed top-4 right-4">
         {/* You can add your ColorModeSelect component here if needed */}

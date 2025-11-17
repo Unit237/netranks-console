@@ -284,7 +284,7 @@ class ApiClient {
 
       if (response.status === 401) {
         token.clear();
-        window.location.href = "/";
+        // window.location.href = "/";
         throw new Error("Unauthorized");
       }
 
@@ -304,7 +304,7 @@ class ApiClient {
 
       if (response.status === 403) {
         alert((data as string) || "Unauthorized");
-        window.location.href = "/";
+        // window.location.href = "/";
         throw new Error("Forbidden");
       }
 
