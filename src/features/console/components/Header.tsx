@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useTabs } from "../context/TabContext";
 
 const Header = () => {
-  const { tabs, activeTabId, closeTab, closeAllTabs, setActiveTab, addTab } = useTabs();
+  const { tabs, activeTabId, closeTab, closeAllTabs, setActiveTab, addTab } =
+    useTabs();
   const navigate = useNavigate();
 
   const handleAddTab = () => {
     const tabId = addTab({
       name: "untitled survey",
       path: "/console/brand",
+      headerName: "untitled survey",
     });
     navigate("/console/brand");
   };
@@ -43,7 +45,7 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 px-4 pt-2 overflow-x-auto">
+    <div className="bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto">
       {tabs.length > 0 && (
         <>
           <div className="flex items-center gap-1 flex-1 overflow-x-auto">
@@ -78,7 +80,9 @@ const Header = () => {
                       {tab.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="max-w-[120px] truncate">{tab.name}</span>
+                  <span className="max-w-[120px] truncate">
+                    {tab.headerName}
+                  </span>
                   <button
                     onClick={(e) => handleCloseTab(e, tab.id)}
                     className="ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"

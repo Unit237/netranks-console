@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
 import { useUser } from "../context/UserContext";
@@ -11,22 +11,31 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const { user, loading, error } = useUser();
-
-  console.log(token.get());
-  console.log(user);
+  const hasStartedLoading = useRef(false);
+  const hasLoggedAuthStatus = useRef(false);
 
   useEffect(() => {
     const authToken = token.get();
 
-    // If no token, redirect to signin immediately
     if (!authToken) {
+      console.log("no token");
       navigate("/signin", { replace: true });
       return;
     }
 
-    // If user fetch completed but failed or no user data, redirect to signin
-    if (!loading) {
+    // Track when loading starts (API call initiated)
+    if (loading) {
+      hasStartedLoading.current = true;
+      hasLoggedAuthStatus.current = false;
+      return;
+    }
+
+    if (hasStartedLoading.current && !hasLoggedAuthStatus.current) {
+      hasLoggedAuthStatus.current = true;
+
+      // Only log if API call completed and user is not authenticated
       if (error || !user) {
+        console.log("user not logged in");
         navigate("/signin", { replace: true });
       }
     }

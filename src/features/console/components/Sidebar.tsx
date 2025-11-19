@@ -21,26 +21,56 @@ const Sidebar = () => {
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
 
   const sidebarLinks = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/console/dashboard" },
-    { icon: Bell, label: "Alerts", path: "/console/alerts" },
-    { icon: Users, label: "Members", path: "/console/members" },
-    { icon: Settings, label: "Settings", path: "/console/settings" },
+    {
+      icon: LayoutDashboard,
+      label: "Dashboard",
+      path: "/console",
+      headerName: "Q3 Overview",
+    },
+    {
+      icon: Bell,
+      label: "Alerts",
+      path: "/console/alerts",
+      headerName: "Alert",
+    },
+    {
+      icon: Users,
+      label: "Members",
+      path: "/console/members",
+      headerName: "Members",
+    },
+    {
+      icon: Settings,
+      label: "Settings",
+      path: "/console/settings",
+      headerName: "Settings",
+    },
   ];
 
-  const handleSidebarLinkClick = (path: string, label: string) => {
+  const handleSidebarLinkClick = (
+    path: string,
+    label: string,
+    headerName: string
+  ) => {
     addTab({
       name: label,
       path: path,
+      headerName: headerName,
     });
     navigate(path);
   };
 
-  const handleProjectClick = (projectId: number, projectName: string) => {
+  const handleProjectClick = (
+    projectId: number,
+    projectName: string,
+    headerName: string
+  ) => {
     addTab({
       name: projectName || "Untitled Project",
       path: `/console/project/${projectId}`,
       isProject: true,
       projectId,
+      headerName,
     });
     navigate(`/console/project/${projectId}`);
   };
@@ -49,6 +79,7 @@ const Sidebar = () => {
     addTab({
       name: "untitled survey",
       path: "/console/brand",
+      headerName: "untitled survey",
     });
     navigate("/console/brand");
   };
@@ -57,13 +88,14 @@ const Sidebar = () => {
     addTab({
       name: "Support",
       path: "/console/support",
+      headerName: "Support",
     });
     navigate("/console/support");
   };
 
   return (
     <div
-      className={`bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 ${
+      className={`bg-gray-200 dark:bg-gray-900 flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
       }`}
     >
@@ -78,7 +110,7 @@ const Sidebar = () => {
               >
                 <div className="w-4 h-4 bg-blue-500 rounded-md"></div>
                 <div className="flex items-center min-w-0">
-                  <p className="">{user?.Name || "User"}</p>
+                  <p className="">{user?.Name || user?.EMail || "User"}</p>
                   <p className="ml-1">Workspace</p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
@@ -128,7 +160,9 @@ const Sidebar = () => {
           return (
             <button
               key={link.path}
-              onClick={() => handleSidebarLinkClick(link.path, link.label)}
+              onClick={() =>
+                handleSidebarLinkClick(link.path, link.label, link.headerName)
+              }
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isCollapsed ? "justify-center" : "justify-start"
               } text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`}
@@ -172,6 +206,7 @@ const Sidebar = () => {
                   onClick={() =>
                     handleProjectClick(
                       project.Id,
+                      project.Name || "Untitled Project",
                       project.Name || "Untitled Project"
                     )
                   }

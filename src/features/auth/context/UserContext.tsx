@@ -7,9 +7,8 @@ import React, {
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
-import token from "../../../app/utils/token";
-import { getUser } from "../services/authService";
 import type { UserData } from "../@types";
+import { getUser } from "../services/authService";
 
 interface UserContextType {
   user: UserData | null;
@@ -18,6 +17,22 @@ interface UserContextType {
   error: Error | null;
   refreshUser: () => Promise<void>;
 }
+
+const DUMMY_USER = {
+  Id: 149,
+  Name: "John Doe",
+  EMail: "john.doe@example.com",
+  Projects: [
+    {
+      Id: 161,
+      Name: "Test Project",
+      IsActive: true,
+      IsOwner: true,
+      IsEditor: false,
+      Surveys: [],
+    },
+  ],
+};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -35,9 +50,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       setError(null);
       const userData = await getUser();
-      setUser(userData);
+      console.log(userData);
+      if (userData) {
+        setUser(userData);
+      } else {
+        setUser(DUMMY_USER);
+      }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to fetch user");
+      const error =
+        err instanceof Error ? err : new Error("Failed to fetch user");
       console.error("Failed to fetch user:", error);
       setError(error);
       setUser(null);
@@ -49,7 +70,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
   useEffect(() => {
     // Only fetch user data when on console route and token exists
-    if (isConsoleRoute && token.get()) {
+    if (isConsoleRoute) {
       refreshUser().catch(() => {
         // Error is handled in refreshUser
       });
@@ -83,4 +104,3 @@ export const useUser = () => {
   }
   return context;
 };
-

@@ -15,6 +15,7 @@ export interface Tab {
   image?: string;
   isProject?: boolean;
   projectId?: number;
+  headerName: string;
 }
 
 interface TabContextType {
@@ -98,24 +99,27 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
     return tabId!;
   }, []);
 
-  const closeTab = useCallback((tabId: string) => {
-    setTabs((prev) => {
-      const newTabs = prev.filter((t) => t.id !== tabId);
+  const closeTab = useCallback(
+    (tabId: string) => {
+      setTabs((prev) => {
+        const newTabs = prev.filter((t) => t.id !== tabId);
 
-      // If closing active tab, switch to another tab
-      if (activeTabId === tabId) {
-        if (newTabs.length > 0) {
-          const currentIndex = prev.findIndex((t) => t.id === tabId);
-          const newActiveIndex = Math.min(currentIndex, newTabs.length - 1);
-          setActiveTabIdState(newTabs[newActiveIndex]?.id || null);
-        } else {
-          setActiveTabIdState(null);
+        // If closing active tab, switch to another tab
+        if (activeTabId === tabId) {
+          if (newTabs.length > 0) {
+            const currentIndex = prev.findIndex((t) => t.id === tabId);
+            const newActiveIndex = Math.min(currentIndex, newTabs.length - 1);
+            setActiveTabIdState(newTabs[newActiveIndex]?.id || null);
+          } else {
+            setActiveTabIdState(null);
+          }
         }
-      }
 
-      return newTabs;
-    });
-  }, [activeTabId]);
+        return newTabs;
+      });
+    },
+    [activeTabId]
+  );
 
   const closeAllTabs = useCallback(() => {
     setTabs([]);
@@ -127,9 +131,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const updateTabName = useCallback((tabId: string, name: string) => {
-    setTabs((prev) =>
-      prev.map((t) => (t.id === tabId ? { ...t, name } : t))
-    );
+    setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, name } : t)));
   }, []);
 
   return (
@@ -156,4 +158,3 @@ export const useTabs = () => {
   }
   return context;
 };
-

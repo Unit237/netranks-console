@@ -39,7 +39,6 @@ const Router = () => {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
         <Route path="alerts" element={<Alerts />} />
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<Settings />} />

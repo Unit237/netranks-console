@@ -1,4 +1,8 @@
-import { fetchApi, type ApiRequestOptions } from "../../../app/lib/ApiClient";
+import {
+  apiClient,
+  ApiError,
+  type ApiRequestConfig,
+} from "../../../app/lib/api";
 import type { BrandData, BrandOption } from "../@types";
 
 export const searchBrands = async (
@@ -6,6 +10,10 @@ export const searchBrands = async (
   signal?: AbortSignal
 ): Promise<BrandOption[]> => {
   try {
+    // const brands = await brandFetchApi.get<BrandOption[]>(
+    //   `/search/${encodeURIComponent(query)}`
+    // );
+
     // const brands = await brandFetchApi.get<BrandOption[]>(
     //   `/search/${encodeURIComponent(query)}`,
     //   { signal }
@@ -19,7 +27,6 @@ export const searchBrands = async (
     if (!res.ok) throw new Error(res.statusText);
 
     const brands: BrandOption[] = await res.json();
-
     // If no results, return a custom fallback option
     if (brands.length === 0) {
       return [
@@ -39,22 +46,31 @@ export const searchBrands = async (
 
     return brands;
   } catch (error) {
-    // Re-throw AbortError to handle it separately
-    if ((error as Error).name === "AbortError") {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
       throw error;
     }
 
     console.error("Failed to search brands:", error);
-    throw new Error("Unable to search brands. Please try again.");
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to search brands. Please try again."
+    );
   }
 };
 
 export const fetchBrandQuestions = async (
   brand: BrandOption,
-  options?: ApiRequestOptions
+  options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await fetchApi.post<BrandData>(
+    const questions = await apiClient.post<BrandData>(
       `api/CreateSurveyFromBrand`,
       brand,
       options
@@ -64,25 +80,31 @@ export const fetchBrandQuestions = async (
 
     return questions;
   } catch (error) {
-    if (
-      error instanceof Error &&
-      (error.name === "AbortError" ||
-        error.message === "Request canceled with cancel token")
-    ) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
       throw error;
     }
 
     console.error("Failed to fetch brand questions:", error);
-    throw new Error("Unable to fetch questions. Please try again.");
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to fetch questions. Please try again."
+    );
   }
 };
 
 export const fetchQueryQuestions = async (
   query: string,
-  options?: ApiRequestOptions
+  options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await fetchApi.post<BrandData>(
+    const questions = await apiClient.post<BrandData>(
       `api/CreateSurveyFromQuery`,
       query,
       options
@@ -92,37 +114,43 @@ export const fetchQueryQuestions = async (
 
     return questions;
   } catch (error) {
-    if (
-      error instanceof Error &&
-      (error.name === "AbortError" ||
-        error.message === "Request canceled with cancel token")
-    ) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
       throw error;
     }
 
     console.error("Failed to fetch query questions:", error);
-    throw new Error("Unable to fetch questions. Please try again.");
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to fetch questions. Please try again."
+    );
   }
 };
 
 export const startSurvey = async (
   surveyId: number,
   questionIndices?: number[],
-  options?: ApiRequestOptions
+  options?: ApiRequestConfig
 ): Promise<string> => {
   try {
     let response: string;
 
     if (questionIndices && questionIndices.length > 0) {
       // 🔹 POST request with questionIndices
-      response = await fetchApi.post<string>(
+      response = await apiClient.post<string>(
         `api/StartSurvey/${surveyId}`,
         { questionIndices },
         options
       );
     } else {
       // 🔹 GET request if no questionIndices
-      response = await fetchApi.get<string>(
+      response = await apiClient.get<string>(
         `api/StartSurvey/${surveyId}`,
         options
       );
@@ -131,16 +159,22 @@ export const startSurvey = async (
     console.log("Survey started:", response);
     return response;
   } catch (error) {
-    if (
-      error instanceof Error &&
-      (error.name === "AbortError" ||
-        error.message === "Request canceled with cancel token")
-    ) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
       throw error;
     }
 
     console.error("Failed to start survey:", error);
-    throw new Error("Unable to start survey. Please try again.");
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to start survey. Please try again."
+    );
   }
 };
 
@@ -150,17 +184,27 @@ export const getSurveyRun = async (
   p2?: string
 ) => {
   try {
-    const surveyRun = await fetchApi.get(
+    const surveyRun = await apiClient.get(
       `api/GetSurveyRun/${surveyRunId}/${p1}/${p2}`
     );
 
     return surveyRun;
   } catch (error) {
-    if ((error as Error).name === "AbortError") {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
       throw error;
     }
 
     console.error("Failed to get survey run:", error);
-    throw new Error("Unable to get survey run. Please try again.");
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to get survey run. Please try again."
+    );
   }
 };
