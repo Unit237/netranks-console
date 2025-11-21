@@ -2,9 +2,10 @@ import { Keyboard } from "lucide-react";
 import React, { useState } from "react";
 import { FaLinkedinIn } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
 import ToggleTheme from "../../../app/shared/components/ToggleTheme";
+import token from "../../../app/utils/token";
 import Hand from "../../../assets/col.svg";
 import Logo from "../../../assets/user.svg";
 import SurveyStack from "../components/SurveyStack";
@@ -14,7 +15,7 @@ const Signin: React.FC = () => {
   const [email, setEmail] = useState("");
   const toast = useToast();
 
-  const visitorSessionToken = useSearchParams()[0].get("vt");
+  const visitorSessionToken = token.get();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -98,11 +99,11 @@ const Signin: React.FC = () => {
 
               {/* Magic Link Button */}
               <button
-                disabled={!email || email === ""}
+                disabled={!email || email === "" || submitting}
                 type="submit"
                 className="w-full bg-black dark:bg-white dark:text-black text-white font-medium rounded-full py-2 hover:bg-gray-700 dark:hover:bg-gray-300 transition"
               >
-                Send magic link
+                {submitting ? "Sending Magic Link..." : "Send Magic Link"}
               </button>
               <div className="flex items-center justify-center">
                 <div className="flex items-center justify-end text-sm text-gray-600 dark:text-gray-400 mt-4">

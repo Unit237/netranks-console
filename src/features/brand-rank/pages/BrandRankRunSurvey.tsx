@@ -28,10 +28,6 @@ export default function BrandRankSurveyRun() {
 
   const tick = async () => {
     try {
-      //   const surveyRun = await connection().get(
-      //     `api/GetSurveyRun/${surveyRunId}/${p1}/${p2}`
-      //   );
-
       const surveyRun: any = await getSurveyRun(surveyRunId, p1, p2);
 
       const p = surveyRun.Progress;
@@ -52,7 +48,7 @@ export default function BrandRankSurveyRun() {
   };
 
   const gotoDashboard = () => {
-    navigate(`/survey-dashboard/${surveyRunId}/${p1}/${p2}`);
+    navigate(`/dashboard/${surveyRunId}/${p1}/${p2}`);
   };
 
   const handleShare = async (e: React.MouseEvent) => {

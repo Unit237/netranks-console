@@ -15,6 +15,7 @@ import Members from "../../features/console/pages/Members";
 import Project from "../../features/console/pages/Project";
 import Settings from "../../features/console/pages/Settings";
 import Support from "../../features/console/pages/Support";
+import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
 
 const Router = () => {
   return (
@@ -25,6 +26,10 @@ const Router = () => {
         <Route
           path="/brand-rank/survey/:surveyRunId/:p1/:p2"
           element={<BrandRankSurveyRun />}
+        />
+        <Route
+          path="/dashboard/:surveyRunId/:p1/:p2"
+          element={<SurveyDashboard />}
         />
       </Route>
       <Route path="signin" element={<Signin />} />

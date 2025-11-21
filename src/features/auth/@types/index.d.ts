@@ -1,5 +1,8 @@
-interface Survey {
-  // Add survey fields here as needed
+export interface Survey {
+  Id: number;
+  Name: string | null;
+  DescriptionShort: string | null;
+  SchedulePeriodHours: number;
 }
 
 export interface Project {
