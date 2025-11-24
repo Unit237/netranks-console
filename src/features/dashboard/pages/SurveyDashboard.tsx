@@ -1,8 +1,9 @@
-import { ChevronDown, ChevronUp, ExternalLink, Info, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Info, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toPercentage } from "../../../app/utils/utils";
 import type { SurveyStatsResponse } from "../@types";
+import SampleAiAnswerSnippet from "../components/SampleAiAnswerSnippet";
 import VisibilityTrendsOverTime from "../components/VisibilityTrendOverTime";
 import { getSurveyRunForDashboard } from "../services/dashService";
 
@@ -143,48 +144,8 @@ const SurveyDashboard: React.FC = () => {
             </div>
 
             {/* Actual AI Answers for Survey */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-                Actual AI answers for survey
-              </h2>
-              <div className="relative overflow-hidden">
-                {data.SampleAiAnswerSnippets.map((snippet, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start justify-between px-4 py-3 rounded-[20px] border border-gray-100 dark:border-gray-700 last:border-0 bg-white dark:bg-gray-800"
-                  >
-                    <div className="flex items-center justify-between gap-3 flex-1">
-                      <p className="text-sm text-gray-900 dark:text-gray-100">
-                        {snippet.Question}
-                      </p>
-                      <p
-                        // href={snippet.AnswerUrl}
-                        // target="_blank"
-                        // rel="noopener noreferrer"
-                        className="blur-sm flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400 hover:underline"
-                      >
-                        View Answer
-                        <ExternalLink className="w-3 h-3" />
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {/* Banner Overlay */}
-                <div
-                  onClick={goToSignUp}
-                  className="absolute right-[-33rem] top-5 inset-0 flex items-center justify-center rounded-[20px]"
-                >
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-[15rem] mx-4">
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-gray-900 dark:text-gray-100">
-                        Unlock Netranks to view answers.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+            <SampleAiAnswerSnippet survey={data} />
 
             {/* Visibility Table - Prompts & Brand Mentions */}
             <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">

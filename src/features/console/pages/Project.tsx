@@ -29,6 +29,10 @@ const Project = () => {
     navigate("/console/new-survey");
   };
 
+  if (!user) {
+    return <>Loading...</>;
+  }
+
   const project = user?.Projects?.find(
     (p) => p.Id === parseInt(projectId || "0", 10)
   );
@@ -36,7 +40,7 @@ const Project = () => {
   // Dummy survey data based on the image structure
   const surveys = [
     {
-      id: project?.Surveys[0].Id,
+      id: 1,
       name: "Daily Pulse - Social Media Sentiment",
       status: "Active",
       schedule: "Daily",

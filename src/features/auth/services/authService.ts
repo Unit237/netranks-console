@@ -29,7 +29,9 @@ export const sendMagicLink = async (
     // Convert unknown errors to ApiError
     console.error("Failed to authenticate:", error);
     throw new ApiError(
-      error instanceof Error ? error.message : "Unable to authenticate, please try again"
+      error instanceof Error
+        ? error.message
+        : "Unable to authenticate, please try again"
     );
   }
 };
@@ -67,7 +69,9 @@ export const consumeMagicLink = async (
     // Convert unknown errors to ApiError
     console.error("Failed to authenticate:", error);
     throw new ApiError(
-      error instanceof Error ? error.message : "Unable to authenticate, please try again"
+      error instanceof Error
+        ? error.message
+        : "Unable to authenticate, please try again"
     );
   }
 };
@@ -75,8 +79,6 @@ export const consumeMagicLink = async (
 export const getUser = async () => {
   try {
     const res: UserData = await apiClient.get(`api/GetUser`);
-
-    console.log(res);
 
     return res;
   } catch (error) {
@@ -93,7 +95,9 @@ export const getUser = async () => {
     // Convert unknown errors to ApiError
     console.error("Failed to get user:", error);
     throw new ApiError(
-      error instanceof Error ? error.message : "Unable to get user, please try again"
+      error instanceof Error
+        ? error.message
+        : "Unable to get user, please try again"
     );
   }
 };
