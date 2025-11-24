@@ -14,24 +14,24 @@ interface VisibilityTrendsProps {
   signUp?: () => void;
 }
 
-interface JoinWaitlistProps {
-  signUp?: () => void;
-  text: string;
-}
+// interface JoinWaitlistProps {
+//   signUp?: () => void;
+//   text: string;
+// }
 
-const JoinWaitlist: React.FC<JoinWaitlistProps> = ({ signUp, text }) => {
-  return (
-    <div className="mt-4">
-      <p className="text-sm text-gray-600 mb-2">{text}</p>
-      <button
-        onClick={signUp}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-      >
-        Join Waitlist
-      </button>
-    </div>
-  );
-};
+// const JoinWaitlist: React.FC<JoinWaitlistProps> = ({ signUp, text }) => {
+//   return (
+//     <div className="mt-4">
+//       <p className="text-sm text-gray-600 mb-2">{text}</p>
+//       <button
+//         onClick={signUp}
+//         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+//       >
+//         Join Waitlist
+//       </button>
+//     </div>
+//   );
+// };
 
 function getDaysInMonth(month: number, year: number) {
   const date = new Date(year, month, 0);

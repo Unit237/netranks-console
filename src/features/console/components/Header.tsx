@@ -8,7 +8,7 @@ const Header = () => {
   const navigate = useNavigate();
 
   const handleAddTab = () => {
-    const tabId = addTab({
+    addTab({
       name: "untitled survey",
       path: "/console/brand",
       headerName: "untitled survey",

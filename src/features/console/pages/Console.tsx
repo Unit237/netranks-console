@@ -14,6 +14,7 @@ const Console = () => {
     addTab({
       name: "untitled survey",
       path: "/console/brand",
+      headerName: "untitled survey",
     });
     navigate("/console/brand");
   };
@@ -37,6 +38,7 @@ const Console = () => {
       addTab({
         name: tabName,
         path: location.pathname,
+        headerName: tabName,
       });
     }
   }, [location.pathname, tabs, activeTabId, setActiveTab, addTab]);

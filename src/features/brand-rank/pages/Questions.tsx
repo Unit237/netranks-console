@@ -82,7 +82,7 @@ const Questions: React.FC = () => {
 
         // Clear query if this is a brand-type survey
         if (!hasParamQuestion && surveyData.QueryType === "brand") {
-          setQueryState("");
+          // setQueryState("");
         }
       } catch (error) {
         console.error("Failed to fetch survey data:", error);

@@ -1,12 +1,15 @@
 const devServerId = 1; // 0: localhost, 1: netranks server
 
-const SERVER = "https://netranks.azurewebsites.net/";
+const SERVER = import.meta.env.VITE_BACKEND_API_URL;
+const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN;
 
-const SERVER_URL = import.meta.env.PROD ? SERVER : ["/", SERVER][devServerId];
+const SERVER_URL = import.meta.env.VITE_PROD
+  ? SERVER
+  : ["/", SERVER][devServerId];
 
 export default {
   SERVER_URL,
-  netranksDomain: "https://www.netranks.ai",
+  netranksDomain: netranksDomain,
 
   netranksSessionKey: {
     words: [1313166418, 1095650131, 1600082757, 1129465172],

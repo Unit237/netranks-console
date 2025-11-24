@@ -7,11 +7,13 @@ import Layout from "../../features/brand-rank/components/Layout";
 import BrandRank from "../../features/brand-rank/pages";
 import Brand from "../../features/brand-rank/pages/Brand";
 import BrandRankSurveyRun from "../../features/brand-rank/pages/BrandRankRunSurvey";
+import PricingAndQuestion from "../../features/brand-rank/pages/PricingAndQuestion";
 import Questions from "../../features/brand-rank/pages/Questions";
 import Alerts from "../../features/console/pages/Alerts";
 import Console from "../../features/console/pages/Console";
 import Dashboard from "../../features/console/pages/Dashboard";
 import Members from "../../features/console/pages/Members";
+import NewSurvey from "../../features/console/pages/NewSurvey";
 import Project from "../../features/console/pages/Project";
 import Settings from "../../features/console/pages/Settings";
 import Support from "../../features/console/pages/Support";
@@ -50,6 +52,8 @@ const Router = () => {
         <Route path="support" element={<Support />} />
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
+        <Route path="new-survey" element={<NewSurvey />} />
+        <Route path="review-question" element={<PricingAndQuestion />} />
       </Route>
     </Routes>
   );

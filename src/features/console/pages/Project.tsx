@@ -8,12 +8,26 @@ import {
   Settings2,
   SlidersHorizontal,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useUser } from "../../auth/context/UserContext";
+import { useTabs } from "../context/TabContext";
 
 const Project = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useUser();
+
+  const navigate = useNavigate();
+
+  const { addTab } = useTabs();
+
+  const handleCreateNewSurvey = () => {
+    addTab({
+      name: "New Survey",
+      path: "/console/new-survey",
+      headerName: "New Survey",
+    });
+    navigate("/console/new-survey");
+  };
 
   const project = user?.Projects?.find(
     (p) => p.Id === parseInt(projectId || "0", 10)
@@ -249,8 +263,11 @@ const Project = () => {
         {/* Surveys section */}
 
         {/* Header */}
-        <div className="px-6 py-4 flex items-center justify-between">
-          <button className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300">
+        <div className="py-4 flex items-center justify-between">
+          <button
+            onClick={handleCreateNewSurvey}
+            className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
+          >
             <Plus size={16} />
             New survey
           </button>

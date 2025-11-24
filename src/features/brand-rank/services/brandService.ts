@@ -208,3 +208,60 @@ export const getSurveyRun = async (
     );
   }
 };
+
+export const addQuestion = async (
+  surveyId: number,
+  question: string
+): Promise<Record<string, unknown>> => {
+  try {
+    const newQuestionId = await apiClient.post(`api/AddQuestion`, {
+      SurveyId: surveyId,
+      question: question,
+    });
+
+    return {
+      Id: newQuestionId,
+      Questions: question,
+    };
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to add question:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to add questions. Please try again."
+    );
+  }
+};
+
+export const deleteQuestion = async (questionId: string): Promise<void> => {
+  try {
+    await apiClient.delete(`api/DeleteQuestion/${questionId}`);
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to delete question:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to delete questions. Please try again."
+    );
+  }
+};
