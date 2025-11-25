@@ -37,117 +37,9 @@ const Project = () => {
     (p) => p.Id === parseInt(projectId || "0", 10)
   );
 
-  // Dummy survey data based on the image structure
-  const surveys = [
-    {
-      id: 1,
-      name: "Daily Pulse - Social Media Sentiment",
-      status: "Active",
-      schedule: "Daily",
-      lastRun: "15 mins ago",
-      cost: "$1200/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 2,
-      name: "Q3 Brand Report",
-      status: "Active",
-      schedule: "Weekly",
-      lastRun: "2 hours ago",
-      cost: "$200/pm",
-      hasIndicator: true,
-    },
-    {
-      id: 3,
-      name: "Q2 2025 Competitor Analysis",
-      status: "Paused",
-      schedule: "Weekly",
-      lastRun: "3 months ago",
-      cost: "$200/pm",
-      hasIndicator: true,
-    },
-    {
-      id: 4,
-      name: "Ad Campaign Pre-Launch Analysis",
-      status: "Error",
-      schedule: "Single Run",
-      lastRun: "Failed",
-      cost: "$25/pm",
-      hasIndicator: true,
-    },
-    {
-      id: 5,
-      name: "FFFFFF Head-to-Head",
-      status: "Active",
-      schedule: "Weekly",
-      lastRun: "2 weeks ago",
-      cost: "$200/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 6,
-      name: "Q3 Brand Report",
-      status: "Active",
-      schedule: "Weekly",
-      lastRun: "2 hours ago",
-      cost: "$200/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 7,
-      name: "Daily Pulse - Social Media Sentiment",
-      status: "Active",
-      schedule: "Daily",
-      lastRun: "15 mins ago",
-      cost: "$1200/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 8,
-      name: "Q2 2025 Competitor Analysis",
-      status: "Paused",
-      schedule: "Weekly",
-      lastRun: "3 months ago",
-      cost: "$200/pm",
-      hasIndicator: true,
-    },
-    {
-      id: 9,
-      name: "Ad Campaign Pre-Launch Analysis",
-      status: "Error",
-      schedule: "Single Run",
-      lastRun: "Failed",
-      cost: "$25/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 10,
-      name: "FFFFFF Head-to-Head",
-      status: "Active",
-      schedule: "Weekly",
-      lastRun: "2 weeks ago",
-      cost: "$200/pm",
-      hasIndicator: false,
-    },
-    {
-      id: 11,
-      name: "Q2 2025 Competitor Analysis",
-      status: "Paused",
-      schedule: "Weekly",
-      lastRun: "3 months ago",
-      cost: "$200/pm",
-      hasIndicator: true,
-    },
-    {
-      id: 12,
-      name: "Ad Campaign Pre-Launch Analysis",
-      status: "Error",
-      schedule: "Single Run",
-      lastRun: "Failed",
-      cost: "$25/pm",
-      hasIndicator: false,
-    },
-  ];
+  if (!project) {
+    return <>Project not found</>;
+  }
 
   const getStatusStyles = (status: string) => {
     switch (status) {
@@ -329,9 +221,9 @@ const Project = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {surveys.map((survey) => (
+                {project.Surveys.map((survey) => (
                   <tr
-                    key={survey.id}
+                    key={survey.Id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   >
                     <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
@@ -342,11 +234,11 @@ const Project = () => {
                     </td>
                     <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
                       <div className="flex items-center gap-2">
-                        {survey.hasIndicator && (
+                        {survey.HasIndicator && (
                           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                         )}
                         <span className="text-sm text-gray-900 dark:text-gray-100">
-                          {survey.name}
+                          {survey.Name}
                         </span>
                       </div>
                     </td>
@@ -354,20 +246,20 @@ const Project = () => {
                       <div
                         className={`flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300`}
                       >
-                        <span className={getStatusStyles(survey.status)}>
-                          {getStatusIcon(survey.status)}
+                        <span className={getStatusStyles(survey.Status)}>
+                          {getStatusIcon(survey.Status)}
                         </span>
-                        <span>{survey.status}</span>
+                        <span>{survey.Status}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                      {survey.schedule}
+                      {survey.Schedule}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                      {survey.lastRun}
+                      {survey.LastRun}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {survey.cost}
+                      {survey.Cost}
                     </td>
                   </tr>
                 ))}

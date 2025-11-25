@@ -10,7 +10,7 @@ import {
   fetchQueryQuestions,
 } from "../services/brandService";
 
-const PricingAndQuestion: React.FC = () => {
+const ReviewAndQuestion: React.FC = () => {
   const {
     selectedBrand,
     setSelectedBrand,
@@ -23,6 +23,7 @@ const PricingAndQuestion: React.FC = () => {
   const [survey, setSurvey] = useState<BrandData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(0);
 
   useEffect(() => {
     // Validate that we have data to fetch
@@ -47,6 +48,7 @@ const PricingAndQuestion: React.FC = () => {
         }
 
         setSurvey(surveyData);
+        setQuestionCount(surveyData.Questions?.length || 0);
 
         if (surveyData.BrandName || surveyData.DescriptionOfTheBrandShort) {
           handleUpdateTabName(
@@ -97,12 +99,19 @@ const PricingAndQuestion: React.FC = () => {
     return <div>No survey data available</div>;
   }
 
+  const handleQuestionCountChange = (count: number) => {
+    setQuestionCount(count);
+  };
+
   return (
-    <div>
-      <ConsoleReviewAndRefine survey={survey} />
-      <ConsoleQuestionSection survey={survey} />
+    <div className="flex h-full w-full bg-white items-start justify-center space-x-8 py-20">
+      <ConsoleReviewAndRefine survey={survey} questionCount={questionCount} />
+      <ConsoleQuestionSection
+        survey={survey}
+        onQuestionCountChange={handleQuestionCountChange}
+      />
     </div>
   );
 };
 
-export default PricingAndQuestion;
+export default ReviewAndQuestion;

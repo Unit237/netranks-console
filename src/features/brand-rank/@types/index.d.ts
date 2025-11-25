@@ -25,3 +25,8 @@ export type BrandData = {
   iterations?: number;
   runsPerMonth?: number;
 };
+
+export type Question = {
+  Id: number;
+  Question: string;
+};

@@ -3,6 +3,7 @@ import {
   ApiError,
   type ApiRequestConfig,
 } from "../../../app/lib/api";
+import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
 
 export const searchBrands = async (
@@ -70,11 +71,15 @@ export const fetchBrandQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromBrand`,
-      brand,
-      options
-    );
+    // const questions = await apiClient.post<BrandData>(
+    //   `api/CreateSurveyFromBrand`,
+    //   brand,
+    //   options
+    // );
+
+    const questions = await searchBrand(brand.name);
+
+    if (!questions) throw new Error("No questions found");
 
     console.log(questions);
 
@@ -104,11 +109,15 @@ export const fetchQueryQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromQuery`,
-      query,
-      options
-    );
+    // const questions = await apiClient.post<BrandData>(
+    //   `api/CreateSurveyFromQuery`,
+    //   query,
+    //   options
+    // );
+
+    const questions = await searchBrand(query);
+
+    if (!questions) throw new Error("No questions found");
 
     console.log(questions);
 
@@ -264,4 +273,63 @@ export const deleteQuestion = async (questionId: string): Promise<void> => {
         : "Unable to delete questions. Please try again."
     );
   }
+};
+
+export const editQuestion = async (questionId: number, question: string) => {
+  try {
+    const editQuestionId = await apiClient.put(
+      `api/EditQuestion/${questionId}`,
+      {
+        question,
+      }
+    );
+
+    return {
+      Id: editQuestionId,
+      Questions: question,
+    };
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to edit question:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to edit questions. Please try again."
+    );
+  }
+};
+
+export const searchBrand = async (query: string) => {
+  if (!query.trim()) return null;
+
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  if (!query.trim()) return null;
+
+  const lowerQuery = query.toLowerCase();
+
+  return BRAND_DATA.find((brand) => {
+    const fields = [
+      brand.BrandName,
+      brand.DescriptionOfTheBrand,
+      brand.DescriptionOfTheBrandShort,
+      brand.DescriptionOfTheQuestion,
+      brand.DescriptionOfTheQuestionShort,
+      brand.WebsiteOfTheBrand,
+      ...(brand.Questions || []),
+    ];
+
+    return fields.some(
+      (field) => field && field.toLowerCase().includes(lowerQuery)
+    );
+  });
 };

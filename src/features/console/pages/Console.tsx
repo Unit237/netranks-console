@@ -59,7 +59,7 @@ const Console = () => {
             </button>
           </main>
         ) : (
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto bg-white dark:bg-gray-900">
             <Outlet />
           </main>
         )}

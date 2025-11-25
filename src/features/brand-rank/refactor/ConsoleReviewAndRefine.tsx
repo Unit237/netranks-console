@@ -11,6 +11,7 @@ import type { BrandData } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
   survey: BrandData;
+  questionCount: number;
 }
 
 interface Model {
@@ -24,11 +25,12 @@ interface Model {
 
 const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   survey,
+  questionCount,
 }) => {
   const [surveyName, setSurveyName] = useState(
     survey.BrandName || "New Pricing Plan – Sentiment Analysis"
   );
-  const [frequency, setFrequency] = useState("Weekly");
+  const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
   const [showModelsDropdown, setShowModelsDropdown] = useState(false);
 
@@ -67,13 +69,42 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     },
   ]);
 
-  const frequencies = ["Daily", "Weekly", "Bi-weekly", "Monthly"];
-  const questions = survey.Questions.length || 11;
+  const frequencies = [
+    {
+      id: "single-run",
+      name: "Single Run",
+      price: 200,
+      desc: "Runs once, immediately after launch",
+      duration: "",
+      numberOfRuns: 1,
+    },
+    {
+      id: "weekly-run",
+      name: "Run weekly",
+      price: 200,
+      desc: "Runs automatically every Monday",
+      duration: "monthly",
+      numberOfRuns: 4,
+    },
+    {
+      id: "daily-run",
+      name: "Run daily",
+      price: 1200,
+      desc: "Runs automatically every day",
+      duration: "monthly",
+      numberOfRuns: 30,
+    },
+  ];
+  const questions = questionCount || survey.Questions.length || 11;
   const totalIterations = models.reduce(
     (sum, m) => sum + (m.enabled ? m.iterations : 0),
     0
   );
-  const runsPerMonth = survey.runsPerMonth || 4;
+
+  // Get runsPerMonth from selected frequency, fallback to survey data
+  const selectedFrequencyData = frequencies.find((f) => f.id === frequency);
+  const runsPerMonth =
+    selectedFrequencyData?.numberOfRuns || survey.runsPerMonth || 4;
 
   // Calculate costs
   const costPerPrompt =
@@ -136,221 +167,235 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-8">
-        <h1 className="text-2xl font-semibold mb-8">Review & refine</h1>
+    <div className="border border-gray-200 rounded-[20px] p-4">
+      <div className="flex flex-col w-[40vw] h-[75vh] mx-auto">
+        <div className="">
+          <h1 className="text-md font- mb-8">Review & refine</h1>
 
-        {/* Survey Name */}
-        <div className="mb-6">
-          <label className="block text-sm text-gray-600 mb-2">
-            Survey name
-          </label>
-          <input
-            type="text"
-            value={surveyName}
-            onChange={(e) => setSurveyName(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+          {/* Survey Name */}
+          <div className="mb-6">
+            <label className="block text-sm text-gray-600 mb-2">
+              Survey name
+            </label>
+            <input
+              type="text"
+              value={surveyName}
+              onChange={(e) => setSurveyName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
 
-        {/* Cost Summary - Collapsed View */}
-        {!showModelsDropdown && (
-          <div className="mb-6 border border-orange-200 bg-orange-50 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
+          {/* Cost Summary - Collapsed View */}
+          <div className="mb-6 border border-gray-200 bg-gray-50 rounded-[20px]">
+            <div className="flex items-center justify-between mb-3 border border-orange-500 rounded-[20px] bg-red-50 py-2 px-4">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-xs">
                   ⚙️
                 </div>
                 <span className="text-gray-700 font-medium">Custom run:</span>
                 <span className="text-xl font-semibold">
-                  ${monthlyCost.toFixed(0)}
+                  $
+                  {(
+                    Number(selectedFrequencyData?.price) + Number(monthlyCost)
+                  ).toFixed(0)}
                 </span>
-                <span className="text-gray-600">/ month</span>
+                <span className="text-gray-600">/month</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-white rounded-[20px] px-2 py-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-gray-600">Live cost</span>
               </div>
             </div>
-            <div className="text-gray-600 text-sm">
-              ${costPerPrompt.toFixed(2)} / prompt
-            </div>
-            <div className="text-gray-500 text-sm mt-1">
-              {questions} questions × {totalIterations} total iterations ×{" "}
-              {runsPerMonth} runs/month
-            </div>
-          </div>
-        )}
-
-        {/* Cost Summary - Expanded View */}
-        {showModelsDropdown && (
-          <div className="mb-6 border border-orange-200 bg-orange-50 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-xs">
-                  📅
-                </div>
-                <span className="text-gray-700 font-medium">Weekly run:</span>
-                <span className="text-xl font-semibold">
-                  ${monthlyCost.toFixed(0)}
-                </span>
-                <span className="text-gray-600">/ month</span>
+            <div className="px-4 py-2">
+              <div className="text-gray-600 text-sm">
+                ${costPerPrompt.toFixed(2)} / prompt
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Live cost</span>
+              <div className="text-gray-500 text-sm mt-1">
+                {questions} questions × {totalIterations} total iterations ×{" "}
+                {runsPerMonth} runs/month
               </div>
             </div>
           </div>
-        )}
 
-        {/* Frequency and Models Row */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {/* Frequency Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowFrequencyDropdown(!showFrequencyDropdown);
-                setShowModelsDropdown(false);
-              }}
-              className="w-full px-4 py-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors flex items-center justify-between bg-white"
-            >
-              <div className="flex items-center gap-3">
-                <Clock className="w-5 h-5 text-gray-400" />
-                <div className="text-left">
-                  <div className="font-medium text-gray-900">{frequency}</div>
-                  <div className="text-sm text-gray-500">Survey frequency</div>
-                </div>
-              </div>
-              {showFrequencyDropdown ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )}
-            </button>
-
-            {showFrequencyDropdown && (
-              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
-                {frequencies.map((freq) => (
-                  <button
-                    key={freq}
-                    onClick={() => {
-                      setFrequency(freq);
-                      setShowFrequencyDropdown(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                      freq === frequency
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {freq}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Models Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowModelsDropdown(!showModelsDropdown);
-                setShowFrequencyDropdown(false);
-              }}
-              className="w-full px-4 py-4 border border-gray-200 rounded-xl hover:border-gray-300 transition-colors flex items-center justify-between bg-white"
-            >
-              <div className="flex items-center gap-3">
-                <Layers className="w-5 h-5 text-gray-400" />
-                <div className="text-left">
-                  <div className="font-medium text-gray-900">
-                    {enabledModelsCount} different model
-                    {enabledModelsCount !== 1 ? "s" : ""}
-                  </div>
-                  <div className="text-sm text-gray-500">Used for queries</div>
-                </div>
-              </div>
-              {showModelsDropdown ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )}
-            </button>
-
-            {showModelsDropdown && (
-              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg z-10 p-4">
-                <div className="mb-4">
-                  <div className="font-semibold text-gray-900 mb-1">
-                    {totalIterations} Total iterations
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    This directly multiplies your survey cost.{" "}
-                    <a href="#" className="text-blue-600 hover:underline">
-                      Learn more
-                    </a>
+          {/* Frequency and Models Row */}
+          <div className="grid grid-cols-2 mb-6 bg-gray-100 rounded-[20px]">
+            {/* Frequency Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowFrequencyDropdown(!showFrequencyDropdown);
+                  setShowModelsDropdown(false);
+                }}
+                className="w-full px-4 py-4 border border-gray-200 rounded-[20px] hover:border-gray-300 transition-colors flex items-start justify-between bg-white"
+              >
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-gray-400 mt-1" />
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">
+                      {selectedFrequencyData?.name || frequency}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Survey frequency
+                    </div>
                   </div>
                 </div>
+                {showFrequencyDropdown ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
 
-                <div className="space-y-3">
-                  {models.map((model) => (
+              {showFrequencyDropdown && (
+                <div className="absolute top-full mt-2 w-full bg-gray-100 border border-gray-200 rounded-[20px] shadow-lg z-10 overflow-hidden">
+                  {frequencies.map((freq) => (
                     <div
-                      key={model.id}
-                      className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                      key={freq.id}
+                      onClick={() => {
+                        setFrequency(freq.id);
+                        setShowFrequencyDropdown(false);
+                      }}
+                      className={`cursor-pointer border border-gray-100 rounded-[20px] flex items-start gap-4 w-full px-4 py-3 text-left hover:bg-gray-200 transition-colors ${
+                        freq.id === frequency
+                          ? "bg-gray-100"
+                          : "text-gray-700 bg-white"
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={model.enabled}
-                          onChange={() => toggleModel(model.id)}
-                          className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{model.icon}</span>
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {model.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              ≈ ${model.costPerPrompt.toFixed(2)} / prompt
-                            </div>
-                          </div>
+                      <div
+                        className={`border border-gray-500 rounded-full h-4 w-4 mt-1 ${
+                          freq.id === frequency ? "bg-black" : "bg-white"
+                        }`}
+                      ></div>
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex items-center gap-2 text-gray-800 text-sm">
+                          <div className="">{freq.name}</div>
+                          <div
+                            className={`border border-gray-300 rounded-full h-1 w-1 bg-gray-300`}
+                          ></div>
+                          <div className="">${freq.price}</div>
+                          <div className="text-sm">/ {freq.duration}</div>
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateModelIterations(model.id, -1)}
-                          disabled={model.iterations === 0}
-                          className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          <Minus className="w-4 h-4 text-gray-600" />
-                        </button>
-                        <span className="w-8 text-center font-medium text-gray-900">
-                          {model.iterations}
-                        </span>
-                        <button
-                          onClick={() => updateModelIterations(model.id, 1)}
-                          className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50"
-                        >
-                          <Plus className="w-4 h-4 text-gray-600" />
-                        </button>
+                        <div className="text-gray-500 text-sm">{freq.desc}</div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Models Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowModelsDropdown(!showModelsDropdown);
+                  setShowFrequencyDropdown(false);
+                }}
+                className="w-full px-4 py-4 border border-gray-200 rounded-[20px] hover:border-gray-300 transition-colors flex items-center justify-between bg-white"
+              >
+                <div className="flex items-center gap-3">
+                  <Layers className="w-5 h-5 text-gray-400" />
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900">
+                      {enabledModelsCount} different model
+                      {enabledModelsCount !== 1 ? "s" : ""}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Used for queries
+                    </div>
+                  </div>
+                </div>
+                {showModelsDropdown ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+
+              {showModelsDropdown && (
+                <div className="absolute top-full right-0 mt-2 w-[22vw] bg-gray-100 border border-gray-200 rounded-[20px] shadow-lg z-10">
+                  <div className="mb-4 px-4 pt-2">
+                    <div className="font-semibold text-gray-900 mb-1">
+                      {totalIterations} Total iterations
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      This directly multiplies your survey cost.{" "}
+                      <a href="#" className="text-blue-600 hover:underline">
+                        Learn more
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="">
+                    {models.map((model) => (
+                      <div
+                        key={model.id}
+                        className="flex items-center justify-between bg-white rounded-[20px] border border-gray-100 last:border-0 px-4 py-2"
+                      >
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={model.enabled}
+                            onChange={() => toggleModel(model.id)}
+                            className="
+                              w-4 h-4
+                              rounded-[4px]
+                              border-black
+                              bg-white
+                              text-black
+                              accent-black
+                              focus:ring-black
+                              mt-1
+                            "
+                          />
+
+                          <div className="flex items-start gap-3">
+                            <span className="text-lg">{model.icon}</span>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {model.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                ≈ ${model.costPerPrompt.toFixed(2)} / prompt
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-[20px]">
+                          <button
+                            onClick={() => updateModelIterations(model.id, -1)}
+                            disabled={model.iterations === 0}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Minus className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <span className="w-8 text-center font-medium text-gray-900">
+                            {model.iterations}
+                          </span>
+                          <button
+                            onClick={() => updateModelIterations(model.id, 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-gray-50"
+                          >
+                            <Plus className="w-4 h-4 text-gray-600" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-          <button className="px-6 py-3 text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2">
+        <div className="mt-auto flex items-center justify-between text-sm">
+          <button className="px-6 py-1 border border-gray-200 rounded-lg hover:border-gray-300 text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2">
             ← Go back
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2"
+            className="px-6 py-1 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2"
           >
             Finish & save →
           </button>

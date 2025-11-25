@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
 import { getSelectedLanguage } from "../../../app/localization/language";
+import { DUMMY_USER } from "../../../app/utils/constant";
 import token from "../../../app/utils/token";
-import type { UserData } from "../@types";
 
 export const sendMagicLink = async (
   email: string,
@@ -78,7 +78,9 @@ export const consumeMagicLink = async (
 
 export const getUser = async () => {
   try {
-    const res: UserData = await apiClient.get(`api/GetUser`);
+    // const res: UserData = await apiClient.get(`api/GetUser`);
+
+    const res = DUMMY_USER;
 
     return res;
   } catch (error) {

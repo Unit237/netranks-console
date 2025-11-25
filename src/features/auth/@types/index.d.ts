@@ -3,6 +3,11 @@ export interface Survey {
   Name: string | null;
   DescriptionShort: string | null;
   SchedulePeriodHours: number;
+  Status: string;
+  Schedule: string;
+  LastRun: string;
+  Cost: string;
+  HasIndicator: boolean;
 }
 
 export interface Project {

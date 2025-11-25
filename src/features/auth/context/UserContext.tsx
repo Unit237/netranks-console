@@ -7,6 +7,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
+import { DUMMY_USER } from "../../../app/utils/constant";
 import type { UserData } from "../@types";
 import { getUser } from "../services/authService";
 
@@ -17,22 +18,6 @@ interface UserContextType {
   error: Error | null;
   refreshUser: () => Promise<void>;
 }
-
-const DUMMY_USER = {
-  Id: 149,
-  Name: "John Doe",
-  EMail: "john.doe@example.com",
-  Projects: [
-    {
-      Id: 161,
-      Name: "Test Project",
-      IsActive: true,
-      IsOwner: true,
-      IsEditor: false,
-      Surveys: [],
-    },
-  ],
-};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
