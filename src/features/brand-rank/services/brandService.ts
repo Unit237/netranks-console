@@ -308,6 +308,33 @@ export const editQuestion = async (questionId: number, question: string) => {
   }
 };
 
+export const createProject = async (projectName: string) => {
+  try {
+    // await apiClient.post(`api/CreateProject`, projectName);
+
+    await new Promise((resolve) => setTimeout(resolve, 4000));
+
+    return 1110;
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to create project:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to create project. Please try again."
+    );
+  }
+};
+
 export const searchBrand = async (query: string) => {
   if (!query.trim()) return null;
 

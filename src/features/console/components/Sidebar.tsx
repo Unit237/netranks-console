@@ -75,13 +75,13 @@ const Sidebar = () => {
     navigate(`/console/project/${projectId}`);
   };
 
-  const handleNewTab = () => {
+  const handleNewProject = () => {
     addTab({
-      name: "untitled survey",
-      path: "/console/brand",
-      headerName: "untitled survey",
+      name: "untitled project",
+      path: "/console/new-project",
+      headerName: "untitled project",
     });
-    navigate("/console/brand");
+    navigate("/console/new-project");
   };
 
   const handleSupportClick = () => {
@@ -190,7 +190,7 @@ const Sidebar = () => {
                 <Search className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               </button>
               <button
-                onClick={handleNewTab}
+                onClick={handleNewProject}
                 className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
                 title="Add new tab"
               >
@@ -200,23 +200,28 @@ const Sidebar = () => {
           </div>
           <div className="space-y-1 max-h-64 overflow-y-auto">
             {user?.Projects && user.Projects.length > 0 ? (
-              user.Projects.map((project) => (
-                <button
-                  key={project.Id}
-                  onClick={() =>
-                    handleProjectClick(
-                      project.Id,
-                      project.Name || "Untitled Project",
-                      project.Name || "Untitled Project"
-                    )
-                  }
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
-                >
-                  <span className="flex-1 truncate">
-                    {project.Name || "Untitled Project"}
-                  </span>
-                </button>
-              ))
+              user.Projects.map((project) => {
+                if (project.Id === 1110) {
+                  return null;
+                }
+                return (
+                  <button
+                    key={project.Id}
+                    onClick={() =>
+                      handleProjectClick(
+                        project.Id,
+                        project.Name || "Untitled Project",
+                        project.Name || "Untitled Project"
+                      )
+                    }
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left"
+                  >
+                    <span className="flex-1 truncate">
+                      {project.Name || "Untitled Project"}
+                    </span>
+                  </button>
+                );
+              })
             ) : (
               <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
                 No projects

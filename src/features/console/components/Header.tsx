@@ -23,7 +23,6 @@ const Header = () => {
 
   const handleCloseTab = (e: React.MouseEvent, tabId: string) => {
     e.stopPropagation();
-    closeTab(tabId);
 
     // If closing active tab, navigate to the new active tab or dashboard
     if (activeTabId === tabId) {
@@ -34,9 +33,11 @@ const Header = () => {
         const newActiveTab = remainingTabs[newActiveIndex];
         navigate(newActiveTab.path);
       } else {
-        navigate("/console/dashboard");
+        navigate("/console");
       }
     }
+
+    closeTab(tabId);
   };
 
   const handleCloseAllTabs = () => {
@@ -93,7 +94,16 @@ const Header = () => {
                 </button>
               );
             })}
+            <button
+              onClick={handleAddTab}
+              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0"
+              aria-label="Add new tab"
+              title="Add new tab"
+            >
+              <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
           </div>
+
           {tabs.length > 1 && (
             <button
               onClick={handleCloseAllTabs}
@@ -105,14 +115,6 @@ const Header = () => {
           )}
         </>
       )}
-      <button
-        onClick={handleAddTab}
-        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0"
-        aria-label="Add new tab"
-        title="Add new tab"
-      >
-        <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-      </button>
     </div>
   );
 };

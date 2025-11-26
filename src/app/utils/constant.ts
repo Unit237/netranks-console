@@ -89,6 +89,14 @@ export const DUMMY_USER: UserData = {
       IsEditor: false,
       Surveys: surveys.slice(2, 5), // Subset
     },
+    {
+      Id: 1110,
+      Name: "Test survey",
+      IsActive: true,
+      IsOwner: false,
+      IsEditor: false,
+      Surveys: [],
+    },
   ],
 };
 
@@ -200,5 +208,20 @@ export const BRAND_DATA: BrandData[] = [
       "What frustrates users most when using Wavepay?",
       "What features do users want added to Wavepay?",
     ],
+  },
+  {
+    Id: 6,
+    BrandName: "New project",
+    DescriptionOfTheBrand: "",
+    DescriptionOfTheBrandShort: "",
+    DescriptionOfTheQuestion: "",
+    DescriptionOfTheQuestionShort: "",
+    QueryType: "",
+    PasswordOne: null,
+    PasswordTwo: null,
+    WebsiteOfTheBrand: "",
+    iterations: 0,
+    runsPerMonth: 0,
+    Questions: [],
   },
 ];

@@ -13,6 +13,7 @@ import Alerts from "../../features/console/pages/Alerts";
 import Console from "../../features/console/pages/Console";
 import Dashboard from "../../features/console/pages/Dashboard";
 import Members from "../../features/console/pages/Members";
+import NewProject from "../../features/console/pages/NewProject";
 import NewSurvey from "../../features/console/pages/NewSurvey";
 import Project from "../../features/console/pages/Project";
 import Settings from "../../features/console/pages/Settings";
@@ -53,6 +54,7 @@ const Router = () => {
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
         <Route path="new-survey" element={<NewSurvey />} />
+        <Route path="new-project" element={<NewProject />} />
         <Route path="review-question" element={<PricingAndQuestion />} />
       </Route>
     </Routes>
