@@ -14,12 +14,7 @@ const Questions: React.FC = () => {
   const [searchParams] = useSearchParams();
   const paramQuestionRaw = (searchParams.get("question") ?? "").trim();
   const hasParamQuestion = paramQuestionRaw.length >= 3;
-  const {
-    selectedBrand,
-    setSelectedBrand,
-    query,
-    setQuery: setQueryState,
-  } = useBrand();
+  const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
 
   const [survey, setSurvey] = useState<BrandData | null>(null);
@@ -37,6 +32,8 @@ const Questions: React.FC = () => {
   const [hoveredQuestion, setHoveredQuestion] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastFetchedBrandIdRef = useRef<string | null>(null);
+  const lastFetchedQueryRef = useRef<string | null>(null);
 
   const questions = survey?.Questions ?? [];
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
@@ -49,6 +46,18 @@ const Questions: React.FC = () => {
       return;
     }
 
+    // Determine what we're fetching
+    const brandId = selectedBrand?.brandId ?? null;
+    const queryToFetch = hasParamQuestion ? paramQuestionRaw : query;
+
+    // Skip if we've already fetched for this brand/query
+    if (
+      (brandId && brandId === lastFetchedBrandIdRef.current) ||
+      (queryToFetch && queryToFetch === lastFetchedQueryRef.current && !brandId)
+    ) {
+      return;
+    }
+
     (async () => {
       try {
         setLoading(true);
@@ -58,32 +67,30 @@ const Questions: React.FC = () => {
 
         if (hasParamQuestion) {
           surveyData = await fetchQueryQuestions(paramQuestionRaw);
+          lastFetchedQueryRef.current = paramQuestionRaw;
+          lastFetchedBrandIdRef.current = null;
         } else if (selectedBrand) {
           surveyData = await fetchBrandQuestions(selectedBrand);
+          lastFetchedBrandIdRef.current = selectedBrand.brandId;
+          lastFetchedQueryRef.current = null;
+
+          // Only update selectedBrand if description actually changed
+          const newDescription = surveyData.DescriptionOfTheBrandShort ?? "";
+          if (selectedBrand.description !== newDescription) {
+            setSelectedBrand({
+              ...selectedBrand,
+              description: newDescription,
+            });
+          }
         } else if (query) {
           surveyData = await fetchQueryQuestions(query);
+          lastFetchedQueryRef.current = query;
+          lastFetchedBrandIdRef.current = null;
         } else {
           throw new Error("No data available to fetch survey");
         }
 
         setSurvey(surveyData);
-
-        // Update brand description if available
-        if (
-          !hasParamQuestion &&
-          selectedBrand &&
-          surveyData.DescriptionOfTheBrandShort
-        ) {
-          setSelectedBrand({
-            ...selectedBrand,
-            description: surveyData.DescriptionOfTheBrandShort,
-          });
-        }
-
-        // Clear query if this is a brand-type survey
-        if (!hasParamQuestion && surveyData.QueryType === "brand") {
-          // setQueryState("");
-        }
       } catch (error) {
         console.error("Failed to fetch survey data:", error);
         const errorMessage =
@@ -99,11 +106,10 @@ const Questions: React.FC = () => {
   }, [
     hasParamQuestion,
     paramQuestionRaw,
-    selectedBrand,
+    selectedBrand?.brandId,
     query,
     navigate,
     setSelectedBrand,
-    setQueryState,
   ]);
 
   // Handle click outside to cancel confirmation
@@ -199,7 +205,7 @@ const Questions: React.FC = () => {
   const handleConfirmDelete = (index: number) => {
     const question = survey?.Questions?.[index];
     if (question) {
-      setLastDeletedQuestion({ index, question });
+      setLastDeletedQuestion({ index, question: question.Text });
       setDeletedQuestions((prev) => new Set([...prev, index]));
       setShowToast(true);
       setConfirmingDelete(null);
@@ -297,7 +303,9 @@ const Questions: React.FC = () => {
                         </span>
 
                         {/* Question text */}
-                        <p className="text-sm w-[500px] leading-5 m-0">{q}</p>
+                        <p className="text-sm w-[500px] leading-5 m-0">
+                          {q.Text}
+                        </p>
                       </div>
 
                       {/* Trash icon or confirm button - fixed width container */}

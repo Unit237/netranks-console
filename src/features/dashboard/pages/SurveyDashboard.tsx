@@ -21,6 +21,7 @@ const SurveyDashboard: React.FC = () => {
       try {
         setLoading(true);
         const response = await getSurveyRunForDashboard(surveyRunId, p1, p2);
+        console.log(response);
         setData(response);
       } catch (error) {
         console.error("Failed to fetch survey dashboard data:", error);
@@ -187,7 +188,7 @@ const SurveyDashboard: React.FC = () => {
                                     key={brandIndex}
                                     className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                                   >
-                                    {brand}
+                                    {brand.Name} +{brand.Count}
                                   </span>
                                 )
                               )}

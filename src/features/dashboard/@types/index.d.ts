@@ -1,9 +1,7 @@
-export interface SurveyStatsResponse {
-  SurveyStatsOverview: SurveyStatsOverview;
-  TopBrandsInAiAnswers: TopBrand[];
-  TopCitationsInAiAnswers: TopCitation[];
-  SampleAiAnswerSnippets: AiAnswerSnippet[];
-  VisibilityTable: VisibilityEntry[];
+export interface VisibilityTrend {
+  Date: string; // ISO string
+  NumberOfAnswersMentioningThisBrand: number;
+  TotalNumberOfAnswers: number;
 }
 
 export interface SurveyStatsOverview {
@@ -24,13 +22,31 @@ export interface TopCitation {
 }
 
 export interface AiAnswerSnippet {
+  Id: number;
+  Date: string; // ISO string
   Question: string;
   AnswerUrl: string;
 }
 
-export interface VisibilityEntry {
+export interface MentionedBrand {
+  Id: number;
+  Name: string;
+  Count: number;
+}
+
+export interface VisibilityTableRow {
   Prompt: string;
-  BrandsMentioned: string[];
+  BrandsMentioned: MentionedBrand[];
   YourBrandMentioned: boolean;
-  Position: number | null;
+  Position: number;
+}
+
+export interface SurveyStatsResponse {
+  VisibilityTrendsOverTime: VisibilityTrend[];
+  VisibilityScore: number;
+  SurveyStatsOverview: SurveyStatsOverview;
+  TopBrandsInAiAnswers: TopBrand[];
+  TopCitationsInAiAnswers: TopCitation[];
+  SampleAiAnswerSnippets: AiAnswerSnippet[];
+  VisibilityTable: VisibilityTableRow[];
 }
