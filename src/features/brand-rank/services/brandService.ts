@@ -71,13 +71,13 @@ export const fetchBrandQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    // const questions = await apiClient.post<BrandData>(
-    //   `api/CreateSurveyFromBrand`,
-    //   brand,
-    //   options
-    // );
+    const questions = await apiClient.post<BrandData>(
+      `api/CreateSurveyFromBrand`,
+      brand,
+      options
+    );
 
-    const questions = await searchBrand(brand.name);
+    // const questions = await searchBrand(brand.name);
 
     if (!questions) throw new Error("No questions found");
 
@@ -109,13 +109,13 @@ export const fetchQueryQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    // const questions = await apiClient.post<BrandData>(
-    //   `api/CreateSurveyFromQuery`,
-    //   query,
-    //   options
-    // );
+    const questions = await apiClient.post<BrandData>(
+      `api/CreateSurveyFromQuery`,
+      query,
+      options
+    );
 
-    const questions = await searchBrand(query);
+    // const questions = await searchBrand(query);
 
     if (!questions) throw new Error("No questions found");
 
@@ -221,17 +221,14 @@ export const getSurveyRun = async (
 export const addQuestion = async (
   surveyId: number,
   question: string
-): Promise<Record<string, unknown>> => {
+): Promise<number> => {
   try {
-    const newQuestionId = await apiClient.post(`api/AddQuestion`, {
+    const newQuestionId: number = await apiClient.post(`api/AddQuestion`, {
       SurveyId: surveyId,
-      question: question,
+      Question: question,
     });
 
-    return {
-      Id: newQuestionId,
-      Questions: question,
-    };
+    return newQuestionId;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {
@@ -275,19 +272,19 @@ export const deleteQuestion = async (questionId: string): Promise<void> => {
   }
 };
 
-export const editQuestion = async (questionId: number, question: string) => {
+export const editQuestion = async (
+  questionId: number,
+  question: string
+): Promise<number> => {
   try {
-    const editQuestionId = await apiClient.put(
+    const editQuestionId: number = await apiClient.put(
       `api/EditQuestion/${questionId}`,
       {
         question,
       }
     );
 
-    return {
-      Id: editQuestionId,
-      Questions: question,
-    };
+    return editQuestionId;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {
@@ -342,7 +339,7 @@ export const searchBrand = async (query: string) => {
 
   if (!query.trim()) return null;
 
-  const lowerQuery = query.toLowerCase();
+  // const lowerQuery = query.toLowerCase();
 
   return BRAND_DATA.find((brand) => {
     const fields = [
@@ -355,8 +352,6 @@ export const searchBrand = async (query: string) => {
       ...(brand.Questions || []),
     ];
 
-    return fields.some(
-      (field) => field && field.toLowerCase().includes(lowerQuery)
-    );
+    return fields.some((field) => field && field);
   });
 };

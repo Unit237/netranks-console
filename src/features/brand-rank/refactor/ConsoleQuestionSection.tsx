@@ -1,6 +1,11 @@
 import { Check, MousePointerClick, Plus, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { BrandData } from "../@types";
+import type { BrandData, Question } from "../@types";
+import {
+  addQuestion,
+  deleteQuestion,
+  editQuestion,
+} from "../services/brandService";
 
 interface ConsoleQuestionSectionProps {
   survey: BrandData;
@@ -14,7 +19,9 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestionInput, setEditQuestionInput] = useState("");
-  const [questions, setQuestions] = useState<string[]>(survey.Questions ?? []);
+  const [questions, setQuestions] = useState<Question[]>(
+    survey.Questions ?? []
+  );
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
@@ -92,9 +99,9 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     const question = questions[index];
     if (question) {
       try {
-        // await deleteQuestion(index.toString());
+        await deleteQuestion(index.toString());
 
-        setLastDeletedQuestion({ index, question });
+        setLastDeletedQuestion({ index, question: question.Text });
         setDeletedQuestions((prev) => new Set([...prev, index]));
         setToastType("delete");
         setShowToast(true);
@@ -125,17 +132,21 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      // const newQuestionId = await addQuestion(survey.Id, trimmedQuestion);
+      const newQuestionId: number = await addQuestion(
+        survey.Id,
+        trimmedQuestion
+      );
 
-      // if (newQuestionId) {
-
-      // }
-
-      setQuestions((prev) => [...prev, trimmedQuestion]);
-      setNewQuestionInput("");
-      setShowAddQuestion(false);
-      setToastType("add");
-      setShowToast(true);
+      if (newQuestionId) {
+        setQuestions((prev) => [
+          ...prev,
+          { Id: newQuestionId, Text: trimmedQuestion },
+        ]);
+        setNewQuestionInput("");
+        setShowAddQuestion(false);
+        setToastType("add");
+        setShowToast(true);
+      }
     } catch (error) {
       console.error("Failed to add question:", error);
     } finally {
@@ -151,11 +162,11 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      // await editQuestion(index, trimmedQuestion);
+      await editQuestion(index, trimmedQuestion);
 
       setQuestions((prev) => {
         const updated = [...prev];
-        updated[index] = trimmedQuestion;
+        updated[index].Text = trimmedQuestion;
         return updated;
       });
       setEditingIndex(null);
@@ -285,13 +296,13 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                         <div className="flex items-center justify-between w-full h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
                           <div
                             className="flex items-start gap-6 flex-1 cursor-pointer px-4"
-                            onClick={() => handleClickQuestion(i, q)}
+                            onClick={() => handleClickQuestion(i, q.Text)}
                           >
                             <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400">
                               {String(i + 1)}.
                             </span>
                             <p className="text-sm w-[440px] leading-5 m-0 text-gray-900 dark:text-gray-100">
-                              {q}
+                              {q.Text}
                             </p>
                           </div>
 

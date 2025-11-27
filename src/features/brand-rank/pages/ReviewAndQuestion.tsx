@@ -28,7 +28,7 @@ const ReviewAndQuestion: React.FC = () => {
   useEffect(() => {
     // Validate that we have data to fetch
     if (!selectedBrand && !query) {
-      navigate("/");
+      navigate("/console");
       return;
     }
 

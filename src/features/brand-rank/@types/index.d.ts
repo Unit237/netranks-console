@@ -20,13 +20,13 @@ export type BrandData = {
   PasswordOne: string | null;
   PasswordTwo: string | null;
   QueryType: string | null;
-  Questions: string[];
+  Questions: Question[];
   WebsiteOfTheBrand: string | null;
   iterations?: number;
   runsPerMonth?: number;
 };
 
-export type Question = {
+export interface Question {
   Id: number;
-  Question: string;
-};
+  Text: string;
+}

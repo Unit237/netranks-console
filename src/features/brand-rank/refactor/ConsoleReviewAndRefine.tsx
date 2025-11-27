@@ -28,7 +28,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   questionCount,
 }) => {
   const [surveyName, setSurveyName] = useState(
-    survey.BrandName || "New Pricing Plan – Sentiment Analysis"
+    survey.DescriptionOfTheBrandShort || "New Pricing Plan – Sentiment Analysis"
   );
   const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);

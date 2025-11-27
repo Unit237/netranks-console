@@ -1,58 +1,12 @@
-import { useState } from "react";
-import OptimizePageTab from "../../dashboard/pages/OptimizePageTab";
-import OverviewPageTab from "../../dashboard/pages/OverviewPageTab";
-import QuestionPageTab from "../../dashboard/pages/QuestionPageTab";
-
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState<
-    "Overview" | "Questions" | "Optimize"
-  >("Overview");
-
   return (
-    <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
-      <div className="w-full mx-auto p-6">
-        {/* Header with tabs */}
-        <div className="mb-6">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab("Overview")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "Overview"
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab("Questions")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "Questions"
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              Questions
-            </button>
-            <button
-              onClick={() => setActiveTab("Optimize")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "Optimize"
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              Optimize
-            </button>
-          </div>
-        </div>
-
-        {activeTab === "Overview" && <OverviewPageTab />}
-
-        {activeTab === "Questions" && <QuestionPageTab />}
-
-        {activeTab === "Optimize" && <OptimizePageTab />}
-      </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        Dashboard
+      </h1>
+      <p className="text-gray-600 dark:text-gray-400">
+        Your dashboard will appear here
+      </p>
     </div>
   );
 };

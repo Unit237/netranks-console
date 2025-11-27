@@ -19,6 +19,7 @@ import Project from "../../features/console/pages/Project";
 import Settings from "../../features/console/pages/Settings";
 import Support from "../../features/console/pages/Support";
 import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
+import SurveyDetails from "../../features/project/pages/SurveyDetails";
 
 const Router = () => {
   return (
@@ -56,6 +57,7 @@ const Router = () => {
         <Route path="new-survey" element={<NewSurvey />} />
         <Route path="new-project" element={<NewProject />} />
         <Route path="review-question" element={<PricingAndQuestion />} />
+        <Route path="project/:surveyId" element={<SurveyDetails />} />
       </Route>
     </Routes>
   );
