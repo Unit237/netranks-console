@@ -100,7 +100,7 @@ const Sidebar = () => {
       }`}
     >
       {/* User Section */}
-      <div className="p-4">
+      <div className="px-4 py-2">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex-1">
