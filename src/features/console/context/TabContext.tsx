@@ -26,6 +26,8 @@ interface TabContextType {
   closeAllTabs: () => void;
   setActiveTab: (tabId: string) => void;
   updateTabName: (tabId: string, name: string) => void;
+  replaceTab: (currentTabId: string | null, newTab: Omit<Tab, "id">) => string;
+  navigateToTab: (path: string, tabName?: string) => void;
 }
 
 const TabContext = createContext<TabContextType | undefined>(undefined);
@@ -134,6 +136,74 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
     setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, name } : t)));
   }, []);
 
+  const replaceTab = useCallback(
+    (currentTabId: string | null, newTab: Omit<Tab, "id">): string => {
+      let newTabId: string;
+
+      // Check if tab with same path already exists
+      setTabs((prev) => {
+        const existingTab = prev.find((t) => t.path === newTab.path);
+        if (existingTab) {
+          newTabId = existingTab.id;
+          // If replacing current tab, close it first
+          if (currentTabId && currentTabId !== existingTab.id) {
+            return prev.filter((t) => t.id !== currentTabId);
+          }
+          return prev;
+        }
+
+        // Create new tab
+        const tab: Tab = {
+          ...newTab,
+          id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        };
+        newTabId = tab.id;
+
+        // If replacing current tab, remove it and add new one
+        if (currentTabId) {
+          return prev.filter((t) => t.id !== currentTabId).concat(tab);
+        }
+
+        // Otherwise just add new tab
+        return [...prev, tab];
+      });
+
+      // Set active tab after state update to avoid infinite loops
+      setActiveTabIdState(newTabId!);
+
+      return newTabId!;
+    },
+    []
+  );
+
+  const navigateToTab = useCallback((path: string, tabName?: string) => {
+    let tabId: string | null = null;
+
+    setTabs((prev) => {
+      const existingTab = prev.find((t) => t.path === path);
+      if (existingTab) {
+        tabId = existingTab.id;
+        return prev;
+      }
+
+      // Create new tab if it doesn't exist
+      const name = tabName || path.split("/").pop() || "New Tab";
+      const newTab: Tab = {
+        name,
+        path,
+        headerName: name,
+        id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      tabId = newTab.id;
+      return [...prev, newTab];
+    });
+
+    // Set active tab after state update to avoid infinite loops
+    if (tabId) {
+      setActiveTabIdState(tabId);
+    }
+  }, []);
+
   return (
     <TabContext.Provider
       value={{
@@ -144,6 +214,8 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
         closeAllTabs,
         setActiveTab,
         updateTabName,
+        replaceTab,
+        navigateToTab,
       }}
     >
       {children}

@@ -10,11 +10,13 @@ import {
 interface ConsoleQuestionSectionProps {
   survey: BrandData;
   onQuestionCountChange?: (count: number) => void;
+  onQuestionsChange?: (questions: Question[]) => void;
 }
 
 const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   survey,
   onQuestionCountChange,
+  onQuestionsChange,
 }) => {
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -89,7 +91,11 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   useEffect(() => {
     const activeQuestionCount = questions.length - deletedQuestions.size;
     onQuestionCountChange?.(activeQuestionCount);
-  }, [questions, deletedQuestions, onQuestionCountChange]);
+
+    // Expose current questions (filtered to exclude deleted ones)
+    const activeQuestions = questions.filter((_, index) => !deletedQuestions.has(index));
+    onQuestionsChange?.(activeQuestions);
+  }, [questions, deletedQuestions, onQuestionCountChange, onQuestionsChange]);
 
   const handleDeleteQuestion = (index: number) => {
     setConfirmingDelete(index);

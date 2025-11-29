@@ -7,11 +7,19 @@ import {
   Plus,
 } from "lucide-react";
 import React, { useState } from "react";
-import type { BrandData } from "../@types";
+import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTabs } from "../../console/context/TabContext";
+import {
+  changeSurveySchedule,
+  createSurvey,
+} from "../../project/services/projectService";
+import type { BrandData, Question } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
   survey: BrandData;
   questionCount: number;
+  questions: Question[];
 }
 
 interface Model {
@@ -26,13 +34,18 @@ interface Model {
 const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   survey,
   questionCount,
+  questions,
 }) => {
+  const { projectId } = useParams<{ projectId: string }>();
   const [surveyName, setSurveyName] = useState(
     survey.DescriptionOfTheBrandShort || "New Pricing Plan – Sentiment Analysis"
   );
   const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
   const [showModelsDropdown, setShowModelsDropdown] = useState(false);
+
+  const navigate = useNavigate();
+  const { activeTabId, replaceTab, navigateToTab } = useTabs();
 
   const [models, setModels] = useState<Model[]>([
     {
@@ -77,6 +90,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       desc: "Runs once, immediately after launch",
       duration: "",
       numberOfRuns: 1,
+      period: 24 * 0,
     },
     {
       id: "weekly-run",
@@ -85,6 +99,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       desc: "Runs automatically every Monday",
       duration: "monthly",
       numberOfRuns: 4,
+      period: 24 * 7,
     },
     {
       id: "daily-run",
@@ -93,16 +108,19 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       desc: "Runs automatically every day",
       duration: "monthly",
       numberOfRuns: 30,
+      period: 24 * 1,
     },
   ];
-  const questions = questionCount || survey.Questions.length || 11;
+
+  const questionCountValue = questionCount || survey.Questions.length || 11;
   const totalIterations = models.reduce(
     (sum, m) => sum + (m.enabled ? m.iterations : 0),
     0
   );
 
   // Get runsPerMonth from selected frequency, fallback to survey data
-  const selectedFrequencyData = frequencies.find((f) => f.id === frequency);
+  const selectedFrequencyData =
+    frequencies.find((f) => f.id === frequency) || frequencies[0];
   const runsPerMonth =
     selectedFrequencyData?.numberOfRuns || survey.runsPerMonth || 4;
 
@@ -114,7 +132,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     ) / totalIterations;
 
   const monthlyCost =
-    questions * totalIterations * runsPerMonth * costPerPrompt;
+    questionCountValue * totalIterations * runsPerMonth * costPerPrompt;
 
   const enabledModelsCount = models.filter((m) => m.enabled).length;
 
@@ -146,11 +164,11 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const selectedData = {
       surveyName,
       frequency,
-      questions,
+      questions: questionCountValue,
       totalIterations,
       runsPerMonth,
       costPerPrompt,
@@ -163,7 +181,109 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           costPerPrompt: m.costPerPrompt,
         })),
     };
-    console.log("Selected Data:", selectedData);
+
+    console.log(selectedData);
+
+    if (!projectId) {
+      console.error("Project ID not found");
+      return;
+    }
+
+    try {
+      console.log(selectedFrequencyData);
+      const schedule = await changeSurveySchedule(
+        survey.Id,
+        selectedFrequencyData?.period
+      );
+
+      if (schedule) {
+        console.log("Schedule updated:", schedule);
+
+        // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
+        const questionsToSend =
+          questions.length > 0 ? questions : survey.Questions;
+
+        const surveyId = await createSurvey(
+          Number(projectId),
+          selectedFrequencyData?.period,
+          surveyName,
+          questionsToSend
+        );
+
+        if (surveyId) {
+          const surveyPath = `/console/survey/${surveyId}`;
+
+          // Show toast notification with View button at the bottom
+          toast.custom(
+            (t) => (
+              <div
+                className={`${
+                  t.visible ? "animate-enter" : "animate-leave"
+                } fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full bg-black shadow-lg rounded-[20px] pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+                style={{
+                  animation: t.visible
+                    ? "slideInUp 0.3s ease-out"
+                    : "slideOutDown 0.2s ease-in",
+                }}
+              >
+                <div className="flex-1 w-0 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <svg
+                            className="h-5 w-5 text-green-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <p className="text-sm font-medium text-white">
+                          Survey created successfully
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        toast.dismiss(t.id);
+                        // Replace current tab with survey tab seamlessly
+                        replaceTab(activeTabId, {
+                          name: surveyName,
+                          path: surveyPath,
+                          headerName: surveyName,
+                        });
+                        // Navigate to the survey page
+                        navigate(surveyPath);
+                      }}
+                      className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ),
+            {
+              duration: 6000,
+              position: "bottom-center",
+            }
+          );
+
+          // Navigate to project page and ensure tab is set
+          navigateToTab(`/console/project/${projectId}`);
+          navigate(`/console/project/${projectId}`);
+        }
+      }
+    } catch (error) {}
   };
 
   return (
@@ -189,9 +309,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           <div className="mb-6 border border-gray-200 bg-gray-50 rounded-[20px]">
             <div className="flex items-center justify-between mb-3 border border-orange-500 rounded-[20px] bg-red-50 py-2 px-4">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-xs">
+                {/* <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-xs">
                   ⚙️
-                </div>
+                </div> */}
                 <span className="text-gray-700 font-medium">Custom run:</span>
                 <span className="text-xl font-semibold">
                   $
@@ -211,8 +331,8 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                 ${costPerPrompt.toFixed(2)} / prompt
               </div>
               <div className="text-gray-500 text-sm mt-1">
-                {questions} questions × {totalIterations} total iterations ×{" "}
-                {runsPerMonth} runs/month
+                {questionCountValue} questions × {totalIterations} total
+                iterations × {runsPerMonth} runs/month
               </div>
             </div>
           </div>

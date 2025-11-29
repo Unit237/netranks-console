@@ -8,13 +8,16 @@ import {
   Settings2,
   SlidersHorizontal,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useUser } from "../../auth/context/UserContext";
+import type { Project, Survey } from "../../auth/@types";
 import { useTabs } from "../../console/context/TabContext";
+import { getProjectById } from "../services/projectService";
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { user } = useUser();
+
+  const [project, setProject] = useState<Project | null>(null);
 
   const navigate = useNavigate();
 
@@ -23,22 +26,31 @@ const ProjectDetails = () => {
   const handleCreateNewSurvey = () => {
     addTab({
       name: "New Survey",
-      path: "/console/new-survey",
+      path: `/console/new-survey/${projectId}`,
       headerName: "New Survey",
     });
-    navigate("/console/new-survey");
+    navigate(`/console/new-survey/${projectId}`);
   };
 
-  if (!user) {
-    return <>Loading...</>;
-  }
+  const fetchProduct = async () => {
+    try {
+      const res = await getProjectById(parseInt(projectId || "0", 10));
 
-  const project = user?.Projects?.find(
-    (p) => p.Id === parseInt(projectId || "0", 10)
-  );
+      setProject(res);
+      return res;
+    } catch (error) {
+      console.error("Failed to fetch product:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProduct();
+  }, []);
+
+  console.log(project);
 
   if (!project) {
-    return <>Project not found</>;
+    return <>Loading...</>;
   }
 
   const getStatusStyles = (status: string) => {
@@ -80,6 +92,15 @@ const ProjectDetails = () => {
       default:
         return "";
     }
+  };
+
+  const surveyDetails = (survey: Survey) => {
+    addTab({
+      name: survey.Name || "Survey Details",
+      path: `/console/survey/${survey.Id}`,
+      headerName: survey.Name || "Survey Details",
+    });
+    navigate(`/console/survey/${survey.Id}`);
   };
 
   return (
@@ -223,6 +244,7 @@ const ProjectDetails = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {project.Surveys.map((survey) => (
                   <tr
+                    onClick={() => surveyDetails(survey)}
                     key={survey.Id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   >
@@ -259,7 +281,7 @@ const ProjectDetails = () => {
                       {survey.LastRun}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {survey.Cost}
+                      {survey.CostDisplay}
                     </td>
                   </tr>
                 ))}

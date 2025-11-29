@@ -25,23 +25,15 @@ const Console = () => {
     if (tabs.length === 0) return;
 
     const currentTab = tabs.find((tab) => tab.path === location.pathname);
-    if (currentTab && currentTab.id !== activeTabId) {
-      setActiveTab(currentTab.id);
-    } else if (!currentTab && location.pathname.startsWith("/console")) {
-      // If navigating to a console route without a tab, create one
-      const pathSegments = location.pathname.split("/");
-      const routeName = pathSegments[pathSegments.length - 1] || "dashboard";
-      const tabName =
-        routeName.charAt(0).toUpperCase() +
-        routeName.slice(1).replace(/-/g, " ");
-
-      addTab({
-        name: tabName,
-        path: location.pathname,
-        headerName: tabName,
-      });
+    if (currentTab) {
+      // Only update if the active tab is different to prevent infinite loops
+      if (currentTab.id !== activeTabId) {
+        setActiveTab(currentTab.id);
+      }
     }
-  }, [location.pathname, tabs, activeTabId, setActiveTab, addTab]);
+    // Don't auto-create tabs here - let components handle tab creation explicitly
+    // This prevents infinite loops when navigating programmatically
+  }, [location.pathname, tabs, activeTabId, setActiveTab]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-900">

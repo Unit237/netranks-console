@@ -84,13 +84,13 @@ const Header = () => {
                   <span className="max-w-[120px] truncate">
                     {tab.headerName}
                   </span>
-                  <button
+                  <div
                     onClick={(e) => handleCloseTab(e, tab.id)}
                     className="ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                     aria-label="Close tab"
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </div>
                 </button>
               );
             })}

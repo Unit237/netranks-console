@@ -7,14 +7,17 @@ const SERVER_URL = import.meta.env.VITE_PROD
   ? SERVER
   : ["/", SERVER][devServerId];
 
+const API_BASE_URL = "https://qmnga6hmp3.eu-central-1.awsapprunner.com";
+
 export default {
   SERVER_URL,
   netranksDomain: netranksDomain,
+  API_BASE_URL,
 
   netranksSessionKey: {
     words: [1313166418, 1095650131, 1600082757, 1129465172],
     sigBytes: 16,
-  }, // CryptoJS.enc.Utf8.parse("NETRANKS__SECRET")
+  },
 
   Colors: {
     Blue: "#008AD0",

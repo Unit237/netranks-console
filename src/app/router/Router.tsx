@@ -54,10 +54,13 @@ const Router = () => {
         <Route path="support" element={<Support />} />
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
-        <Route path="new-survey" element={<NewSurvey />} />
+        <Route path="new-survey/:projectId" element={<NewSurvey />} />
         <Route path="new-project" element={<NewProject />} />
-        <Route path="review-question" element={<PricingAndQuestion />} />
-        <Route path="project/:surveyId" element={<SurveyDetails />} />
+        <Route
+          path="review-questions/:projectId"
+          element={<PricingAndQuestion />}
+        />
+        <Route path="survey/:surveyId" element={<SurveyDetails />} />
       </Route>
     </Routes>
   );

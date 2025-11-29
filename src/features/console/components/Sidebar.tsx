@@ -2,7 +2,6 @@ import {
   Bell,
   ChevronDown,
   HelpCircle,
-  LayoutDashboard,
   Plus,
   Search,
   Settings,
@@ -21,12 +20,12 @@ const Sidebar = () => {
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
 
   const sidebarLinks = [
-    {
-      icon: LayoutDashboard,
-      label: "Dashboard",
-      path: "/console",
-      headerName: "Q3 Overview",
-    },
+    // {
+    //   icon: LayoutDashboard,
+    //   label: "Dashboard",
+    //   path: "/console",
+    //   headerName: "Q3 Overview",
+    // },
     {
       icon: Bell,
       label: "Alerts",

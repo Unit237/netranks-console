@@ -1,11 +1,24 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { BrandOption } from "../../brand-rank/@types";
 import AutocompleteBrand from "../../brand-rank/components/AutocompleteBrand";
 import { useBrand } from "../../brand-rank/context/BrandContext";
+import { useTabs } from "../context/TabContext";
 
 const NewSurvey = () => {
+  const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { setSelectedBrand, setQuery } = useBrand();
+  const { activeTabId, replaceTab } = useTabs();
+
+  const moveToTab = () => {
+    replaceTab(activeTabId, {
+      name: "Review Questions",
+      path: `/console/review-questions/${projectId}`,
+      headerName: "Review Questions",
+    });
+
+    navigate(`/console/review-questions/${projectId}`);
+  };
 
   const onSelect = (brand: BrandOption | string) => {
     if (typeof brand === "string") {
@@ -16,7 +29,7 @@ const NewSurvey = () => {
       setSelectedBrand(brand);
     }
 
-    navigate("/console/review-question");
+    moveToTab();
   };
 
   return (

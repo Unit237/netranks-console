@@ -8,6 +8,7 @@ export interface Survey {
   LastRun: string;
   Cost: string;
   HasIndicator: boolean;
+  CostDisplay?: string;
 }
 
 export interface Project {

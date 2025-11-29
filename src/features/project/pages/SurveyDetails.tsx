@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import OptimizePageTab from "../components/tabs/OptimizePageTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
 import QuestionPageTab from "../components/tabs/QuestionPageTab";
 
 const SurveyDetails = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  // const { projectId } = useParams<{ projectId: string }>();
   const [activeTab, setActiveTab] = useState<
     "Overview" | "Questions" | "Optimize"
   >("Overview");
