@@ -41,7 +41,7 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     <>
       {children}
       <Toaster
-        position="top-center"
+        position="bottom-center"
         toastOptions={{
           duration: 4000,
           className: "animate-enter-custom",

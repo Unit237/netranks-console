@@ -5,7 +5,6 @@ import ContentAttributionAnalyzer from "../refactor/ContentAttribute";
 
 const Prediction: React.FC = () => {
   const [activeTab, setActiveTab] = useState("brand");
-  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const TabContent = () => {
     if (activeTab === "brand") {
@@ -17,11 +16,7 @@ const Prediction: React.FC = () => {
   };
 
   return (
-    <div
-      className={`transition-colors duration-200 ${
-        theme === "dark" ? "dark bg-[#141414]" : ""
-      }`}
-    >
+    <div className={`transition-colors duration-200`}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-center mb-8">

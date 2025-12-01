@@ -307,11 +307,9 @@ export const editQuestion = async (
 
 export const createProject = async (projectName: string) => {
   try {
-    // await apiClient.post(`api/CreateProject`, projectName);
+    const projectId = await apiClient.post(`api/CreateNewProject`, projectName);
 
-    await new Promise((resolve) => setTimeout(resolve, 4000));
-
-    return 1110;
+    return projectId;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {

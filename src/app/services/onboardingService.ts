@@ -19,9 +19,9 @@ import { urlParams } from "../utils/urlUtils";
  */
 export async function createOnboardingSession(): Promise<void> {
   // Early return if token already exists
-  if (token.get()) {
-    return;
-  }
+  // if (token.get()) {
+  //   return;
+  // }
 
   try {
     // Step 1: Create visitor session and get IP/session identifier

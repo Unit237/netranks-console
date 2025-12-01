@@ -56,7 +56,7 @@ export class ApiError extends Error {
 }
 
 const axios = Axios.create({
-  timeout: 30000,
+  timeout: 60000,
   validateStatus: (_) => true,
 });
 

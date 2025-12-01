@@ -1,12 +1,16 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../../app/providers/ToastProvider";
+import { useUser } from "../../auth/context/UserContext";
 import { createProject } from "../../brand-rank/services/brandService";
 
 const NewProject = () => {
   const [projectName, setProjectName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
+  const { refreshUser } = useUser();
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -20,9 +24,20 @@ const NewProject = () => {
     try {
       const projectId = await createProject(projectName);
       setIsSubmitting(false);
+
+      toast.success({
+        title: "Success",
+        message: "Project created successfully",
+      });
+      refreshUser();
       navigate(`/console/project/${projectId}`);
     } catch (error) {
       console.error("Failed to create project:", error);
+      toast.error({
+        title: "Error",
+        message: "Failed to create project. Please try again.",
+      });
+      setIsSubmitting(false);
     }
   };
 

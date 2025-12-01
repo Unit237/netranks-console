@@ -1,4 +1,4 @@
-import { formatNumberOrNA } from "../../lib/utils";
+import { formatNumberOrNA } from "../../hooks/utils";
 
 const ShapSection: React.FC<{ shap: any }> = ({ shap }) => {
   if (!shap) return null;

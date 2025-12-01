@@ -1,11 +1,9 @@
-import OnboardingSessionInitializer from "./components/OnboardingSessionInitializer";
 import { AppProviders } from "./providers/AppProviders";
 import Router from "./router/Router";
 
 export default function App() {
   return (
     <AppProviders>
-      <OnboardingSessionInitializer />
       <Router />
     </AppProviders>
   );
