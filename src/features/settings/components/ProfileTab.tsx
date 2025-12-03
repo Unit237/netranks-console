@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail } from "lucide-react";
+import { useUser } from "../../auth/context/UserContext";
 
 const ProfileTab = () => {
-  const [name, setName] = useState("Ali");
-  const [email, setEmail] = useState("ali@baked.design");
+  const { user } = useUser();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [inAppNotifications, setInAppNotifications] = useState(true);
   const [notificationFrequency, setNotificationFrequency] = useState<"immediate" | "daily">("immediate");
+
+  // Initialize with user data when available
+  useEffect(() => {
+    if (user) {
+      setName(user.Name || "");
+      setEmail(user.EMail || "");
+    }
+  }, [user]);
 
   return (
     <div className="p-6 space-y-8">
