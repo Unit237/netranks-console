@@ -2,6 +2,7 @@ import { Check, Eye, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IoShareSocial } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTabs } from "../../console/context/TabContext";
 import { getSurveyRun } from "../services/brandService";
 
 export default function BrandRankSurveyRun() {
@@ -16,6 +17,7 @@ export default function BrandRankSurveyRun() {
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
   const [copied, setCopied] = useState(false);
+  const { addTab } = useTabs();
 
   useEffect(() => {
     tick();
@@ -40,6 +42,16 @@ export default function BrandRankSurveyRun() {
 
       if (p.Finished < total) {
         timeoutId.current = setTimeout(tick, 1500);
+      } else {
+        const path = `/console/dashboard/${surveyRunId}/${p1}/${p2}`;
+        // Survey is complete, navigate to console dashboard
+        navigate(path);
+
+        addTab({
+          name: "my first report",
+          path: path,
+          headerName: "my first report",
+        });
       }
     } catch (error) {
       console.error("Failed to get survey run progress", error);

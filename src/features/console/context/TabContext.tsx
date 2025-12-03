@@ -24,7 +24,7 @@ interface TabContextType {
   addTab: (tab: Omit<Tab, "id">) => string;
   closeTab: (tabId: string) => void;
   closeAllTabs: () => void;
-  setActiveTab: (tabId: string) => void;
+  setActiveTab: (tabId: string | null) => void;
   updateTabName: (tabId: string, name: string) => void;
   replaceTab: (currentTabId: string | null, newTab: Omit<Tab, "id">) => string;
   navigateToTab: (path: string, tabName?: string) => void;
@@ -128,7 +128,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
     setActiveTabIdState(null);
   }, []);
 
-  const setActiveTab = useCallback((tabId: string) => {
+  const setActiveTab = useCallback((tabId: string | null) => {
     setActiveTabIdState(tabId);
   }, []);
 
@@ -176,32 +176,16 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
-  const navigateToTab = useCallback((path: string, tabName?: string) => {
-    let tabId: string | null = null;
-
+  const navigateToTab = useCallback((path: string) => {
+    // Only activate existing tabs - don't create new ones
+    // Tabs should only be created via explicit addTab() calls
     setTabs((prev) => {
       const existingTab = prev.find((t) => t.path === path);
       if (existingTab) {
-        tabId = existingTab.id;
-        return prev;
+        setActiveTabIdState(existingTab.id);
       }
-
-      // Create new tab if it doesn't exist
-      const name = tabName || path.split("/").pop() || "New Tab";
-      const newTab: Tab = {
-        name,
-        path,
-        headerName: name,
-        id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      };
-      tabId = newTab.id;
-      return [...prev, newTab];
+      return prev;
     });
-
-    // Set active tab after state update to avoid infinite loops
-    if (tabId) {
-      setActiveTabIdState(tabId);
-    }
   }, []);
 
   return (

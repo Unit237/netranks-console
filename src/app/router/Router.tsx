@@ -3,6 +3,7 @@ import MagicLinkHandler from "../../features/auth/components/MagicLinkHandler";
 import ProtectedRoute from "../../features/auth/components/ProtectedRoute";
 import MagicLinkSent from "../../features/auth/pages/MagicLinkSent";
 import Signin from "../../features/auth/pages/Signin";
+import Billing from "../../features/billing/pages/Billing";
 import Layout from "../../features/brand-rank/components/Layout";
 import BrandRank from "../../features/brand-rank/pages";
 import Brand from "../../features/brand-rank/pages/Brand";
@@ -52,6 +53,7 @@ const Router = () => {
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<Settings />} />
         <Route path="support" element={<Support />} />
+        <Route path="billing" element={<Billing />} />
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
         <Route path="new-survey/:projectId" element={<NewSurvey />} />
@@ -61,6 +63,10 @@ const Router = () => {
           element={<PricingAndQuestion />}
         />
         <Route path="survey/:surveyId" element={<SurveyDetails />} />
+        <Route
+          path="dashboard/:surveyRunId/:p1/:p2"
+          element={<SurveyDashboard />}
+        />
       </Route>
     </Routes>
   );

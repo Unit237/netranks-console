@@ -14,6 +14,9 @@ export default {
   netranksDomain: netranksDomain,
   API_BASE_URL,
 
+  stripePublishableKey:
+    "pk_live_51RpphHPDJ4afO8q12iGI2kehYxtGaa2FV4nAghat1ZQ7rvlXcBw9TMq92K2g3nEkLjrXFWozrxUdfCyW3qUEz9xM00uYusWOZl",
+
   netranksSessionKey: {
     words: [1313166418, 1095650131, 1600082757, 1129465172],
     sigBytes: 16,

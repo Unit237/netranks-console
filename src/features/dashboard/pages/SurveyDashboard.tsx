@@ -4,6 +4,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toPercentage } from "../../../app/utils/utils";
 import type { SurveyStatsResponse } from "../@types";
 import SampleAiAnswerSnippet from "../components/SampleAiAnswerSnippet";
+import OptimizePageTab from "../components/surveyDashTabs/OptimizePageTab";
+import OverviewPageTab from "../components/surveyDashTabs/OverviewPageTab";
+import QuestionPageTab from "../components/surveyDashTabs/QuestionPageTab";
 import VisibilityTrendsOverTime from "../components/VisibilityTrendOverTime";
 import { getSurveyRunForDashboard } from "../services/dashService";
 
@@ -13,8 +16,26 @@ const SurveyDashboard: React.FC = () => {
   const [data, setData] = useState<SurveyStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllCitations, setShowAllCitations] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "Overview" | "Questions" | "Optimize"
+  >("Overview");
 
   const navigate = useNavigate();
+
+  // Check if user is authenticated
+  // Note: Anyone navigating to SurveyDashboard in console is not authenticated
+  const isAuthenticated = () => {
+    return false;
+  };
+
+  // Handle click to redirect to signin if not authenticated
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated()) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate("/signin");
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +58,12 @@ const SurveyDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div
+        onClick={!isAuthenticated() ? handleClick : undefined}
+        className={`h-full overflow-auto bg-gray-50 dark:bg-gray-900 flex items-center justify-center ${
+          !isAuthenticated() ? "cursor-pointer" : ""
+        }`}
+      >
         <div className="text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
@@ -45,7 +71,12 @@ const SurveyDashboard: React.FC = () => {
 
   if (!data) {
     return (
-      <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div
+        onClick={!isAuthenticated() ? handleClick : undefined}
+        className={`h-full overflow-auto bg-gray-50 dark:bg-gray-900 flex items-center justify-center ${
+          !isAuthenticated() ? "cursor-pointer" : ""
+        }`}
+      >
         <div className="text-gray-600 dark:text-gray-400">
           No data available
         </div>
@@ -61,7 +92,7 @@ const SurveyDashboard: React.FC = () => {
     navigate("/signin");
   };
 
-  return (
+  const mainContent = (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
       <div className="max-w-[80vw] mx-auto p-6">
         <div className="flex gap-6">
@@ -125,7 +156,14 @@ const SurveyDashboard: React.FC = () => {
               {data.TopCitationsInAiAnswers.length > 5 && (
                 <div className="p-4">
                   <button
-                    onClick={() => setShowAllCitations(!showAllCitations)}
+                    onClick={(e) => {
+                      if (!isAuthenticated()) {
+                        e.stopPropagation();
+                        goToSignUp();
+                        return;
+                      }
+                      setShowAllCitations(!showAllCitations);
+                    }}
                     className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   >
                     {showAllCitations ? (
@@ -222,7 +260,12 @@ const SurveyDashboard: React.FC = () => {
 
                 {/* Banner Overlay */}
                 <div
-                  onClick={goToSignUp}
+                  onClick={(e) => {
+                    if (!isAuthenticated()) {
+                      e.stopPropagation();
+                    }
+                    goToSignUp();
+                  }}
                   className="absolute right-[-33rem] top-5 inset-0 flex items-center justify-center rounded-[20px]"
                 >
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-[15rem] mx-4">
@@ -242,7 +285,12 @@ const SurveyDashboard: React.FC = () => {
           <div className="space-y-6 w-[30vw]">
             {/* Sign up button */}
             <button
-              onClick={goToSignUp}
+              onClick={(e) => {
+                if (!isAuthenticated()) {
+                  e.stopPropagation();
+                }
+                goToSignUp();
+              }}
               className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-[20px] transition-colors"
             >
               Sign Up
@@ -250,7 +298,14 @@ const SurveyDashboard: React.FC = () => {
 
             {/* Create new survey button */}
             <button
-              onClick={() => navigate("/")}
+              onClick={(e) => {
+                if (!isAuthenticated()) {
+                  e.stopPropagation();
+                  goToSignUp();
+                  return;
+                }
+                navigate("/");
+              }}
               className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-[20px] transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -355,7 +410,12 @@ const SurveyDashboard: React.FC = () => {
                 </div>
                 {/* Banner Overlay */}
                 <div
-                  onClick={goToSignUp}
+                  onClick={(e) => {
+                    if (!isAuthenticated()) {
+                      e.stopPropagation();
+                    }
+                    goToSignUp();
+                  }}
                   className="absolute inset-0 flex items-center justify-center rounded-[20px]"
                 >
                   <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-md mx-4">
@@ -374,6 +434,60 @@ const SurveyDashboard: React.FC = () => {
       </div>
     </div>
   );
+
+  // Wrap content in click handler if not authenticated
+  if (!isAuthenticated()) {
+    return (
+      <div onClick={handleClick} className="cursor-pointer">
+        <div className="w-full mx-auto p-6">
+          {/* Header with tabs */}
+          <div className="mb-6">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab("Overview")}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "Overview"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab("Questions")}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "Questions"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                Questions
+              </button>
+              <button
+                onClick={() => setActiveTab("Optimize")}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "Optimize"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                Optimize
+              </button>
+            </div>
+          </div>
+
+          {activeTab === "Overview" && <OverviewPageTab surveyStats={data} />}
+
+          {activeTab === "Questions" && <QuestionPageTab surveyStats={data} />}
+
+          {activeTab === "Optimize" && <OptimizePageTab surveyStats={data} />}
+        </div>
+        {mainContent}
+      </div>
+    );
+  }
+
+  return mainContent;
 };
 
 export default SurveyDashboard;

@@ -1,13 +1,35 @@
 import { Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import token from "../../../app/utils/token";
+import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
 const Header = () => {
   const { tabs, activeTabId, closeTab, closeAllTabs, setActiveTab, addTab } =
     useTabs();
   const navigate = useNavigate();
+  const { user } = useUser();
+
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    const authToken = token.get();
+    return !!authToken && !!user;
+  };
+
+  // Handle click to redirect to signin if not authenticated
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated()) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate("/signin");
+    }
+  };
 
   const handleAddTab = () => {
+    if (!isAuthenticated()) {
+      navigate("/signin");
+      return;
+    }
     addTab({
       name: "untitled survey",
       path: "/console/brand",
@@ -17,6 +39,10 @@ const Header = () => {
   };
 
   const handleTabClick = (tabId: string, path: string) => {
+    if (!isAuthenticated()) {
+      navigate("/signin");
+      return;
+    }
     setActiveTab(tabId);
     navigate(path);
   };
@@ -46,7 +72,12 @@ const Header = () => {
   };
 
   return (
-    <div className="bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto">
+    <div
+      onClick={handleClick}
+      className={`bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto ${
+        !isAuthenticated() ? "cursor-pointer" : ""
+      }`}
+    >
       {tabs.length > 0 && (
         <>
           <div className="flex items-center gap-1 flex-1 overflow-x-auto">

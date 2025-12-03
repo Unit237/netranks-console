@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
 import { useUser } from "../context/UserContext";
 
@@ -10,11 +10,20 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, error } = useUser();
   const hasStartedLoading = useRef(false);
   const hasLoggedAuthStatus = useRef(false);
 
+  // Allow dashboard route without authentication
+  const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
+
   useEffect(() => {
+    // Skip authentication check for dashboard route
+    if (isDashboardRoute) {
+      return;
+    }
+
     const authToken = token.get();
 
     if (!authToken) {
@@ -39,7 +48,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         navigate("/signin", { replace: true });
       }
     }
-  }, [user, loading, error, navigate]);
+  }, [user, loading, error, navigate, isDashboardRoute]);
+
+  // Allow dashboard route without authentication
+  if (isDashboardRoute) {
+    return <>{children}</>;
+  }
 
   // Show loading state while checking authentication
   if (loading || !user) {

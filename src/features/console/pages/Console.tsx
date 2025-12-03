@@ -22,13 +22,24 @@ const Console = () => {
   // Sync active tab with current route
   useEffect(() => {
     // Only sync if there are tabs
-    if (tabs.length === 0) return;
+    if (tabs.length === 0) {
+      // Clear active tab if no tabs exist
+      if (activeTabId !== null) {
+        setActiveTab(null);
+      }
+      return;
+    }
 
     const currentTab = tabs.find((tab) => tab.path === location.pathname);
     if (currentTab) {
       // Only update if the active tab is different to prevent infinite loops
       if (currentTab.id !== activeTabId) {
         setActiveTab(currentTab.id);
+      }
+    } else {
+      // Clear active tab if current route doesn't match any tab
+      if (activeTabId !== null) {
+        setActiveTab(null);
       }
     }
     // Don't auto-create tabs here - let components handle tab creation explicitly

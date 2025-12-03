@@ -17,6 +17,7 @@ interface UserContextType {
   loading: boolean;
   error: Error | null;
   refreshUser: () => Promise<void>;
+  useActiveProjectId: () => number;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,7 +36,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       setError(null);
       const userData = await getUser();
-      console.log(userData);
       if (userData) {
         setUser(userData);
       } else {
@@ -67,6 +67,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [isConsoleRoute, refreshUser]);
 
+  const useActiveProjectId = () => {
+    if (user && user.Projects && user.Projects.length > 0) {
+      const activeProject = user.Projects.find((p) => p.IsActive);
+
+      return activeProject?.Id || user.Projects[0].Id;
+    }
+    return 0;
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -75,6 +84,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
         loading,
         error,
         refreshUser,
+        useActiveProjectId,
       }}
     >
       {children}
