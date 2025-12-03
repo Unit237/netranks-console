@@ -1,7 +1,6 @@
 import { Eye, Infinity, Info, Menu, Search, Smile } from "lucide-react";
 import { AiFillApi } from "react-icons/ai";
 import type { SurveyStatsResponse } from "../../@types";
-import VisibilityTrendsOverTime from "../VisibilityTrendOverTime";
 
 interface OverviewPageTabProps {
   surveyStats: SurveyStatsResponse;
@@ -168,16 +167,16 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
         </div>
       </div>
 
-      <div className="flex w-full space-x-8 overflow-hidden">
+      <div className="flex w-full overflow-hidden">
         {/* Sentiment Over Time Graph */}
 
         {/* Visibility Trends Over Time */}
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 relative">
+        {/* <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 relative">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
             Visibility Trends Over Time
           </h2>
           <VisibilityTrendsOverTime />
-        </div>
+        </div> */}
 
         <div className="space-y-4">
           {/* Industry Rank */}
