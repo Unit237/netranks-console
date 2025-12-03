@@ -17,6 +17,14 @@ const Header = () => {
         <div className="hidden md:flex items-center gap-3">
           <ToggleTheme />
 
+          {/* Settings */}
+          <button
+            className={`px-3 py-1 text-sm rounded-md border transition-colors hover:bg-gray-100 dark:hover:bg-white/10`}
+            onClick={() => navigate("/settings")}
+          >
+            Settings
+          </button>
+
           {/* Sign in */}
           <button
             className={`px-3 py-1 text-sm rounded-md border transition-colors hover:bg-gray-100 dark:hover:bg-white/10`}
