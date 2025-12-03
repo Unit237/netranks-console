@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Info, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toPercentage } from "../../../app/utils/utils";
@@ -7,7 +7,6 @@ import SampleAiAnswerSnippet from "../components/SampleAiAnswerSnippet";
 import OptimizePageTab from "../components/surveyDashTabs/OptimizePageTab";
 import OverviewPageTab from "../components/surveyDashTabs/OverviewPageTab";
 import QuestionPageTab from "../components/surveyDashTabs/QuestionPageTab";
-import VisibilityTrendsOverTime from "../components/VisibilityTrendOverTime";
 import { getSurveyRunForDashboard } from "../services/dashService";
 
 const SurveyDashboard: React.FC = () => {
@@ -93,8 +92,8 @@ const SurveyDashboard: React.FC = () => {
   };
 
   const mainContent = (
-    <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-[80vw] mx-auto p-6">
+    <div className="h-full overflow-auto">
+      <div className="mx-auto p-6">
         <div className="flex gap-6">
           {/* Column 1 */}
           <div className="space-y-6 w-[50vw]">
@@ -185,133 +184,10 @@ const SurveyDashboard: React.FC = () => {
             {/* Actual AI Answers for Survey */}
 
             <SampleAiAnswerSnippet survey={data} />
-
-            {/* Visibility Table - Prompts & Brand Mentions */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-                Visibility table - prompts & brand mentions
-              </h2>
-
-              <div className="relative overflow-hidden p-4">
-                <table className="w-full border-collapse rounded-[20px] overflow-hidden">
-                  <thead>
-                    <tr className="bg-gray-200 dark:bg-gray-700 text-left text-sm text-gray-700 dark:text-gray-300">
-                      <th className="p-3 w-2/2">Prompt</th>
-                      <th className="p-3 text-center">Brands Mentioned</th>
-                      <th className="p-3 text-center">Your Brand Mentioned</th>
-                      <th className="p-3 text-center">Position</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {data.VisibilityTable.map((entry, index) => {
-                      return (
-                        <tr
-                          key={index}
-                          className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700"
-                        >
-                          {/* Prompt */}
-                          <td className="p-3 align-top">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {entry.Prompt}
-                            </p>
-                          </td>
-
-                          {/* Brands Mentioned */}
-                          <td className="p-3 align-top">
-                            <div className="flex flex-wrap gap-2 justify-start">
-                              {entry.BrandsMentioned.map(
-                                (brand, brandIndex) => (
-                                  <span
-                                    key={brandIndex}
-                                    className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                                  >
-                                    {brand.Name} +{brand.Count}
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </td>
-
-                          {/* YourBrandMentioned (blurred + red/green color logic) */}
-                          <td className="blur-sm p-3 text-center">
-                            <span
-                              className={`font-semibold ${
-                                entry.YourBrandMentioned
-                                  ? "text-red-500 dark:text-red-400"
-                                  : "text-green-600 dark:text-green-400"
-                              }`}
-                            >
-                              {entry.YourBrandMentioned ? "Yes" : "No"}
-                            </span>
-                          </td>
-
-                          {/* Position (blurred) */}
-                          <td className="blur-sm p-3 text-center">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {entry.Position !== null ? entry.Position : "-"}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {/* Banner Overlay */}
-                <div
-                  onClick={(e) => {
-                    if (!isAuthenticated()) {
-                      e.stopPropagation();
-                    }
-                    goToSignUp();
-                  }}
-                  className="absolute right-[-33rem] top-5 inset-0 flex items-center justify-center rounded-[20px]"
-                >
-                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-[15rem] mx-4">
-                    <div className="flex items-start gap-3">
-                      <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-gray-900 dark:text-gray-100">
-                        Unlock Netranks to track brands
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Column 2 */}
           <div className="space-y-6 w-[30vw]">
-            {/* Sign up button */}
-            <button
-              onClick={(e) => {
-                if (!isAuthenticated()) {
-                  e.stopPropagation();
-                }
-                goToSignUp();
-              }}
-              className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-[20px] transition-colors"
-            >
-              Sign Up
-            </button>
-
-            {/* Create new survey button */}
-            <button
-              onClick={(e) => {
-                if (!isAuthenticated()) {
-                  e.stopPropagation();
-                  goToSignUp();
-                  return;
-                }
-                navigate("/");
-              }}
-              className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium rounded-[20px] transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Create New Survey
-            </button>
-
             {/* Survey Stats Overview */}
             <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
@@ -365,14 +241,6 @@ const SurveyDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Visibility Trends Over Time */}
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 relative">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-                Visibility Trends Over Time
-              </h2>
-              <VisibilityTrendsOverTime />
             </div>
 
             {/* AI Visibility Score - Choose Your Brand to Track */}

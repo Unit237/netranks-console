@@ -1,6 +1,5 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
 import type { Project } from "../../auth/@types";
-import type { Question } from "../../brand-rank/@types";
 
 export const changeSurveySchedule = async (
   surveyRunId: number,
@@ -37,7 +36,7 @@ export const createSurvey = async (
   projectId: number,
   schedule: number,
   name: string,
-  question: Question[]
+  question: string[]
 ) => {
   try {
     const surveyRun = await apiClient.post(`api/CreateSurvey`, {

@@ -14,12 +14,12 @@ import {
   changeSurveySchedule,
   createSurvey,
 } from "../../project/services/projectService";
-import type { BrandData, Question } from "../@types";
+import type { BrandData } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
   survey: BrandData;
   questionCount: number;
-  questions: Question[];
+  questions: string[];
 }
 
 interface Model {
