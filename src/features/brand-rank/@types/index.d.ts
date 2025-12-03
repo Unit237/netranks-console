@@ -22,4 +22,11 @@ export type BrandData = {
   QueryType: string | null;
   Questions: string[];
   WebsiteOfTheBrand: string | null;
+  iterations?: number;
+  runsPerMonth?: number;
 };
+
+export interface Question {
+  Id: number;
+  Text: string;
+}

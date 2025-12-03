@@ -4,28 +4,24 @@ import Hub, { HubType, useHub } from "./Hub";
 let TOKEN = "";
 const TOKEN_STR = "t";
 
-// Get token from localStorage
 const get = (): string | null => {
   try {
-    const stored = localStorage.getItem(TOKEN_STR);
-    if (!stored) {
+    TOKEN = localStorage.getItem(TOKEN_STR) || "";
+    if (!TOKEN) {
       clearCookie();
+      return null;
     }
-    TOKEN = stored || "";
-    return stored;
+    return TOKEN;
   } catch (error) {
-    console.error("Error getting token:", error);
     return null;
   }
 };
 
-// Set token and update storage + cookies
-const set = (token: string | null): void => {
+const set = (token: string | null) => {
   if (TOKEN === token) {
     console.log("skip token set");
     return;
   }
-
   TOKEN = token || "";
   Hub.dispatch(HubType.AuthTokenChanged, token);
 
@@ -38,20 +34,17 @@ const set = (token: string | null): void => {
   }
 };
 
-// Set cookie for token (1-year expiry)
-const setCookie = (token: string): void => {
+const setCookie = (token: string) => {
   const date = new Date();
   date.setFullYear(date.getFullYear() + 1);
   document.cookie = `token=${token}; expires=${date.toUTCString()}; path=/`;
 };
 
-// Clear token cookie
-const clearCookie = (): void => {
+const clearCookie = () => {
   document.cookie = `token=; expires=${new Date().toUTCString()}; path=/`;
 };
 
-// Clear token entirely
-const clear = (): void => {
+const clear = () => {
   set(null);
 };
 
@@ -61,9 +54,8 @@ export default {
   clear,
 };
 
-// React hook to track login status
-export function useIsLoggedIn(): boolean {
-  const [token, setToken] = useState<string | null>(get());
+export function useIsLoggedIn() {
+  const [token, setToken] = useState(get());
   useHub(HubType.AuthTokenChanged, setToken);
   return !!token;
 }

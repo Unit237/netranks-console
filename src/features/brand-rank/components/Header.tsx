@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import ToggleTheme from "../../../app/shared/components/ToggleTheme";
 import AppLogo from "../../../app/shared/ui/AppLogo";
 
 const Header = () => {
@@ -15,7 +14,7 @@ const Header = () => {
 
         {/* Right section */}
         <div className="hidden md:flex items-center gap-3">
-          <ToggleTheme />
+          {/* <ToggleTheme /> */}
 
           {/* Sign in */}
           <button

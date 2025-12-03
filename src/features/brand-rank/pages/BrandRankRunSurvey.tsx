@@ -2,6 +2,7 @@ import { Check, Eye, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IoShareSocial } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTabs } from "../../console/context/TabContext";
 import { getSurveyRun } from "../services/brandService";
 
 export default function BrandRankSurveyRun() {
@@ -16,6 +17,7 @@ export default function BrandRankSurveyRun() {
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
   const [copied, setCopied] = useState(false);
+  const { addTab } = useTabs();
 
   useEffect(() => {
     tick();
@@ -28,10 +30,6 @@ export default function BrandRankSurveyRun() {
 
   const tick = async () => {
     try {
-      //   const surveyRun = await connection().get(
-      //     `api/GetSurveyRun/${surveyRunId}/${p1}/${p2}`
-      //   );
-
       const surveyRun: any = await getSurveyRun(surveyRunId, p1, p2);
 
       const p = surveyRun.Progress;
@@ -44,6 +42,16 @@ export default function BrandRankSurveyRun() {
 
       if (p.Finished < total) {
         timeoutId.current = setTimeout(tick, 1500);
+      } else {
+        const path = `/console/dashboard/${surveyRunId}/${p1}/${p2}`;
+        // Survey is complete, navigate to console dashboard
+        navigate(path);
+
+        addTab({
+          name: "My First Report",
+          path: path,
+          headerName: "My First Report",
+        });
       }
     } catch (error) {
       console.error("Failed to get survey run progress", error);
@@ -52,7 +60,7 @@ export default function BrandRankSurveyRun() {
   };
 
   const gotoDashboard = () => {
-    navigate(`/survey-dashboard/${surveyRunId}/${p1}/${p2}`);
+    navigate(`/dashboard/${surveyRunId}/${p1}/${p2}`);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -112,7 +120,7 @@ export default function BrandRankSurveyRun() {
     <div className="min-h-screen p-4 sm:p-6 md:p-8 max-w-[55vw] mx-auto transition-all duration-300 ease-in-out">
       {/* Header Section */}
       <div className="mb-8">
-        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-6 transition-all duration-300">
+        <div className="w-10 h-10 bg-gray-100 dark:bg-[#2c2c2c] rounded-lg flex items-center justify-center mb-6 transition-all duration-300">
           {progress < 100 ? (
             <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
           ) : (
@@ -153,7 +161,7 @@ export default function BrandRankSurveyRun() {
       )}
 
       {/* Live Progress Section */}
-      <div className="rounded-2xl p-6 sm:p-8 md:p-12 mb-6 transition-all duration-300 border bg-gray-200 dark:bg-gray-700 shadow-sm">
+      <div className="rounded-2xl p-6 sm:p-8 md:p-12 mb-6 transition-all duration-300 bg-gray-100 dark:bg-[#2c2c2c] shadow-sm">
         <h2 className="text-xl font-medium mb-6">Live progress</h2>
 
         <div className="flex flex-col gap-6">
@@ -209,17 +217,17 @@ export default function BrandRankSurveyRun() {
 
       {/* Results View */}
       {brands.length > 0 && (
-        <div className="w-full bg-white rounded-xl overflow-hidden mb-6 border border-gray-200 shadow-sm">
+        <div className="w-full bg-gray-100 dark:bg-[#2c2c2c] rounded-xl overflow-hidden mb-6 shadow-sm">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-400 dark:bg-[#1c1b1b]">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-medium">
                   Rank
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-medium">
                   Brand
                 </th>
-                <th className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                <th className="px-6 py-4 text-right text-sm font-medium">
                   Visibility
                 </th>
               </tr>
@@ -228,23 +236,23 @@ export default function BrandRankSurveyRun() {
               {brands.map((x, i) => (
                 <tr
                   key={x.Id}
-                  className="hover:bg-gray-50 border-b border-gray-200 transition-colors duration-150"
+                  className="hover:bg-gray-50 hover:dark:bg-[#1e1d1d] border-b border-gray-200 dark:border-gray-600 transition-colors duration-150"
                 >
                   <td className="px-6 py-4 align-top">
-                    <p className="text-xl font-semibold text-gray-400">
+                    <p className="text-xl font-semibold text-gray-400 dark:text-gray-200">
                       #{i + 1}
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-xl font-semibold text-gray-900">
+                    <p className="text-xl font-semibold text-gray-900 dark:text-gray-200">
                       {x.Name}
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {x.Description}
                     </p>
                   </td>
                   <td className="px-6 py-4 align-top text-right">
-                    <p className="text-xl font-semibold text-gray-900">
+                    <p className="text-xl font-semibold text-gray-900 dark:text-gray-200">
                       {`${Math.round((100 * x.Count) / total)}%`}
                     </p>
                   </td>
@@ -260,7 +268,7 @@ export default function BrandRankSurveyRun() {
           <button
             onClick={handleShare}
             disabled={false}
-            className="flex items-center gap-2 px-6 py-3 border-2 border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors duration-200 cursor-pointer z-10 relative"
+            className="flex items-center gap-2 px-6 py-3 border-2 border-orange-600 text-white font-medium rounded-lg hover:bg-blue-50 transition-colors duration-200 cursor-pointer z-10 relative"
           >
             {copied ? "Copied!" : "Share your results"}
             <IoShareSocial className="w-5 h-5" />

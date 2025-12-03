@@ -1,7 +1,6 @@
 import { Trash2, Undo2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { v4 as uuid } from "uuid";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
 import { useBrand } from "../context/BrandContext";
@@ -15,19 +14,12 @@ const Questions: React.FC = () => {
   const [searchParams] = useSearchParams();
   const paramQuestionRaw = (searchParams.get("question") ?? "").trim();
   const hasParamQuestion = paramQuestionRaw.length >= 3;
-  const { selectedBrand, setSelectedBrand, query, setQuery } = useBrand();
+  const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
-
-  // Use a stable componentId for request cancellation
-  const componentIdRef = useRef<string>(uuid());
-  const isMountedRef = useRef<boolean>(true);
-  const fetchInProgressRef = useRef<boolean>(false);
 
   const [survey, setSurvey] = useState<BrandData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryTrigger, setRetryTrigger] = useState<number>(0);
-
   const [startingSurvey, setStartingSurvey] = useState<boolean>(false);
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
@@ -40,126 +32,66 @@ const Questions: React.FC = () => {
   const [hoveredQuestion, setHoveredQuestion] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastFetchedBrandIdRef = useRef<string | null>(null);
+  const lastFetchedQueryRef = useRef<string | null>(null);
 
-  const questions = useMemo<string[]>(() => survey?.Questions ?? [], [survey]);
-
+  const questions = survey?.Questions ?? [];
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
   const displayBrand = hasParamQuestion ? null : selectedBrand ?? null;
 
-  // Memoize the key to prevent unnecessary re-fetches
-  const fetchKey = useMemo(() => {
-    if (hasParamQuestion) {
-      return `param-${paramQuestionRaw}-${retryTrigger}`;
-    }
-    if (selectedBrand) {
-      return `brand-${selectedBrand.brandId}-${retryTrigger}`;
-    }
-    if (query) {
-      return `query-${query}-${retryTrigger}`;
-    }
-    return null;
-  }, [
-    hasParamQuestion,
-    paramQuestionRaw,
-    selectedBrand?.brandId,
-    query,
-    retryTrigger,
-  ]);
-
   useEffect(() => {
-    // Cleanup on unmount
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    // Validate that either we have a param question or context data
+    // Validate that we have data to fetch
     if (!hasParamQuestion && !selectedBrand && !query) {
       navigate("/");
       return;
     }
 
-    // Prevent multiple simultaneous requests
-    if (fetchInProgressRef.current) {
+    // Determine what we're fetching
+    const brandId = selectedBrand?.brandId ?? null;
+    const queryToFetch = hasParamQuestion ? paramQuestionRaw : query;
+
+    // Skip if we've already fetched for this brand/query
+    if (
+      (brandId && brandId === lastFetchedBrandIdRef.current) ||
+      (queryToFetch && queryToFetch === lastFetchedQueryRef.current && !brandId)
+    ) {
       return;
     }
 
-    const fetchSurveyData = async () => {
-      // Skip if component is unmounted
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      fetchInProgressRef.current = true;
-      setLoading(true);
-      setError(null);
-
+    (async () => {
       try {
-        let surveyData: BrandData | null = null;
+        setLoading(true);
+        setError(null);
+
+        let surveyData: BrandData;
 
         if (hasParamQuestion) {
-          surveyData = await fetchQueryQuestions(paramQuestionRaw, {
-            componentId: componentIdRef.current,
-            setLoading,
-          });
+          surveyData = await fetchQueryQuestions(paramQuestionRaw);
+          lastFetchedQueryRef.current = paramQuestionRaw;
+          lastFetchedBrandIdRef.current = null;
         } else if (selectedBrand) {
-          surveyData = await fetchBrandQuestions(selectedBrand, {
-            componentId: componentIdRef.current,
-            setLoading,
-          });
-        } else if (effectiveQuery) {
-          surveyData = await fetchQueryQuestions(effectiveQuery, {
-            componentId: componentIdRef.current,
-            setLoading,
-          });
-        }
+          surveyData = await fetchBrandQuestions(selectedBrand);
+          lastFetchedBrandIdRef.current = selectedBrand.brandId;
+          lastFetchedQueryRef.current = null;
 
-        if (!surveyData) {
-          throw new Error(
-            "No survey data available for the current selection."
-          );
+          // Only update selectedBrand if description actually changed
+          const newDescription = surveyData.DescriptionOfTheBrandShort ?? "";
+          if (selectedBrand.description !== newDescription) {
+            setSelectedBrand({
+              ...selectedBrand,
+              description: newDescription,
+            });
+          }
+        } else if (query) {
+          surveyData = await fetchQueryQuestions(query);
+          lastFetchedQueryRef.current = query;
+          lastFetchedBrandIdRef.current = null;
+        } else {
+          throw new Error("No data available to fetch survey");
         }
-
-        // Check if component is still mounted before updating state
-        // if (!isMountedRef.current) {
-        //   return;
-        // }
 
         setSurvey(surveyData);
-
-        // Update brand description if available
-        if (
-          !hasParamQuestion &&
-          selectedBrand &&
-          surveyData.DescriptionOfTheBrandShort
-        ) {
-          setSelectedBrand({
-            ...selectedBrand,
-            description: surveyData.DescriptionOfTheBrandShort,
-          });
-        }
-
-        // Clear query if this is a brand-type survey
-        if (!hasParamQuestion && surveyData.QueryType === "brand") {
-          setQuery("");
-        }
       } catch (error) {
-        // Check if component is still mounted before updating state
-        if (!isMountedRef.current) {
-          return;
-        }
-
-        // Ignore abort errors (cancelled requests)
-        if (
-          error instanceof Error &&
-          (error.name === "AbortError" ||
-            error.message === "Request canceled with cancel token")
-        ) {
-          console.log("Request was cancelled");
-          return;
-        }
-
         console.error("Failed to fetch survey data:", error);
         const errorMessage =
           error instanceof Error
@@ -168,28 +100,49 @@ const Questions: React.FC = () => {
         setError(errorMessage);
         setSurvey(null);
       } finally {
-        if (isMountedRef.current) {
-          setLoading(false);
-          fetchInProgressRef.current = false;
-        }
+        setLoading(false);
+      }
+    })();
+  }, [
+    hasParamQuestion,
+    paramQuestionRaw,
+    selectedBrand?.brandId,
+    query,
+    navigate,
+    setSelectedBrand,
+  ]);
+
+  // Handle click outside to cancel confirmation
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setConfirmingDelete(null);
       }
     };
 
-    fetchSurveyData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchKey]); // Only depend on fetchKey, not the individual values
+    if (confirmingDelete !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [confirmingDelete]);
 
-  const handleSubmit = useCallback(async () => {
-    if (startingSurvey || !survey || loading) {
+  const handleSubmit = async () => {
+    if (startingSurvey || !survey) {
       return;
     }
 
     setStartingSurvey(true);
     setError(null);
 
-    const filteredQuestions = questions.filter(
-      (_, index) => !deletedQuestions.has(index)
-    );
+    // Filter out deleted questions
+    const filteredQuestions =
+      survey?.Questions?.filter((_, index) => !deletedQuestions.has(index)) ??
+      [];
     const filteredSurvey = survey
       ? {
           ...survey,
@@ -197,50 +150,30 @@ const Questions: React.FC = () => {
         }
       : null;
 
-    const questionIndices = questions
-      .map((_, index) => index)
-      .filter((index) => !deletedQuestions.has(index));
+    // Get question indices (0-based) to include only non-deleted questions
+    const questionIndices =
+      survey?.Questions?.map((_, index) => index).filter(
+        (index) => !deletedQuestions.has(index)
+      ) ?? [];
 
     try {
       let surveyRunId: string;
 
       if (deletedQuestions.size > 0) {
         try {
-          surveyRunId = await startSurvey(survey.Id, questionIndices, {
-            componentId: componentIdRef.current,
-            setLoading: setStartingSurvey,
-          });
+          // Attempt to start survey with filtered question indices
+          surveyRunId = await startSurvey(survey.Id, questionIndices);
         } catch (error) {
-          // Ignore abort errors
-          if (
-            error instanceof Error &&
-            (error.name === "AbortError" ||
-              error.message === "Request canceled with cancel token")
-          ) {
-            return;
-          }
-
-          // Fallback: if POST doesn't work, try without questionIndices
+          // Fallback: if POST doesn't work, try GET (backend might not support filtering yet)
           console.warn(
-            "POST with questionIndices failed, falling back to default. Backend may need to support question filtering.",
+            "POST with questionIndices failed, falling back to GET. Backend may need to support question filtering.",
             error
           );
-          surveyRunId = await startSurvey(survey.Id, undefined, {
-            componentId: componentIdRef.current,
-            setLoading: setStartingSurvey,
-          });
+          surveyRunId = await startSurvey(survey.Id);
         }
       } else {
-        // No deleted questions, use default
-        surveyRunId = await startSurvey(survey.Id, undefined, {
-          componentId: componentIdRef.current,
-          setLoading: setStartingSurvey,
-        });
-      }
-
-      // Check if component is still mounted before navigating
-      if (!isMountedRef.current) {
-        return;
+        // No deleted questions, use GET
+        surveyRunId = await startSurvey(survey.Id);
       }
 
       const p1 = filteredSurvey?.PasswordOne;
@@ -254,15 +187,6 @@ const Questions: React.FC = () => {
         },
       });
     } catch (error) {
-      // Ignore abort errors
-      if (
-        error instanceof Error &&
-        (error.name === "AbortError" ||
-          error.message === "Request canceled with cancel token")
-      ) {
-        return;
-      }
-
       console.error("Failed to start survey:", error);
       const errorMessage =
         error instanceof Error
@@ -270,28 +194,18 @@ const Questions: React.FC = () => {
           : "Failed to start survey. Please try again.";
       setError(errorMessage);
     } finally {
-      if (isMountedRef.current) {
-        setStartingSurvey(false);
-      }
+      setStartingSurvey(false);
     }
-  }, [
-    startingSurvey,
-    survey,
-    loading,
-    deletedQuestions,
-    navigate,
-    effectiveQuery,
-    displayBrand,
-  ]);
+  };
 
   const handleDeleteQuestion = (index: number) => {
     setConfirmingDelete(index);
   };
 
   const handleConfirmDelete = (index: number) => {
-    const question = questions[index];
+    const question = survey?.Questions?.[index];
     if (question) {
-      setLastDeletedQuestion({ index, question });
+      setLastDeletedQuestion({ index, question: question });
       setDeletedQuestions((prev) => new Set([...prev, index]));
       setShowToast(true);
       setConfirmingDelete(null);
@@ -325,7 +239,7 @@ const Questions: React.FC = () => {
       />
       {loading && !survey && !error && (
         <>
-          <h4 className="text-3xl font-light text-center">
+          <h4 className="text-xl font-light text-center">
             {selectedBrand
               ? "Now we're generating customer questions"
               : "Now we're generating similar questions"}
@@ -343,8 +257,14 @@ const Questions: React.FC = () => {
             onClick={() => {
               setError(null);
               setLoading(true);
-              // Trigger re-fetch by incrementing retry trigger
-              setRetryTrigger((prev) => prev + 1);
+              // Trigger re-fetch by updating state
+              if (hasParamQuestion) {
+                // Force re-render by updating search params
+                window.location.reload();
+              } else {
+                // Re-trigger useEffect by updating a dependency
+                setSurvey(null);
+              }
             }}
             className="mt-2 px-4 py-2 text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
           >

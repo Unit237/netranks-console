@@ -5,17 +5,18 @@ import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
 import ToggleTheme from "../../../app/shared/components/ToggleTheme";
+import token from "../../../app/utils/token";
 import Hand from "../../../assets/col.svg";
 import Logo from "../../../assets/user.svg";
 import SurveyStack from "../components/SurveyStack";
 import { sendMagicLink } from "../services/authService";
 
-const Signin = () => {
+const Signin: React.FC = () => {
   const [email, setEmail] = useState("");
   const toast = useToast();
 
+  const visitorSessionToken = token.get();
   const navigate = useNavigate();
-
   const [submitting, setSubmitting] = React.useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -24,10 +25,9 @@ const Signin = () => {
     if (submitting) {
       return;
     }
-    const data = new FormData(event.currentTarget);
     setSubmitting(true);
     try {
-      await sendMagicLink(data.get("email") as string);
+      await sendMagicLink(email, visitorSessionToken as string);
       toast.success({
         title: "Success",
         message: "Magic link sent successfully",
@@ -99,12 +99,23 @@ const Signin = () => {
 
               {/* Magic Link Button */}
               <button
-                disabled={!email || email === ""}
+                disabled={!email || email === "" || submitting}
                 type="submit"
                 className="w-full bg-black dark:bg-white dark:text-black text-white font-medium rounded-full py-2 hover:bg-gray-700 dark:hover:bg-gray-300 transition"
               >
-                Send magic link
+                {submitting ? "Sending Magic Link..." : "Send Magic Link"}
               </button>
+              <div className="flex items-center justify-center">
+                <div className="flex items-center justify-end text-sm text-gray-600 dark:text-gray-400 mt-4">
+                  Don't have an account?{" "}
+                  <a
+                    href="/signup"
+                    className="text-primary hover:underline dark:text-primary ml-1"
+                  >
+                    Sign up
+                  </a>
+                </div>
+              </div>
             </form>
           </div>
         </div>
