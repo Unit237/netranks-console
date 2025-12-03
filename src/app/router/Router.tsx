@@ -5,6 +5,7 @@ import Layout from "../../features/brand-rank/components/Layout";
 import BrandRank from "../../features/brand-rank/pages";
 import BrandRankSurveyRun from "../../features/brand-rank/pages/BrandRankRunSurvey";
 import Questions from "../../features/brand-rank/pages/Questions";
+import Settings from "../../features/settings/pages/Settings";
 
 const Router = () => {
   return (
@@ -16,6 +17,7 @@ const Router = () => {
           path="/brand-rank/survey/:surveyRunId/:p1/:p2"
           element={<BrandRankSurveyRun />}
         />
+        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="signin" element={<Signin />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
