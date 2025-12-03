@@ -17,10 +17,10 @@ import Members from "../../features/console/pages/Members";
 import NewProject from "../../features/console/pages/NewProject";
 import NewSurvey from "../../features/console/pages/NewSurvey";
 import Project from "../../features/console/pages/Project";
-import Settings from "../../features/console/pages/Settings";
 import Support from "../../features/console/pages/Support";
 import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
 import SurveyDetails from "../../features/project/pages/SurveyDetails";
+import Settings from "../../features/settings/pages/Settings";
 
 const Router = () => {
   return (

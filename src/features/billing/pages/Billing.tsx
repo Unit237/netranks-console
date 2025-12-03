@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { BiLeftArrowCircle } from "react-icons/bi";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
 import AddNewPaymentMethod from "./AddNewPaymentMethod";
 import ExistingPaymentMethod from "./ExistingPaymentMethod";
@@ -20,6 +22,7 @@ export default function Billing() {
   );
   const [isEditMode, setIsEditMode] = useState(!paymentMethod);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const navigate = useNavigate();
 
   const handleOnSaved = (newPaymentMethod: PaymentMethod) => {
     try {
@@ -74,6 +77,13 @@ export default function Billing() {
   return (
     <div className="flex w-full flex-col items-center gap-10 py-8">
       <div className="w-full max-w-4xl px-4">
+        <div className="flex items-center text-[13px] mb-2">
+          <BiLeftArrowCircle
+            onClick={() => navigate(-1)}
+            className="h-4 w-4 mr-2 text-2xl cursor-pointer"
+          />
+          Go back
+        </div>
         <div>
           <h2 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
             Payment Info

@@ -8,7 +8,6 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { CiMoneyBill } from "react-icons/ci";
 import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
 import { useUser } from "../../auth/context/UserContext";
@@ -68,12 +67,6 @@ const Sidebar = () => {
       label: "Settings",
       path: "/console/settings",
       headerName: "Settings",
-    },
-    {
-      icon: CiMoneyBill,
-      label: "Billing",
-      path: "/console/billing",
-      headerName: "Billing",
     },
   ];
 
