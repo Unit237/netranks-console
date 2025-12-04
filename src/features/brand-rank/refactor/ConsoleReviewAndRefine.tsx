@@ -97,7 +97,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       name: "Run weekly",
       price: 200,
       desc: "Runs automatically every Monday",
-      duration: "monthly",
+      duration: "weekly",
       numberOfRuns: 4,
       period: 24 * 7,
     },

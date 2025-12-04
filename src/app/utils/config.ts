@@ -1,6 +1,6 @@
 const devServerId = 1; // 0: localhost, 1: netranks server
 
-const SERVER = import.meta.env.VITE_DEMO_BACKEND_API_URL;
+const SERVER = import.meta.env.VITE_BACKEND_API_URL;
 const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN;
 
 const SERVER_URL = import.meta.env.VITE_PROD

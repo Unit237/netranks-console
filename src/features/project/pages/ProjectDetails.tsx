@@ -4,12 +4,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
-import { getProjectById } from "../services/projectService";
+import { getPlanByPeriod } from "../hooks/utils";
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
 
   const [project, setProject] = useState<Project | null>(null);
+
+  const { user } = useUser();
 
   const navigate = useNavigate();
 
@@ -34,7 +36,13 @@ const ProjectDetails = () => {
     }
 
     try {
-      const res = await getProjectById(parseInt(id || "0", 10));
+      //await getProjectById(parseInt(id || "0", 10));
+
+      const res = user?.Projects.find((p) => p.Id === parseInt(id || "0", 10));
+
+      if (!res) {
+        return;
+      }
 
       setProject(res);
       return res;
@@ -240,49 +248,52 @@ const ProjectDetails = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {project.Surveys.map((survey) => (
-                  <tr
-                    onClick={() => surveyDetails(survey)}
-                    key={survey.Id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  >
-                    <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center gap-2">
-                        {survey.HasIndicator && (
-                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        )}
-                        <span className="text-sm text-gray-900 dark:text-gray-100">
-                          {survey.Name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                      <div
-                        className={`flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300`}
-                      >
-                        <span className={getStatusStyles(survey.Status)}>
-                          {getStatusIcon(survey.Status)}
-                        </span>
-                        <span>{survey.Status}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                      {survey.Schedule}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                      {survey.LastRun}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {survey.CostDisplay}
-                    </td>
-                  </tr>
-                ))}
+                {project.Surveys.map((survey) => {
+                  const plan = getPlanByPeriod(survey.SchedulePeriodHours);
+                  return (
+                    <tr
+                      onClick={() => surveyDetails(survey)}
+                      key={survey.Id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    >
+                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-2">
+                          {survey.HasIndicator && (
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          )}
+                          <span className="text-sm text-gray-900 dark:text-gray-100">
+                            {survey.Name ? survey.Name : "Untitled Survey"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                        <div
+                          className={`flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300`}
+                        >
+                          <span className={getStatusStyles(survey.Status)}>
+                            {getStatusIcon(survey.Status)}
+                          </span>
+                          <span>{survey.Status}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+                        {plan?.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
+                        {survey.LastRun}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {plan?.cost === 0 ? "Free" : `${plan?.cost}/pm`}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
