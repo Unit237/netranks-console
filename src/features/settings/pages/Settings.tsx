@@ -15,12 +15,8 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-8">
-          Settings
-        </h1>
-
+    <div className="p-6">
+      <div className="max-w-2xl mx-auto">
         {/* Tabs */}
         <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
           <nav className="-mb-px flex space-x-8">
@@ -44,7 +40,7 @@ const Settings = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <div>
           {activeTab === "profile" && <ProfileTab />}
           {activeTab === "workspace" && <WorkspaceTab />}
           {activeTab === "billing" && <BillingTab />}

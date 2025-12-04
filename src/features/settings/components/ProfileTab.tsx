@@ -19,10 +19,10 @@ const ProfileTab = () => {
   }, [user]);
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Account Section */}
-      <div>
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+    <div className="space-y-6">
+      {/* Account Section - Separate white card */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
           Account
         </h2>
         <div className="space-y-4">
@@ -39,7 +39,7 @@ const ProfileTab = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Your name"
               />
             </div>
@@ -58,7 +58,7 @@ const ProfileTab = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -66,9 +66,9 @@ const ProfileTab = () => {
         </div>
       </div>
 
-      {/* Notifications Section */}
-      <div>
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+      {/* Notifications Section - Separate white card */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
           Notifications
         </h2>
         <div className="space-y-6">
@@ -89,7 +89,7 @@ const ProfileTab = () => {
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                 ${
                   emailNotifications
-                    ? "bg-blue-600"
+                    ? "bg-gray-900 dark:bg-gray-100"
                     : "bg-gray-200 dark:bg-gray-600"
                 }
               `}
@@ -124,7 +124,7 @@ const ProfileTab = () => {
                 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                 ${
                   inAppNotifications
-                    ? "bg-blue-600"
+                    ? "bg-gray-900 dark:bg-gray-100"
                     : "bg-gray-200 dark:bg-gray-600"
                 }
               `}
@@ -152,11 +152,11 @@ const ProfileTab = () => {
                 type="button"
                 onClick={() => setNotificationFrequency("immediate")}
                 className={`
-                  px-4 py-2 text-sm font-medium rounded-md border transition-colors
+                  px-4 py-2 text-sm font-medium rounded-full transition-colors
                   ${
                     notificationFrequency === "immediate"
-                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-400"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                      ? "border border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-400"
+                      : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }
                 `}
               >
@@ -166,11 +166,11 @@ const ProfileTab = () => {
                 type="button"
                 onClick={() => setNotificationFrequency("daily")}
                 className={`
-                  px-4 py-2 text-sm font-medium rounded-md border transition-colors
+                  px-4 py-2 text-sm font-medium rounded-full transition-colors
                   ${
                     notificationFrequency === "daily"
-                      ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-400"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                      ? "border border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-400"
+                      : "text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }
                 `}
               >
