@@ -1,17 +1,28 @@
 const devServerId = 1; // 0: localhost, 1: netranks server
 
-const SERVER = import.meta.env.VITE_BACKEND_API_URL;
-const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN;
+// Use demo backend URL for local development, main backend URL for production
+const SERVER = import.meta.env.VITE_PROD === "true"
+  ? import.meta.env.VITE_BACKEND_API_URL || "https://netranks.azurewebsites.net"
+  : import.meta.env.VITE_DEMO_BACKEND_API_URL || import.meta.env.VITE_BACKEND_API_URL || "http://localhost:4000";
+const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN || "https://www.netranks.ai";
 
-const SERVER_URL = import.meta.env.VITE_PROD
-  ? SERVER
-  : ["/", SERVER][devServerId];
+// Remove trailing slash if present and ensure we have a valid URL
+const cleanServerUrl = SERVER && typeof SERVER === "string" 
+  ? (SERVER.endsWith("/") ? SERVER.slice(0, -1) : SERVER)
+  : "http://localhost:4000"; // Fallback to localhost if invalid
+
+const SERVER_URL = import.meta.env.VITE_PROD === "true"
+  ? cleanServerUrl
+  : (["/", cleanServerUrl][devServerId] || cleanServerUrl); // Ensure we always have a value
+
+// Validate SERVER_URL is not undefined
+const validatedServerUrl = SERVER_URL || "http://localhost:4000";
 
 const HOMEWORK_API_BASE_URL =
   "https://qmnga6hmp3.eu-central-1.awsapprunner.com";
 
 export default {
-  SERVER_URL,
+  SERVER_URL: validatedServerUrl,
   netranksDomain: netranksDomain,
   API_BASE_URL: HOMEWORK_API_BASE_URL,
 

@@ -11,6 +11,12 @@ const get = (): string | null => {
       clearCookie();
       return null;
     }
+    // Safety check: if token looks like HTML, it's invalid - clear it
+    if (TOKEN.trim().startsWith("<!DOCTYPE") || TOKEN.trim().startsWith("<html")) {
+      console.error("Invalid token detected (HTML), clearing...");
+      clear();
+      return null;
+    }
     return TOKEN;
   } catch (error) {
     return null;

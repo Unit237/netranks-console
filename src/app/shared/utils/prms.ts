@@ -1,11 +1,14 @@
 const devServerId = 1; // 0: localhost, 1: netranks server
 
-const SERVER = import.meta.env.VITE_DEMO_BACKEND_API_URL;
-const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN;
+const SERVER = import.meta.env.VITE_DEMO_BACKEND_API_URL || "http://localhost:4000";
+const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN || "https://www.netranks.ai";
 
-const SERVER_URL = import.meta.env.VITE_PROD
-  ? SERVER
-  : ["/", SERVER][devServerId];
+// Remove trailing slash if present
+const cleanServerUrl = SERVER?.endsWith("/") ? SERVER.slice(0, -1) : SERVER;
+
+const SERVER_URL = import.meta.env.VITE_PROD === "true"
+  ? cleanServerUrl
+  : ["/", cleanServerUrl][devServerId];
 
 const API_BASE_URL = "https://qmnga6hmp3.eu-central-1.awsapprunner.com";
 
