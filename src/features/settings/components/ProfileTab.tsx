@@ -1,22 +1,104 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, Mail } from "lucide-react";
 import { useUser } from "../../auth/context/UserContext";
+import { apiClient } from "../../../app/lib/api";
 
 const ProfileTab = () => {
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [inAppNotifications, setInAppNotifications] = useState(true);
   const [notificationFrequency, setNotificationFrequency] = useState<"immediate" | "daily">("immediate");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Store original values to track changes
+  const originalValues = useRef({
+    name: "",
+    email: "",
+    emailNotifications: false,
+    inAppNotifications: true,
+    notificationFrequency: "immediate" as "immediate" | "daily",
+  });
 
   // Initialize with user data when available
   useEffect(() => {
     if (user) {
-      setName(user.Name || "");
-      setEmail(user.EMail || "");
+      const userName = user.Name || "";
+      const userEmail = user.EMail || "";
+      setName(userName);
+      setEmail(userEmail);
+      
+      // Store original values
+      originalValues.current = {
+        name: userName,
+        email: userEmail,
+        emailNotifications: false,
+        inAppNotifications: true,
+        notificationFrequency: "immediate",
+      };
     }
   }, [user]);
+
+  // Check if there are unsaved changes
+  const hasChanges =
+    name !== originalValues.current.name ||
+    email !== originalValues.current.email ||
+    emailNotifications !== originalValues.current.emailNotifications ||
+    inAppNotifications !== originalValues.current.inAppNotifications ||
+    notificationFrequency !== originalValues.current.notificationFrequency;
+
+  // Handle save changes
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      // Prepare the update payload
+      const updateData = {
+        Name: name,
+        EMail: email,
+        // Note: Notification preferences are stored client-side for now
+        // In the future, these can be added to the backend User model
+      };
+
+      // Make API call to update user profile
+      await apiClient.patch(`api/UpdateUser`, updateData);
+
+      // Refresh user data from server
+      await refreshUser();
+      
+      // Update original values after successful save
+      originalValues.current = {
+        name,
+        email,
+        emailNotifications,
+        inAppNotifications,
+        notificationFrequency,
+      };
+    } catch (error) {
+      console.error("Failed to save changes:", error);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Failed to save changes. Please try again."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle cancel - revert to original values
+  const handleCancel = () => {
+    setName(originalValues.current.name);
+    setEmail(originalValues.current.email);
+    setEmailNotifications(originalValues.current.emailNotifications);
+    setInAppNotifications(originalValues.current.inAppNotifications);
+    setNotificationFrequency(originalValues.current.notificationFrequency);
+  };
 
   return (
     <div className="space-y-6">
@@ -180,6 +262,35 @@ const ProfileTab = () => {
           </div>
         </div>
       </div>
+
+      {/* Save/Cancel Buttons - Only show when there are changes */}
+      {hasChanges && (
+        <div className="space-y-2">
+          {saveError && (
+            <div className="text-sm text-red-600 dark:text-red-400">
+              {saveError}
+            </div>
+          )}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
