@@ -1,7 +1,6 @@
-import { Eye, Infinity, Menu, Search, Smile } from "lucide-react";
+import { Eye, Infinity, Info, Menu, Search, Smile } from "lucide-react";
 import { AiFillApi } from "react-icons/ai";
 import type { SurveyStatsResponse } from "../../@types";
-import VisibilityTrendsOverTime from "../VisibilityTrendOverTime";
 
 interface OverviewPageTabProps {
   surveyStats: SurveyStatsResponse;
@@ -168,51 +167,136 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
         </div>
       </div>
 
-      <div className="flex w-full space-x-8 overflow-hidden">
+      <div className="flex w-full overflow-hidden">
         {/* Sentiment Over Time Graph */}
 
         {/* Visibility Trends Over Time */}
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 relative">
+        {/* <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 relative">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
             Visibility Trends Over Time
           </h2>
           <VisibilityTrendsOverTime />
-        </div>
+        </div> */}
 
-        {/* Industry Rank */}
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 w-full">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-            Industry Rank
-          </h2>
-          <div className="">
-            {industryRank.map((item) => (
-              <div
-                key={item.rank}
-                className="flex items-center justify-between px-4 py-3 rounded-[20px] border border-gray-100 dark:border-gray-700 last:border-0 bg-white dark:bg-gray-800"
-              >
-                <div className="flex items-center gap-3 flex-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-6">
-                    {item.rank}.
-                  </span>
-                  {item.icon ? (
-                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
-                      {item.icon}
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300"></div>
-                  )}
-                  <span className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <span className="h-6 p-2 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300 mr-1">
-                      {item.percentage}% <Eye className="h-4 w-4 ml-1" />
-                    </span>{" "}
-                    {item.name}
+        <div className="space-y-4">
+          {/* Industry Rank */}
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 w-full">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
+              Industry Rank
+            </h2>
+            <div className="">
+              {industryRank.map((item) => (
+                <div
+                  key={item.rank}
+                  className="flex items-center justify-between px-4 py-3 rounded-[20px] border border-gray-100 dark:border-gray-700 last:border-0 bg-white dark:bg-gray-800"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-6">
+                      {item.rank}.
+                    </span>
+                    {item.icon ? (
+                      <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
+                        {item.icon}
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300"></div>
+                    )}
+                    <span className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="h-6 p-2 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300 mr-1">
+                        {item.percentage}% <Eye className="h-4 w-4 ml-1" />
+                      </span>{" "}
+                      {item.name}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {item.mentions} mentions
                   </span>
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {item.mentions} mentions
-                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
+              Visibility table - prompts & brand mentions
+            </h2>
+
+            <div className="relative overflow-hidden p-4">
+              <table className="w-full border-collapse rounded-[20px] overflow-hidden">
+                <thead>
+                  <tr className="bg-gray-200 dark:bg-gray-700 text-left text-sm text-gray-700 dark:text-gray-300">
+                    <th className="p-3 w-2/2">Prompt</th>
+                    <th className="p-3 text-center">Brands Mentioned</th>
+                    <th className="p-3 text-center">Your Brand Mentioned</th>
+                    <th className="p-3 text-center">Position</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {surveyStats.VisibilityTable.map((entry, index) => {
+                    return (
+                      <tr
+                        key={index}
+                        className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700"
+                      >
+                        {/* Prompt */}
+                        <td className="p-3 align-top">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {entry.Prompt}
+                          </p>
+                        </td>
+
+                        {/* Brands Mentioned */}
+                        <td className="p-3 align-top">
+                          <div className="flex flex-wrap gap-2 justify-start">
+                            {entry.BrandsMentioned.map((brand, brandIndex) => (
+                              <span
+                                key={brandIndex}
+                                className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                              >
+                                {brand.Name} +{brand.Count}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+
+                        {/* YourBrandMentioned (blurred + red/green color logic) */}
+                        <td className="blur-sm p-3 text-center">
+                          <span
+                            className={`font-semibold ${
+                              entry.YourBrandMentioned
+                                ? "text-red-500 dark:text-red-400"
+                                : "text-green-600 dark:text-green-400"
+                            }`}
+                          >
+                            {entry.YourBrandMentioned ? "Yes" : "No"}
+                          </span>
+                        </td>
+
+                        {/* Position (blurred) */}
+                        <td className="blur-sm p-3 text-center">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {entry.Position !== null ? entry.Position : "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Banner Overlay */}
+              <div className="absolute right-[-33rem] top-5 inset-0 flex items-center justify-center rounded-[20px]">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border border-gray-200 dark:border-gray-700 max-w-[15rem] mx-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-gray-900 dark:text-gray-100">
+                      Unlock Netranks to track brands
+                    </p>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { Check, MousePointerClick, Plus, Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { BrandData, Question } from "../@types";
+import type { BrandData } from "../@types";
 import {
   addQuestion,
   deleteQuestion,
@@ -10,7 +10,7 @@ import {
 interface ConsoleQuestionSectionProps {
   survey: BrandData;
   onQuestionCountChange?: (count: number) => void;
-  onQuestionsChange?: (questions: Question[]) => void;
+  onQuestionsChange?: (questions: string[]) => void;
 }
 
 const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
@@ -21,9 +21,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestionInput, setEditQuestionInput] = useState("");
-  const [questions, setQuestions] = useState<Question[]>(
-    survey.Questions ?? []
-  );
+  const [questions, setQuestions] = useState<string[]>(survey.Questions ?? []);
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
@@ -93,7 +91,9 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     onQuestionCountChange?.(activeQuestionCount);
 
     // Expose current questions (filtered to exclude deleted ones)
-    const activeQuestions = questions.filter((_, index) => !deletedQuestions.has(index));
+    const activeQuestions = questions.filter(
+      (_, index) => !deletedQuestions.has(index)
+    );
     onQuestionsChange?.(activeQuestions);
   }, [questions, deletedQuestions, onQuestionCountChange, onQuestionsChange]);
 
@@ -107,7 +107,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
       try {
         await deleteQuestion(index.toString());
 
-        setLastDeletedQuestion({ index, question: question.Text });
+        setLastDeletedQuestion({ index, question: question });
         setDeletedQuestions((prev) => new Set([...prev, index]));
         setToastType("delete");
         setShowToast(true);
@@ -144,10 +144,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
       );
 
       if (newQuestionId) {
-        setQuestions((prev) => [
-          ...prev,
-          { Id: newQuestionId, Text: trimmedQuestion },
-        ]);
+        setQuestions((prev) => [...prev, trimmedQuestion]);
         setNewQuestionInput("");
         setShowAddQuestion(false);
         setToastType("add");
@@ -172,7 +169,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
 
       setQuestions((prev) => {
         const updated = [...prev];
-        updated[index].Text = trimmedQuestion;
+        updated[index] = trimmedQuestion;
         return updated;
       });
       setEditingIndex(null);
@@ -302,13 +299,13 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                         <div className="flex items-center justify-between w-full h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
                           <div
                             className="flex items-start gap-6 flex-1 cursor-pointer px-4"
-                            onClick={() => handleClickQuestion(i, q.Text)}
+                            onClick={() => handleClickQuestion(i, q)}
                           >
                             <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400">
                               {String(i + 1)}.
                             </span>
                             <p className="text-sm w-[440px] leading-5 m-0 text-gray-900 dark:text-gray-100">
-                              {q.Text}
+                              {q}
                             </p>
                           </div>
 

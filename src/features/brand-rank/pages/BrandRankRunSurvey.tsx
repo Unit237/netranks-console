@@ -48,9 +48,9 @@ export default function BrandRankSurveyRun() {
         navigate(path);
 
         addTab({
-          name: "my first report",
+          name: "My First Report",
           path: path,
-          headerName: "my first report",
+          headerName: "My First Report",
         });
       }
     } catch (error) {
