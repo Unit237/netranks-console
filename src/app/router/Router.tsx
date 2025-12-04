@@ -12,7 +12,6 @@ import Questions from "../../features/brand-rank/pages/Questions";
 import PricingAndQuestion from "../../features/brand-rank/pages/ReviewAndQuestion";
 import Alerts from "../../features/console/pages/Alerts";
 import Console from "../../features/console/pages/Console";
-import Dashboard from "../../features/console/pages/Dashboard";
 import Members from "../../features/console/pages/Members";
 import NewProject from "../../features/console/pages/NewProject";
 import NewSurvey from "../../features/console/pages/NewSurvey";
@@ -48,7 +47,7 @@ const Router = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Dashboard />} />
+        <Route index element={<Project />} />
         <Route path="alerts" element={<Alerts />} />
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<Settings />} />

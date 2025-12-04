@@ -1,7 +1,12 @@
-import { Eye, Infinity, Menu, Search, Smile } from "lucide-react";
+import { Eye, Infinity, Search, Smile } from "lucide-react";
 import { AiFillApi } from "react-icons/ai";
+import type { SurveyDetails } from "../../@types";
 
-const OverviewPageTab: React.FC = () => {
+interface OverviewPageTabProps {
+  surveyDetails: SurveyDetails;
+}
+
+const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
   // Sentiment data
   const sentimentData = {
     overall: "Positive",
@@ -96,15 +101,15 @@ const OverviewPageTab: React.FC = () => {
       <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
         {/* Metrics Row */}
 
-        <div className="grid grid-cols-4">
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
+        <div className="grid grid-cols-3">
+          {/* <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
               Sentiment
             </p>
             <div className="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-100">
               <Menu className="text-green-600 mr-1" /> {sentimentData.overall}
             </div>
-          </div>
+          </div> */}
           <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
               Mentions analyzed

@@ -1,7 +1,7 @@
 import { useState } from "react";
+import BillingTab from "../components/BillingTab";
 import ProfileTab from "../components/ProfileTab";
 import WorkspaceTab from "../components/WorkspaceTab";
-import BillingTab from "../components/BillingTab";
 
 type TabType = "profile" | "workspace" | "billing";
 
@@ -55,4 +55,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
