@@ -86,6 +86,12 @@ axios.interceptors.request.use(async (config) => {
   // This ensures we have the latest token value
   const authToken = token.get();
   if (authToken) {
+    // Safety check: ensure token is not HTML or invalid
+    const tokenStr = String(authToken);
+    if (tokenStr.trim().startsWith("<!DOCTYPE") || tokenStr.trim().startsWith("<html")) {
+      console.error("Invalid token detected (HTML), skipping header");
+      return config;
+    }
     // Add token to common headers so it's included in all requests
     config.headers.common["token"] = authToken;
     // Also explicitly set it on the request headers as a fallback
@@ -373,8 +379,14 @@ export default function connection(
 class ApiClient {
   private baseURL: string;
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor(baseURL: string | undefined) {
+    // Ensure we always have a valid baseURL
+    if (!baseURL || typeof baseURL !== "string") {
+      console.error("Invalid baseURL provided to ApiClient, using default:", baseURL);
+      this.baseURL = "http://localhost:4000";
+    } else {
+      this.baseURL = baseURL;
+    }
   }
 
   async get<T>(endpoint: string, options?: ApiRequestConfig): Promise<T> {
@@ -437,7 +449,24 @@ class ApiClient {
     options: ApiRequestConfig = {}
   ): Promise<T> {
     const { setLoading, skipErrorToast, ...config } = options;
-    const url = `${this.baseURL}${endpoint}`;
+    
+    // Ensure endpoint starts with / if baseURL is absolute
+    const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    let url: string;
+    
+    if (this.baseURL.startsWith("http")) {
+      // Absolute URL - ensure proper joining
+      url = `${this.baseURL}${normalizedEndpoint}`;
+    } else {
+      // Relative URL for proxy - use as is
+      url = `${this.baseURL}${endpoint}`;
+    }
+    
+    // Validate URL is not invalid
+    if (!url || url === "undefined" || url.includes("undefined")) {
+      console.error("Invalid URL constructed:", { baseURL: this.baseURL, endpoint, url });
+      throw new ApiError(`Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`);
+    }
 
     return myFetch<T>(setLoading, {
       ...config,
@@ -447,7 +476,11 @@ class ApiClient {
 }
 
 // Export apiClient instance for the main API
-export const apiClient = new ApiClient(prms.SERVER_URL);
+const serverUrl = prms.SERVER_URL;
+if (!serverUrl) {
+  console.error("SERVER_URL is undefined! Using fallback localhost:4000");
+}
+export const apiClient = new ApiClient(serverUrl || "http://localhost:4000");
 
 // Export brandFetchApi instance for BrandFetch API
 export const brandFetchApi = new ApiClient("https://api.brandfetch.io/v2");
