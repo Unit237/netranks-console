@@ -25,7 +25,7 @@ const MagicLinkHandler = () => {
       await consumeMagicLink(magicLinkId, p1, p2);
 
       // Redirect to console after successful authentication
-      navigate("/console", { replace: true });
+      navigate("/project", { replace: true });
     } catch (err) {
       console.error("Magic link authentication failed", err);
 

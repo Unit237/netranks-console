@@ -86,10 +86,10 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     {
       id: "single-run",
       name: "Single Run",
-      price: 200,
-      desc: "Runs once, immediately after launch",
-      duration: "",
-      numberOfRuns: 1,
+      price: 0,
+      desc: "5 free runs.",
+      duration: undefined,
+      numberOfRuns: 5,
       period: 24 * 0,
     },
     {
@@ -403,7 +403,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                             className={`border border-gray-300 rounded-full h-1 w-1 bg-gray-300`}
                           ></div>
                           <div className="">${freq.price}</div>
-                          <div className="text-sm">/ {freq.duration}</div>
+                          {freq.duration && (
+                            <div className="text-sm">/ {freq.duration}</div>
+                          )}
                         </div>
                         <div className="text-gray-500 text-sm">{freq.desc}</div>
                       </div>

@@ -1,16 +1,8 @@
-import {
-  Check,
-  LayoutGrid,
-  List,
-  Pause,
-  Plus,
-  Search,
-  Settings2,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Check, Pause, Plus, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Project, Survey } from "../../auth/@types";
+import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getProjectById } from "../services/projectService";
 
@@ -22,6 +14,7 @@ const ProjectDetails = () => {
   const navigate = useNavigate();
 
   const { addTab } = useTabs();
+  const { useActiveProjectId } = useUser();
 
   const handleCreateNewSurvey = () => {
     addTab({
@@ -33,8 +26,15 @@ const ProjectDetails = () => {
   };
 
   const fetchProduct = async () => {
+    let id = projectId;
+
+    if (!projectId) {
+      const activeProjectId = useActiveProjectId();
+      id = activeProjectId.toString();
+    }
+
     try {
-      const res = await getProjectById(parseInt(projectId || "0", 10));
+      const res = await getProjectById(parseInt(id || "0", 10));
 
       setProject(res);
       return res;
@@ -46,8 +46,6 @@ const ProjectDetails = () => {
   useEffect(() => {
     fetchProduct();
   }, []);
-
-  console.log(project);
 
   if (!project) {
     return <>Loading...</>;
@@ -104,11 +102,11 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen">
       {/* Header with tabs */}
-      <div className="bg-white dark:bg-gray-800">
+      <div className="">
         <div className="px-6 pt-4">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {project?.Name || "Untitled project"}
@@ -121,18 +119,18 @@ const ProjectDetails = () => {
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4">
         {/* Status cards */}
         <div className="">
-          <div className="grid grid-cols-4 gap-4 mb-8 rounded-[20px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-4 gap-4 mb-8 rounded-[20px] border border-gray-200 dark:border-gray-700">
             {/* Health status card */}
             <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
               <div className="flex items-start gap-3 mb-16">
                 <div className="h-1 w-16 bg-gradient-to-r from-orange-500 to-yellow-400 rounded-full"></div>
               </div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              {/* <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 Okay-ish health
-              </h3>
+              </h3> */}
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                 Engagement metrics are steady with a small 12% increase this
                 week, and brand sentiment is holding up
@@ -189,7 +187,7 @@ const ProjectDetails = () => {
             New survey
           </button>
           <div className="flex items-center gap-3">
-            <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            {/* <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <List size={18} />
             </button>
             <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -208,7 +206,7 @@ const ProjectDetails = () => {
                 placeholder="Search surveys..."
                 className="pl-9 pr-4 py-1.5 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-[20px] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
               />
-            </div>
+            </div> */}
           </div>
         </div>
 
