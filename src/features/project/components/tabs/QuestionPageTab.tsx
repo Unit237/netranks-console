@@ -1,7 +1,7 @@
 import { Smile } from "lucide-react";
 import React, { useState, type JSX } from "react";
 import { FaQuoteLeft, FaQuoteRight } from "react-icons/fa";
-import type { Question as SurveyQuestion } from "../../@types";
+import type { SurveyQuestion } from "../../@types";
 
 interface Quote {
   text: string;

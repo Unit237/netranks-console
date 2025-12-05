@@ -34,16 +34,6 @@ const Project = () => {
             >
               Billing
             </button>
-            {/* <button
-              onClick={() => setActiveTab("Prediction")}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === "Prediction"
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              }`}
-            >
-              Prediction
-            </button> */}
           </div>
         </div>
 
