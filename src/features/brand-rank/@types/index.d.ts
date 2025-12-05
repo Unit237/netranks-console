@@ -20,7 +20,7 @@ export type BrandData = {
   PasswordOne: string | null;
   PasswordTwo: string | null;
   QueryType: string | null;
-  Questions: Question[];
+  Questions: string[];
   WebsiteOfTheBrand: string | null;
   iterations?: number;
   runsPerMonth?: number;

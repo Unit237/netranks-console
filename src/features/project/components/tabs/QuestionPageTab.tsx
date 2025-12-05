@@ -1,6 +1,7 @@
 import { Smile } from "lucide-react";
 import React, { useState, type JSX } from "react";
 import { FaQuoteLeft, FaQuoteRight } from "react-icons/fa";
+import type { SurveyQuestion } from "../../@types";
 
 interface Quote {
   text: string;
@@ -28,12 +29,16 @@ interface Question {
   details: QuestionDetails;
 }
 
-const QuestionPageTab: React.FC = () => {
+interface QuestionPageTabProps {
+  questions: SurveyQuestion[];
+}
+
+const QuestionPageTab: React.FC<QuestionPageTabProps> = ({ questions }) => {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
 
-  const questions: Question[] = [
+  const dummyQuestions: Question[] = [
     {
       id: 1,
       text: "How does our new pricing compare to agencies like MetaLab?",
@@ -243,11 +248,13 @@ const QuestionPageTab: React.FC = () => {
   if (!selectedQuestion) {
     return (
       <div className="bg-gray-100 rounded-[20px] border border-gray-200">
-        {questions.map((question, index) => (
+        {dummyQuestions.map((question, index) => (
           <div
             key={question.id}
             className={`bg-white rounded-[20px] border border-gray-100 flex items-center justify-between px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors ${
-              index !== questions.length - 1 ? "border-b border-gray-100" : ""
+              index !== dummyQuestions.length - 1
+                ? "border-b border-gray-100"
+                : ""
             }`}
             onClick={() => setSelectedQuestion(question)}
           >

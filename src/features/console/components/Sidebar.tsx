@@ -1,12 +1,4 @@
-import {
-  Bell,
-  ChevronDown,
-  HelpCircle,
-  Plus,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
+import { ChevronDown, Plus, Search, Settings, Users } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
@@ -50,12 +42,12 @@ const Sidebar = () => {
     //   path: "/console",
     //   headerName: "Q3 Overview",
     // },
-    {
-      icon: Bell,
-      label: "Alerts",
-      path: "/console/alerts",
-      headerName: "Alert",
-    },
+    // {
+    //   icon: Bell,
+    //   label: "Alerts",
+    //   path: "/console/alerts",
+    //   headerName: "Alert",
+    // },
     {
       icon: Users,
       label: "Members",
@@ -115,18 +107,18 @@ const Sidebar = () => {
     navigate("/console/new-project");
   };
 
-  const handleSupportClick = () => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
-    addTab({
-      name: "Support",
-      path: "/console/support",
-      headerName: "Support",
-    });
-    navigate("/console/support");
-  };
+  // const handleSupportClick = () => {
+  //   if (!isAuthenticated()) {
+  //     navigate("/signin");
+  //     return;
+  //   }
+  //   addTab({
+  //     name: "Support",
+  //     path: "/console/support",
+  //     headerName: "Support",
+  //   });
+  //   navigate("/console/support");
+  // };
 
   return (
     <div
@@ -315,7 +307,7 @@ const Sidebar = () => {
       </nav>
 
       {/* Support Link */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-2">
+      {/* <div className="border-t border-gray-200 dark:border-gray-800 p-2">
         <button
           onClick={handleSupportClick}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -330,7 +322,7 @@ const Sidebar = () => {
           <HelpCircle className="w-5 h-5 flex-shrink-0" />
           {!isCollapsed && <span>Support</span>}
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

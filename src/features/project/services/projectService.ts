@@ -1,6 +1,6 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
 import type { Project } from "../../auth/@types";
-import type { Question } from "../../brand-rank/@types";
+import type { SurveyDetails } from "../@types";
 
 export const changeSurveySchedule = async (
   surveyRunId: number,
@@ -37,7 +37,7 @@ export const createSurvey = async (
   projectId: number,
   schedule: number,
   name: string,
-  question: Question[]
+  question: string[]
 ) => {
   try {
     const surveyRun = await apiClient.post(`api/CreateSurvey`, {
@@ -90,6 +90,34 @@ export const getProjectById = async (projectId: number) => {
       error instanceof Error
         ? error.message
         : "Unable to get project. Please try again."
+    );
+  }
+};
+
+export const getSurveyById = async (surveyId: number) => {
+  try {
+    const survey: SurveyDetails = await apiClient.get(
+      `api/GetSurvey/${surveyId}`
+    );
+
+    return survey;
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to get survey:", error);
+
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to get survey. Please try again."
     );
   }
 };

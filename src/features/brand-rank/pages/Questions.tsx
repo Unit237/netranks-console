@@ -205,7 +205,7 @@ const Questions: React.FC = () => {
   const handleConfirmDelete = (index: number) => {
     const question = survey?.Questions?.[index];
     if (question) {
-      setLastDeletedQuestion({ index, question: question.Text });
+      setLastDeletedQuestion({ index, question: question });
       setDeletedQuestions((prev) => new Set([...prev, index]));
       setShowToast(true);
       setConfirmingDelete(null);
@@ -303,9 +303,7 @@ const Questions: React.FC = () => {
                         </span>
 
                         {/* Question text */}
-                        <p className="text-sm w-[500px] leading-5 m-0">
-                          {q.Text}
-                        </p>
+                        <p className="text-sm w-[500px] leading-5 m-0">{q}</p>
                       </div>
 
                       {/* Trash icon or confirm button - fixed width container */}

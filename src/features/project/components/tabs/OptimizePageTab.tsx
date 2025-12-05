@@ -8,6 +8,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import React from "react";
+import type { SurveyDetails } from "../../@types";
 
 interface Task {
   id: string;
@@ -20,7 +21,11 @@ interface Task {
   completed?: boolean;
 }
 
-const OptimizePageTab = () => {
+interface OptimizePageTabProps {
+  surveyDetails: SurveyDetails;
+}
+
+const OptimizePageTab: React.FC<OptimizePageTabProps> = ({ surveyDetails }) => {
   const tasks: Task[] = [
     {
       id: "1",

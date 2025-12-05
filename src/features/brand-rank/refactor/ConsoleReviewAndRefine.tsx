@@ -14,12 +14,12 @@ import {
   changeSurveySchedule,
   createSurvey,
 } from "../../project/services/projectService";
-import type { BrandData, Question } from "../@types";
+import type { BrandData } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
   survey: BrandData;
   questionCount: number;
-  questions: Question[];
+  questions: string[];
 }
 
 interface Model {
@@ -45,7 +45,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   const [showModelsDropdown, setShowModelsDropdown] = useState(false);
 
   const navigate = useNavigate();
-  const { activeTabId, replaceTab, navigateToTab } = useTabs();
+  const { activeTabId, replaceTab, navigateToTab, addTab } = useTabs();
 
   const [models, setModels] = useState<Model[]>([
     {
@@ -86,10 +86,10 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     {
       id: "single-run",
       name: "Single Run",
-      price: 200,
-      desc: "Runs once, immediately after launch",
-      duration: "",
-      numberOfRuns: 1,
+      price: 0,
+      desc: "5 free runs.",
+      duration: undefined,
+      numberOfRuns: 5,
       period: 24 * 0,
     },
     {
@@ -97,7 +97,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       name: "Run weekly",
       price: 200,
       desc: "Runs automatically every Monday",
-      duration: "monthly",
+      duration: "weekly",
       numberOfRuns: 4,
       period: 24 * 7,
     },
@@ -162,6 +162,16 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         return m;
       })
     );
+  };
+
+  const handleGoBack = () => {
+    addTab({
+      name: "New Survey",
+      path: `/console/new-survey/${projectId}`,
+      headerName: "New Survey",
+    });
+    navigateToTab(`/console/new-survey/${projectId}`);
+    navigate(`/console/new-survey/${projectId}`);
   };
 
   const handleSubmit = async () => {
@@ -393,7 +403,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                             className={`border border-gray-300 rounded-full h-1 w-1 bg-gray-300`}
                           ></div>
                           <div className="">${freq.price}</div>
-                          <div className="text-sm">/ {freq.duration}</div>
+                          {freq.duration && (
+                            <div className="text-sm">/ {freq.duration}</div>
+                          )}
                         </div>
                         <div className="text-gray-500 text-sm">{freq.desc}</div>
                       </div>
@@ -510,7 +522,10 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
         {/* Footer Buttons */}
         <div className="mt-auto flex items-center justify-between text-sm">
-          <button className="px-6 py-1 border border-gray-200 rounded-lg hover:border-gray-300 text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2">
+          <button
+            onClick={handleGoBack}
+            className="px-6 py-1 border border-gray-200 rounded-lg hover:border-gray-300 text-gray-700 hover:text-gray-900 font-medium flex items-center gap-2"
+          >
             ← Go back
           </button>
           <button

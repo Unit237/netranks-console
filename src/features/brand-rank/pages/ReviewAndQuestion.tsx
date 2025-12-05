@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
-import type { BrandData, Question } from "../@types";
+import type { BrandData } from "../@types";
 import { useBrand } from "../context/BrandContext";
 import ConsoleQuestionSection from "../refactor/ConsoleQuestionSection";
 import ConsoleReviewAndRefine from "../refactor/ConsoleReviewAndRefine";
@@ -19,7 +19,7 @@ const ReviewAndQuestion: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(0);
-  const [currentQuestions, setCurrentQuestions] = useState<Question[]>([]);
+  const [currentQuestions, setCurrentQuestions] = useState<string[]>([]);
   const lastFetchedBrandIdRef = useRef<string | null>(null);
   const lastFetchedQueryRef = useRef<string | null>(null);
 
@@ -38,7 +38,7 @@ const ReviewAndQuestion: React.FC = () => {
     setQuestionCount(count);
   }, []);
 
-  const handleQuestionsChange = useCallback((questions: Question[]) => {
+  const handleQuestionsChange = useCallback((questions: string[]) => {
     setCurrentQuestions(questions);
   }, []);
 
