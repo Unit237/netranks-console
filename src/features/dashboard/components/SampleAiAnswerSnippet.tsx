@@ -2,11 +2,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Markdown from "../../../app/shared/ui/Markdown";
-import type { AiAnswerSnippet } from "../@types";
 
-interface CarouselItem {
-  question: string;
-  answer: string;
+interface Snippet {
+  Question: string;
+  AnswerUrl: string;
+}
+
+interface Survey {
+  SampleAiAnswerSnippets: Snippet[];
 }
 
 interface CarouselItem {
@@ -14,14 +17,30 @@ interface CarouselItem {
   answer: string;
 }
 
-interface SampleAiAnswerSnippetProps {
-  aiAnswer: AiAnswerSnippet[];
+interface Props {
+  survey: Survey;
 }
 
-export default function SampleAiAnswerSnippet({
-  aiAnswer,
-}: SampleAiAnswerSnippetProps) {
-  const snippets = aiAnswer;
+interface Snippet {
+  Question: string;
+  AnswerUrl: string;
+}
+
+interface Survey {
+  SampleAiAnswerSnippets: Snippet[];
+}
+
+interface CarouselItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  survey: Survey;
+}
+
+export default function SampleAiAnswerSnippet({ survey }: Props) {
+  const snippets = survey.SampleAiAnswerSnippets;
   const [items, setItems] = useState<(CarouselItem | null)[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -67,7 +86,7 @@ export default function SampleAiAnswerSnippet({
       <div className="flex flex-col gap-2 flex-grow mb-8 bg-white rounded-lg shadow-md border border-gray-200">
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-            Actual AI answers for aiAnswer
+            Actual AI answers for survey
           </h2>
           <div className="h-[300px] flex items-center justify-center">
             <div className="animate-pulse text-gray-500">Loading...</div>
@@ -83,7 +102,7 @@ export default function SampleAiAnswerSnippet({
     <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="px-2 py-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pb-4 pl-4">
-          Actual AI answers for aiAnswer
+          Actual AI answers for survey
         </h2>
 
         <div className="relative">
@@ -107,7 +126,7 @@ export default function SampleAiAnswerSnippet({
           {/* Content Area */}
           <div className="mx-12 overflow-hidden">
             <div
-              className="h-[350px] bg-white rounded-[20px] shadow-sm p-4 transition-opacity duration-300"
+              className="h-[300px] bg-white rounded-[20px] shadow-sm p-4 transition-opacity duration-300"
               style={{
                 overflowY: currentItem ? "auto" : "hidden",
               }}

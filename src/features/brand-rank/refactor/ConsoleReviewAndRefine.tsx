@@ -52,7 +52,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       id: "gpt5",
       name: "Open AI GPT 5",
       icon: "🤖",
-      costPerPrompt: 0, // 0.1
+      costPerPrompt: 0.1,
       iterations: 2,
       enabled: true,
     },
@@ -60,7 +60,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       id: "claude",
       name: "Claude 4 Sonnet",
       icon: "AI",
-      costPerPrompt: 0, // 0.15
+      costPerPrompt: 0.15,
       iterations: 4,
       enabled: true,
     },

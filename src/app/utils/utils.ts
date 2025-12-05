@@ -5,8 +5,3 @@ export function toPercentage(value: number | null | undefined): string {
 
   return `${(value * 100).toFixed(0)}%`;
 }
-
-export function truncate(str?: string, maxLength: number = 23): string {
-  if (!str) return "";
-  return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
-}
