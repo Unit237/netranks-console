@@ -12,6 +12,8 @@ const Sidebar = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
+  const [projectSearchQuery, setProjectSearchQuery] = useState("");
+  const [showProjectSearch, setShowProjectSearch] = useState(false);
 
   // Check if we're on the dashboard route
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
@@ -128,26 +130,26 @@ const Sidebar = () => {
       } ${!isAuthenticated() ? "cursor-pointer" : ""}`}
     >
       {/* User Section */}
-      <div className="px-4 py-2">
+      <div className="px-4 py-3 border-b border-gray-300 dark:border-gray-700">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex-1">
               <div
-                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md p-2 -mx-2 text-xs font-medium text-gray-900 dark:text-gray-100 truncate"
+                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md p-2 -mx-2 text-sm font-medium text-gray-900 dark:text-gray-100 truncate transition-colors"
                 onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
               >
-                <div className="w-4 h-4 bg-blue-500 rounded-md"></div>
+                <div className="w-4 h-4 bg-blue-500 rounded-md flex-shrink-0"></div>
                 <div className="flex items-center min-w-0">
-                  <p className="">{user?.Name || user?.EMail || "User"}</p>
-                  <p className="ml-1">Workspace</p>
+                  <p className="truncate">{user?.Name || user?.EMail || "User"}</p>
+                  <p className="ml-1 text-gray-500 dark:text-gray-400">Workspace</p>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform ${showWorkspaceDropdown ? "rotate-180" : ""}`} />
               </div>
             </div>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+            className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors flex-shrink-0"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
@@ -190,6 +192,7 @@ const Sidebar = () => {
             </span>
             <div className="flex items-center gap-1">
               <button
+                onClick={() => setShowProjectSearch(!showProjectSearch)}
                 className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
                 title="Search projects"
               >
@@ -198,13 +201,25 @@ const Sidebar = () => {
               <button
                 onClick={handleNewProject}
                 className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-                title="Add new tab"
+                title="Add new project"
               >
                 <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
           </div>
-          <div className="space-y-1 max-h-64 overflow-y-auto">
+          {showProjectSearch && (
+            <div className="mb-3 px-2">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={projectSearchQuery}
+                onChange={(e) => setProjectSearchQuery(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+          )}
+          <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
             {/* Show "Full demo project" when on dashboard route */}
             {isDashboardRoute && (
               <button
@@ -237,74 +252,118 @@ const Sidebar = () => {
               </button>
             )}
             {user?.Projects && user.Projects.length > 0
-              ? user.Projects.map((project) => {
-                  if (project.Id === 1110) {
-                    return null;
-                  }
-                  const projectPath = `/console/project/${project.Id}`;
-                  const isActiveProject =
-                    isCurrentPageInTabs && location.pathname === projectPath;
-                  return (
-                    <button
-                      key={project.Id}
-                      onClick={() =>
-                        handleProjectClick(
-                          project.Id,
-                          project.Name || "Untitled Project",
-                          project.Name || "Untitled Project"
-                        )
-                      }
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors text-left ${
-                        isActiveProject
-                          ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                    >
-                      <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
-                        <p>{project.Name?.at(0) || "U"}</p>
-                      </div>
+              ? user.Projects
+                  .filter((project) => {
+                    if (project.Id === 1110) return false;
+                    if (!projectSearchQuery) return true;
+                    const searchLower = projectSearchQuery.toLowerCase();
+                    return (project.Name || "Untitled Project").toLowerCase().includes(searchLower);
+                  })
+                  .map((project) => {
+                    const projectPath = `/console/project/${project.Id}`;
+                    const isActiveProject =
+                      isCurrentPageInTabs && location.pathname === projectPath;
+                    return (
+                      <button
+                        key={project.Id}
+                        onClick={() =>
+                          handleProjectClick(
+                            project.Id,
+                            project.Name || "Untitled Project",
+                            project.Name || "Untitled Project"
+                          )
+                        }
+                        className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-all text-left relative ${
+                          isActiveProject
+                            ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900 shadow-sm"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {isActiveProject && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full" />
+                        )}
+                        <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px] flex-shrink-0">
+                          <p>{project.Name?.at(0) || "U"}</p>
+                        </div>
 
-                      <span className="flex-1 truncate">
-                        {project.Name || "Untitled Project"}
-                      </span>
-                    </button>
-                  );
-                })
+                        <span className="flex-1 truncate">
+                          {project.Name || "Untitled Project"}
+                        </span>
+                      </button>
+                    );
+                  })
               : !isDashboardRoute && (
                   <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-                    No projects
+                    {projectSearchQuery ? "No projects found" : "No projects"}
                   </p>
                 )}
           </div>
         </div>
       )}
 
-      {/* Navigation Links */}
-      <nav className="flex-1 flex-col py-4 px-2 space-y-1">
-        {sidebarLinks.map((link) => {
-          const Icon = link.icon;
-          const isActiveLink = location.pathname === link.path;
+      {/* Other Section */}
+      {!isCollapsed && (
+        <div className="flex flex-col px-2 py-4 border-t border-gray-300 dark:border-gray-700">
+          <div className="mb-3 px-2">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Other
+            </span>
+          </div>
+          <nav className="flex flex-col space-y-1">
+            {sidebarLinks.map((link) => {
+              const Icon = link.icon;
+              const isActiveLink = location.pathname === link.path;
 
-          // isCurrentPageInTabs &&
-          return (
-            <button
-              key={link.path}
-              onClick={() => handleSidebarLinkClick(link.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isCollapsed ? "justify-center" : "justify-start"
-              } ${
-                isActiveLink
-                  ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-              title={isCollapsed ? link.label : undefined}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>{link.label}</span>}
-            </button>
-          );
-        })}
-      </nav>
+              return (
+                <button
+                  key={link.path}
+                  onClick={() => handleSidebarLinkClick(link.path)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all relative ${
+                    isActiveLink
+                      ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900 shadow-sm"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                  title={link.label}
+                >
+                  {isActiveLink && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full" />
+                  )}
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActiveLink ? "text-blue-600 dark:text-blue-500" : ""}`} />
+                  <span>{link.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      )}
+
+      {/* Collapsed Navigation Links */}
+      {isCollapsed && (
+        <nav className="flex-1 flex-col py-4 px-2 space-y-1">
+          {sidebarLinks.map((link) => {
+            const Icon = link.icon;
+            const isActiveLink = location.pathname === link.path;
+
+            return (
+              <button
+                key={link.path}
+                onClick={() => handleSidebarLinkClick(link.path)}
+                className={`w-full flex items-center justify-center p-2 rounded-md text-sm font-medium transition-colors relative ${
+                  isActiveLink
+                    ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+                title={link.label}
+              >
+                {isActiveLink && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full" />
+                )}
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActiveLink ? "text-blue-600 dark:text-blue-500" : ""}`} />
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Support Link */}
       {/* <div className="border-t border-gray-200 dark:border-gray-800 p-2">
