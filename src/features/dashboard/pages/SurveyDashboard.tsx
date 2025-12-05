@@ -183,7 +183,7 @@ const SurveyDashboard: React.FC = () => {
 
             {/* Actual AI Answers for Survey */}
 
-            <SampleAiAnswerSnippet survey={data} />
+            <SampleAiAnswerSnippet aiAnswer={data.SampleAiAnswerSnippets} />
           </div>
 
           {/* Column 2 */}

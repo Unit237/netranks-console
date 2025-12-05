@@ -18,6 +18,8 @@ const ProjectDetails = () => {
   const { addTab } = useTabs();
   const { useActiveProjectId } = useUser();
 
+  console.log(useActiveProjectId());
+
   const handleCreateNewSurvey = () => {
     addTab({
       name: "New Survey",
@@ -28,24 +30,22 @@ const ProjectDetails = () => {
   };
 
   const fetchProduct = async () => {
-    let id = projectId;
-
-    if (!projectId) {
-      const activeProjectId = useActiveProjectId();
-      id = activeProjectId.toString();
-    }
-
     try {
-      //await getProjectById(parseInt(id || "0", 10));
+      const primaryId = Number(projectId);
 
-      const res = user?.Projects.find((p) => p.Id === parseInt(id || "0", 10));
+      let project = primaryId
+        ? user?.Projects.find((p) => p.Id === primaryId)
+        : undefined;
 
-      if (!res) {
-        return;
+      if (projectId && !project) {
+        const fallbackId = Number(useActiveProjectId());
+        project = user?.Projects.find((p) => p.Id === fallbackId);
       }
 
-      setProject(res);
-      return res;
+      if (!project) return;
+
+      setProject(project);
+      return project;
     } catch (error) {
       console.error("Failed to fetch product:", error);
     }
@@ -53,7 +53,7 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     fetchProduct();
-  }, []);
+  }, [projectId]);
 
   if (!project) {
     return <>Loading...</>;
@@ -148,7 +148,7 @@ const ProjectDetails = () => {
             {/* Spent card */}
             <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
-                Spent in Oct
+                Spent in Dec
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 $450
@@ -161,9 +161,9 @@ const ProjectDetails = () => {
                 Active surveys
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                6{" "}
+                {project.Surveys.length}
                 <span className="text-xl text-gray-400 dark:text-gray-500">
-                  + 4
+                  + 0
                 </span>
               </div>
             </div>

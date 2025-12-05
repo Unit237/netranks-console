@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails as SurveyDetailsType } from "../@types";
+import QuestionPageTab from "../components/tabs/NewQuestionTab";
 import OptimizePageTab from "../components/tabs/OptimizePageTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
-import QuestionPageTab from "../components/tabs/QuestionPageTab";
 import { getSurveyById } from "../services/projectService";
 
 const SurveyDetails = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
+  const { addTab } = useTabs();
 
   const [activeTab, setActiveTab] = useState<
     "Overview" | "Questions" | "Optimize"
@@ -34,6 +36,12 @@ const SurveyDetails = () => {
         setError("Survey not found.");
       } else {
         setSurveyDetails(res);
+        // Add tab to header when survey details are successfully fetched
+        addTab({
+          name: res.Name || "Survey Details",
+          path: `/console/survey/${surveyId}`,
+          headerName: res.Name || "Survey Details",
+        });
       }
     } catch (err) {
       console.error("Error fetching survey details:", err);
