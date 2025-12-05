@@ -51,7 +51,7 @@ const Console = () => {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        {tabs.length === 0 ? (
+        {tabs.length === 0 && location.pathname.endsWith("/console") ? (
           <main className="flex-1 overflow-auto flex items-center justify-center">
             <button
               onClick={handleCreateNewSurvey}

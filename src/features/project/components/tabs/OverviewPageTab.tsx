@@ -1,10 +1,9 @@
 import SampleAiAnswerSnippet from "../../../dashboard/components/SampleAiAnswerSnippet";
 import type { SurveyDetails } from "../../@types";
-import AiVisibilityScoreChooseYourBrandToTrack from "../AiVisibilityScoreChooseYourBrandToTrack";
 import RankedBrandList from "../TopBrandsInAiAnswers";
+import TopCitationAnswer from "../TopCitationAnswer";
 import VisibilityItem from "../VisibilityItem";
 import VisibilityTable from "../VisibilityTable";
-import VisibilityTrendsOverTime from "../VisibilityTrendsOverTime";
 
 interface OverviewPageTabProps {
   surveyDetails: SurveyDetails;
@@ -33,76 +32,36 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
     <div className="space-y-6">
       {/* Sentiment Summary Card */}
 
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 w-[41.5vw]">
         {/* Metrics Row */}
 
-        <div className="grid grid-cols-3">
-          {/* <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
-              Sentiment
-            </p>
-            <div className="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-100">
-              <Menu className="text-green-600 mr-1" /> {sentimentData.overall}
-            </div>
-          </div> */}
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
-              Mentions analyzed
+        <div className="grid grid-cols-2">
+          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Brands Identified
             </p>
             <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
-              {sentimentData.mentionsAnalyzed}
+              {surveyDetails.Dashboard.SurveyStatsOverview.BrandsIdentified}
             </p>
           </div>
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
-              Competitors mentioned
+          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Queries Run
             </p>
             <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
-              {sentimentData.competitorsMentioned}
-            </p>
-          </div>
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-10">
-              Themes found
-            </p>
-            <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
-              {sentimentData.themesFound}
+              {surveyDetails.Dashboard.SurveyStatsOverview.QueriesRun}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Sentiment Breakdown Bar */}
-      <div className="space-y-2">
-        {/* Breakdown bar */}
-        <div className="flex h-[6px] rounded-md overflow-hidden">
-          {sentimentData.breakdown.map((item, index) => (
-            <div
-              key={index}
-              className={`${item.color} h-[3px] mr-1`}
-              style={{ width: `${item.percentage}%` }}
-            />
-          ))}
-        </div>
+      <div className="flex items-start gap-2">
+        <RankedBrandList items={surveyDetails.Dashboard.TopBrandsInAiAnswers} />
 
-        {/* Labels aligned below */}
-        <div className="flex w-full text-xs text-gray-600 dark:text-gray-400 pt-2">
-          {sentimentData.breakdown.map((item, index) => (
-            <div
-              key={index}
-              className="text-start px-4 border-l border-gray-500 dark:border-gray-600"
-              style={{ width: `${item.percentage}%` }}
-            >
-              <span className="block font-medium">{item.label}</span>
-              <span className="block">
-                {item.percentage}% / {item.count}
-              </span>
-            </div>
-          ))}
-        </div>
+        <TopCitationAnswer
+          items={surveyDetails.Dashboard.TopCitationsInAiAnswers}
+        />
       </div>
-
-      <RankedBrandList items={surveyDetails.Dashboard.TopBrandsInAiAnswers} />
 
       {/* Baked Design Mentions */}
       <VisibilityItem mention={surveyDetails.Dashboard.VisibilityTable} />
@@ -111,18 +70,18 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
         aiAnswer={surveyDetails.Dashboard.SampleAiAnswerSnippets}
       />
 
-      <VisibilityTrendsOverTime
+      {/* <VisibilityTrendsOverTime
         visibilityTrend={surveyDetails.Dashboard.VisibilityTrendsOverTime}
         filteredBrand={surveyDetails.Dashboard.FilteredBrand}
-      />
+      /> */}
 
       <VisibilityTable
         visibilityEntries={surveyDetails.Dashboard.VisibilityTable}
       />
 
-      <AiVisibilityScoreChooseYourBrandToTrack
+      {/* <AiVisibilityScoreChooseYourBrandToTrack
         visibilityScore={surveyDetails.Dashboard.VisibilityScore}
-      />
+      /> */}
     </div>
   );
 };

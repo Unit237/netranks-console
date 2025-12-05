@@ -148,7 +148,7 @@ const ProjectDetails = () => {
             {/* Spent card */}
             <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
-                Spent in Oct
+                Spent in Dec
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 $450
@@ -161,9 +161,9 @@ const ProjectDetails = () => {
                 Active surveys
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                6{" "}
+                {project.Surveys.length}
                 <span className="text-xl text-gray-400 dark:text-gray-500">
-                  + 4
+                  + 0
                 </span>
               </div>
             </div>

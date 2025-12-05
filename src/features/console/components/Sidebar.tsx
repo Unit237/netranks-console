@@ -2,6 +2,7 @@ import { ChevronDown, Plus, Search, Settings, Users } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
+import { truncate } from "../../../app/utils/utils";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
@@ -126,7 +127,9 @@ const Sidebar = () => {
               >
                 <div className="w-4 h-4 bg-blue-500 rounded-md"></div>
                 <div className="flex items-center min-w-0">
-                  <p className="">{user?.Name || user?.EMail || "User"}</p>
+                  <p className="">
+                    {user?.Name || truncate(user?.EMail, 10) || "User"}
+                  </p>
                   <p className="ml-1">Workspace</p>
                 </div>
                 <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
@@ -230,8 +233,7 @@ const Sidebar = () => {
                     return null;
                   }
                   const projectPath = `/console/project/${project.Id}`;
-                  const isActiveProject =
-                    isCurrentPageInTabs && location.pathname === projectPath;
+                  const isActiveProject = location.pathname === projectPath;
                   return (
                     <button
                       key={project.Id}
