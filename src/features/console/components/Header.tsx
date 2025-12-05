@@ -117,7 +117,7 @@ const Header = () => {
                   </span>
                   <button
                     onClick={(e) => handleCloseTab(e, tab.id)}
-                    className={`ml-1 p-1 rounded transition-colors flex-shrink-0 ${
+                    className={`ml-1 p-1 rounded transition-all flex-shrink-0 opacity-0 group-hover:opacity-100 ${
                       isActive
                         ? "hover:bg-gray-200 dark:hover:bg-gray-700"
                         : "hover:bg-gray-200 dark:hover:bg-gray-600"
