@@ -74,22 +74,22 @@ const Header = () => {
   return (
     <div
       onClick={handleClick}
-      className={`bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto border-b border-gray-300 dark:border-gray-700 ${
+      className={`bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto ${
         !isAuthenticated() ? "cursor-pointer" : ""
       }`}
     >
       {tabs.length > 0 && (
         <>
-          <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <div className="flex items-center gap-1 flex-1 overflow-x-auto">
             {tabs.map((tab) => {
               const isActive = tab.id === activeTabId;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id, tab.path)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap relative group ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-t-md text-sm font-medium transition-colors whitespace-nowrap ${
                     isActive
-                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm border-t-2 border-blue-500"
+                      ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
@@ -97,43 +97,39 @@ const Header = () => {
                     <img
                       src={tab.icon}
                       alt={tab.name}
-                      className="w-4 h-4 rounded-sm flex-shrink-0"
+                      className="w-4 h-4 rounded-sm"
                     />
                   )}
                   {tab.image && (
                     <img
                       src={tab.image}
                       alt={tab.name}
-                      className="w-4 h-4 rounded-sm flex-shrink-0"
+                      className="w-4 h-4 rounded-sm"
                     />
                   )}
                   {!tab.icon && !tab.image && (
-                    <div className="w-4 h-4 rounded-sm bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs flex-shrink-0">
+                    <div className="w-4 h-4 rounded-sm bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs">
                       {tab.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="max-w-[140px] truncate">
+                  <span className="max-w-[120px] truncate">
                     {tab.headerName}
                   </span>
-                  <button
+                  <div
                     onClick={(e) => handleCloseTab(e, tab.id)}
-                    className={`ml-1 p-1 rounded transition-all flex-shrink-0 opacity-0 group-hover:opacity-100 ${
-                      isActive
-                        ? "hover:bg-gray-200 dark:hover:bg-gray-700"
-                        : "hover:bg-gray-200 dark:hover:bg-gray-600"
-                    }`}
+                    className="ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
                     aria-label="Close tab"
                   >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                    <X className="w-3 h-3" />
+                  </div>
                 </button>
               );
             })}
             <button
               onClick={handleAddTab}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0 ml-1"
-              aria-label="Add new survey"
-              title="Add new survey"
+              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0"
+              aria-label="Add new tab"
+              title="Add new tab"
             >
               <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
             </button>
