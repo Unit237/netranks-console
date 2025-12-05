@@ -7,7 +7,7 @@ import { useTabs } from "../context/TabContext";
 
 const Sidebar = () => {
   const { user } = useUser();
-  const { addTab, tabs } = useTabs();
+  const { tabs } = useTabs();
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -84,13 +84,6 @@ const Sidebar = () => {
       navigate("/signin");
       return;
     }
-    addTab({
-      name: projectName || "Untitled Project",
-      path: `/console/project/${projectId}`,
-      isProject: true,
-      projectId,
-      headerName,
-    });
     navigate(`/console/project/${projectId}`);
   };
 
@@ -99,11 +92,6 @@ const Sidebar = () => {
       navigate("/signin");
       return;
     }
-    addTab({
-      name: "untitled project",
-      path: "/console/new-project",
-      headerName: "untitled project",
-    });
     navigate("/console/new-project");
   };
 

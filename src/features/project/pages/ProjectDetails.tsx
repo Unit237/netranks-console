@@ -18,6 +18,8 @@ const ProjectDetails = () => {
   const { addTab } = useTabs();
   const { useActiveProjectId } = useUser();
 
+  console.log(useActiveProjectId());
+
   const handleCreateNewSurvey = () => {
     addTab({
       name: "New Survey",
@@ -28,24 +30,22 @@ const ProjectDetails = () => {
   };
 
   const fetchProduct = async () => {
-    let id = projectId;
-
-    if (!projectId) {
-      const activeProjectId = useActiveProjectId();
-      id = activeProjectId.toString();
-    }
-
     try {
-      //await getProjectById(parseInt(id || "0", 10));
+      const primaryId = Number(projectId);
 
-      const res = user?.Projects.find((p) => p.Id === parseInt(id || "0", 10));
+      let project = primaryId
+        ? user?.Projects.find((p) => p.Id === primaryId)
+        : undefined;
 
-      if (!res) {
-        return;
+      if (projectId && !project) {
+        const fallbackId = Number(useActiveProjectId());
+        project = user?.Projects.find((p) => p.Id === fallbackId);
       }
 
-      setProject(res);
-      return res;
+      if (!project) return;
+
+      setProject(project);
+      return project;
     } catch (error) {
       console.error("Failed to fetch product:", error);
     }
@@ -53,7 +53,7 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     fetchProduct();
-  }, []);
+  }, [projectId]);
 
   if (!project) {
     return <>Loading...</>;
