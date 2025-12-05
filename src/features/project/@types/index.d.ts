@@ -1,7 +1,15 @@
-export interface Question {
+// =========================
+// QUESTIONS
+// =========================
+
+export interface SurveyQuestion {
   Id: number;
   Text: string;
 }
+
+// =========================
+// DASHBOARD → SURVEY STATS
+// =========================
 
 export interface SurveyStatsOverview {
   QueriesRun: number;
@@ -10,15 +18,27 @@ export interface SurveyStatsOverview {
   SurveyDepth: number;
 }
 
+// =========================
+// DASHBOARD → TOP BRANDS
+// =========================
+
 export interface TopBrand {
   Name: string;
   Percentage: number;
 }
 
+// =========================
+// DASHBOARD → TOP CITATIONS
+// =========================
+
 export interface TopCitation {
   RegistrableDomain: string;
   Percentage: number;
 }
+
+// =========================
+// DASHBOARD → SAMPLE ANSWERS
+// =========================
 
 export interface SampleAiAnswerSnippet {
   Id: number;
@@ -27,39 +47,23 @@ export interface SampleAiAnswerSnippet {
   AnswerUrl: string;
 }
 
-export interface BrandMention {
-  Id: number;
-  Name: string;
-  Count: number;
-}
+// =========================
+// DASHBOARD ROOT OBJECT
+// =========================
 
-export interface VisibilityTableEntry {
-  Prompt: string;
-  BrandsMentioned: BrandMention[];
-  YourBrandMentioned: any;
-  Position: any;
-}
-
-export interface VisibilityTrendData {
-  Date: string;
-  NumberOfAnswersMentioningThisBrand: number;
-  TotalNumberOfAnswers: number;
-}
-
-export interface FilteredBrand {
-  Name: string;
-}
-
-export interface Dashboard {
-  FilteredBrand: FilteredBrand;
-  VisibilityTrendsOverTime: VisibilityTrendData[];
-  VisibilityScore: number;
+export interface SurveyDashboard {
+  FilteredBrand: string | null;
+  VisibilityTrendsOverTime: number | null;
+  VisibilityScore: number | null;
   SurveyStatsOverview: SurveyStatsOverview;
   TopBrandsInAiAnswers: TopBrand[];
   TopCitationsInAiAnswers: TopCitation[];
   SampleAiAnswerSnippets: SampleAiAnswerSnippet[];
-  VisibilityTable: VisibilityTableEntry[];
 }
+
+// =========================
+// MAIN SURVEY DETAILS TYPE
+// =========================
 
 export interface SurveyDetails {
   Id: number;
@@ -70,6 +74,6 @@ export interface SurveyDetails {
   CurrentlyRunningSurveyRunId: number | null;
   SchedulePeriodHours: number;
   NextRunAt: string | null;
-  Questions: Question[];
-  Dashboard: Dashboard;
+  Questions: SurveyQuestion[];
+  Dashboard: SurveyDashboard;
 }
