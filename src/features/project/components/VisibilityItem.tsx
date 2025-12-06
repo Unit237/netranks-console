@@ -1,6 +1,5 @@
 import { Search, Smile } from "lucide-react";
 import React from "react";
-import { AiFillApi } from "react-icons/ai";
 import type { VisibilityTableEntry } from "../@types";
 import BrandInitialsList from "./BrandInitialList";
 
@@ -25,42 +24,13 @@ const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention }) => {
             <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           </button>
           <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-            <option>
-              <svg
-                className="w-4 h-4 inline-block mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                ></path>
-              </svg>
-              Period
-            </option>
+            <option>Period</option>
           </select>
           <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-            <option>
-              <AiFillApi />
-              Model
-            </option>
+            <option>Model</option>
           </select>
           <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-            <option>
-              <svg
-                className="w-4 h-4 inline-block mr-1"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.691h3.462c.969 0 1.371 1.24.588 1.81l-2.817 2.046a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.817-2.046a1 1 0 00-1.175 0l-2.817 2.046c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.012 8.72a1 1 0 01.588-1.81h3.461a1 1 0 00.951-.691l1.07-3.292z"></path>
-              </svg>
-              Sentiment
-            </option>
+            <option>Sentiment</option>
           </select>
         </div>
       </div>

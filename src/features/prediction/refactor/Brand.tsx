@@ -18,7 +18,7 @@ interface RecentSearch {
   url: string;
 }
 
-interface PredictionData {
+export interface PredictionData {
   prediction: {
     current_rank: number;
     predicted_rank: number;
@@ -63,6 +63,12 @@ interface PredictionData {
       content: string[];
       examples: string[];
     };
+  };
+  attribution: {
+    segments: Array<{
+      segment: string;
+      score: number;
+    }>;
   };
 }
 

@@ -34,7 +34,7 @@ const Project = () => {
             >
               Billing
             </button>
-            {/* <button
+            <button
               onClick={() => setActiveTab("Prediction")}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === "Prediction"
@@ -43,7 +43,7 @@ const Project = () => {
               }`}
             >
               Prediction
-            </button> */}
+            </button>
           </div>
         </div>
 

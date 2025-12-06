@@ -10,77 +10,79 @@ interface OverviewPageTabProps {
 }
 
 const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
-  // Sentiment data
-  const sentimentData = {
-    overall: "Positive",
-    mentionsAnalyzed: "11.2K",
-    competitorsMentioned: "32",
-    themesFound: "12",
-    breakdown: [
-      {
-        label: "Positive",
-        percentage: 68,
-        count: "7.6K",
-        color: "bg-green-500",
-      },
-      { label: "Mixed", percentage: 10, count: "1.2K", color: "bg-orange-500" },
-      { label: "Negative", percentage: 22, count: "2.4K", color: "bg-red-500" },
-    ],
-  };
+  // Safety check for Dashboard and its properties
+  if (!surveyDetails?.Dashboard) {
+    return (
+      <div className="p-6 text-gray-600 dark:text-gray-300">
+        Dashboard data is not available.
+      </div>
+    );
+  }
+
+  const dashboard = surveyDetails.Dashboard;
+  const statsOverview = dashboard.SurveyStatsOverview;
 
   return (
     <div className="space-y-6">
       {/* Sentiment Summary Card */}
 
-      <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 w-[41.5vw]">
-        {/* Metrics Row */}
+      {statsOverview && (
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700 w-[41.5vw]">
+          {/* Metrics Row */}
 
-        <div className="grid grid-cols-2">
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Brands Identified
-            </p>
-            <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
-              {surveyDetails.Dashboard.SurveyStatsOverview.BrandsIdentified}
-            </p>
-          </div>
-          <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Queries Run
-            </p>
-            <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
-              {surveyDetails.Dashboard.SurveyStatsOverview.QueriesRun}
-            </p>
+          <div className="grid grid-cols-2">
+            <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Brands Identified
+              </p>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
+                {statsOverview.BrandsIdentified ?? 0}
+              </p>
+            </div>
+            <div className="rounded-[20px] bg-white dark:bg-gray-800 border-[0.3px] border-gray-200 dark:border-gray-700 p-3">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Queries Run
+              </p>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-100">
+                {statsOverview.QueriesRun ?? 0}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex items-start gap-2">
-        <RankedBrandList items={surveyDetails.Dashboard.TopBrandsInAiAnswers} />
+      {dashboard.TopBrandsInAiAnswers &&
+        dashboard.TopBrandsInAiAnswers.length > 0 && (
+          <div className="flex items-start gap-2">
+            <RankedBrandList items={dashboard.TopBrandsInAiAnswers} />
 
-        <TopCitationAnswer
-          items={surveyDetails.Dashboard.TopCitationsInAiAnswers}
-        />
-      </div>
+            {dashboard.TopCitationsInAiAnswers && (
+              <TopCitationAnswer items={dashboard.TopCitationsInAiAnswers} />
+            )}
+          </div>
+        )}
 
       {/* Baked Design Mentions */}
-      <VisibilityItem mention={surveyDetails.Dashboard.VisibilityTable} />
+      {dashboard.VisibilityTable && dashboard.VisibilityTable.length > 0 && (
+        <VisibilityItem mention={dashboard.VisibilityTable} />
+      )}
 
-      <SampleAiAnswerSnippet
-        aiAnswer={surveyDetails.Dashboard.SampleAiAnswerSnippets}
-      />
+      {dashboard.SampleAiAnswerSnippets &&
+        dashboard.SampleAiAnswerSnippets.length > 0 && (
+          <SampleAiAnswerSnippet aiAnswer={dashboard.SampleAiAnswerSnippets} />
+        )}
 
       {/* <VisibilityTrendsOverTime
-        visibilityTrend={surveyDetails.Dashboard.VisibilityTrendsOverTime}
-        filteredBrand={surveyDetails.Dashboard.FilteredBrand}
+        visibilityTrend={dashboard.VisibilityTrendsOverTime}
+        filteredBrand={dashboard.FilteredBrand}
       /> */}
 
-      <VisibilityTable
-        visibilityEntries={surveyDetails.Dashboard.VisibilityTable}
-      />
+      {dashboard.VisibilityTable && dashboard.VisibilityTable.length > 0 && (
+        <VisibilityTable visibilityEntries={dashboard.VisibilityTable} />
+      )}
 
       {/* <AiVisibilityScoreChooseYourBrandToTrack
-        visibilityScore={surveyDetails.Dashboard.VisibilityScore}
+        visibilityScore={dashboard.VisibilityScore}
       /> */}
     </div>
   );

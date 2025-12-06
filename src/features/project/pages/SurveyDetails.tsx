@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails as SurveyDetailsType } from "../@types";
+import type { CreateSearchPayload } from "../@types/optimization";
+import NewOptimizePageTab from "../components/tabs/NewOptimizePageTab";
 import QuestionPageTab from "../components/tabs/NewQuestionTab";
-import OptimizePageTab from "../components/tabs/OptimizePageTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
+import { getSurveyDashboard } from "../services/optimizeService";
 import { getSurveyById } from "../services/projectService";
 
 const SurveyDetails = () => {
@@ -46,6 +48,29 @@ const SurveyDetails = () => {
     } catch (err) {
       console.error("Error fetching survey details:", err);
       setError("Failed to load survey details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
+    if (!surveyId) return;
+
+    try {
+      setLoading(true);
+      const res = await getSurveyDashboard(
+        parseInt(surveyId, 10),
+        searchPayload
+      );
+
+      console.log(res);
+
+      if (res) {
+        setSurveyDetails(res as SurveyDetailsType);
+      }
+    } catch (err) {
+      console.error("Error fetching survey dashboard:", err);
+      setError("Failed to load survey dashboard. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -108,7 +133,10 @@ const SurveyDetails = () => {
         )}
 
         {activeTab === "Optimize" && (
-          <OptimizePageTab surveyDetails={surveyDetails} />
+          <NewOptimizePageTab
+            surveyDetails={surveyDetails}
+            onBrandSelect={handleBrandSelect}
+          />
         )}
       </div>
     </div>
