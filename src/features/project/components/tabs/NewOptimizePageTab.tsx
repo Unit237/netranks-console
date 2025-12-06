@@ -3,15 +3,16 @@ import {
   Edit3,
   FileText,
   Hash,
+  Loader2,
   Menu,
   TrendingUp,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
-import type { PredictionData } from "../../../prediction/refactor/Brand";
 import type { SurveyDetails } from "../../@types";
 import type { CreateSearchPayload } from "../../@types/optimization";
-import { getPrediction } from "../../services/optimizeService";
+import type { RankingAnalysisResponse, Result } from "../../@types/prediction";
+import { getBatchPrediction } from "../../services/optimizeService";
 import BrandDropdownMenu from "../BrandDropdownMenu";
 
 interface OptimizePageTabProps {
@@ -22,7 +23,7 @@ interface OptimizePageTabProps {
 interface QuestionPrediction {
   questionId: number;
   questionText: string;
-  prediction: PredictionData | null;
+  result: Result | null;
   loading: boolean;
   error: string | null;
 }
@@ -47,7 +48,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
         surveyDetails.Questions.map((q) => ({
           questionId: q.Id,
           questionText: q.Text,
-          prediction: null,
+          result: null,
           loading: false,
           error: null,
         }))
@@ -55,11 +56,81 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }
   }, [surveyDetails?.Questions]);
 
-  const triggerPredictions = (brandName: string, url: string) => {
-    if (url && surveyDetails?.Questions) {
-      surveyDetails.Questions.forEach((question) => {
-        fetchPredictionForQuestion(question.Id, question.Text, brandName, url);
+  const triggerPredictions = async (brandName: string, url: string) => {
+    if (
+      !url ||
+      !surveyDetails?.Questions ||
+      surveyDetails.Questions.length === 0
+    ) {
+      return;
+    }
+
+    // Set all questions to loading state
+    setQuestionPredictions((prev) =>
+      prev.map((qp) => ({
+        ...qp,
+        loading: true,
+        error: null,
+      }))
+    );
+
+    try {
+      // Fetch batch predictions for all questions at once
+      const response: RankingAnalysisResponse = await getBatchPrediction(
+        brandName,
+        url,
+        surveyDetails.Questions
+      );
+
+      console.log("Batch prediction response:", response);
+
+      // Create a map of item_index to result for quick lookup
+      const resultMap = new Map<number, Result>();
+      response.results.forEach((result) => {
+        resultMap.set(result.item_index, result);
       });
+
+      console.log("Result map:", resultMap);
+      console.log("Total results:", response.results.length);
+      console.log("Successful predictions:", response.successful_predictions);
+
+      // Update predictions for each question using item_index
+      setQuestionPredictions((prev) =>
+        prev.map((qp, index) => {
+          const result = resultMap.get(index);
+          console.log(`Question ${index} (ID: ${qp.questionId}):`, result);
+          if (result && result.success) {
+            return {
+              ...qp,
+              result: result,
+              loading: false,
+              error: null,
+            };
+          }
+          return {
+            ...qp,
+            result: result || null,
+            loading: false,
+            error: result
+              ? "Prediction failed for this question"
+              : "No prediction data received",
+          };
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching batch predictions:", error);
+      // Set error state for all questions
+      setQuestionPredictions((prev) =>
+        prev.map((qp) => ({
+          ...qp,
+          result: null,
+          loading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch predictions",
+        }))
+      );
     }
   };
 
@@ -70,7 +141,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       surveyDetails?.Questions?.map((q) => ({
         questionId: q.Id,
         questionText: q.Text,
-        prediction: null,
+        result: null,
         loading: false,
         error: null,
       })) || []
@@ -117,7 +188,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       }
 
       // Fetch predictions for all questions
-      triggerPredictions(selectedPayload.BrandName, finalUrl);
+      await triggerPredictions(selectedPayload.BrandName, finalUrl);
     } catch (error) {
       console.error("Error submitting:", error);
     } finally {
@@ -125,58 +196,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }
   };
 
-  const fetchPredictionForQuestion = async (
-    questionId: number,
-    questionText: string,
-    brandName: string,
-    url: string
-  ) => {
-    // Update loading state for this question
-    setQuestionPredictions((prev) =>
-      prev.map((qp) =>
-        qp.questionId === questionId
-          ? { ...qp, loading: true, error: null }
-          : qp
-      )
-    );
-
-    try {
-      const prediction = await getPrediction(brandName, url, questionText);
-
-      // Update with prediction result
-      setQuestionPredictions((prev) =>
-        prev.map((qp) =>
-          qp.questionId === questionId
-            ? { ...qp, prediction, loading: false, error: null }
-            : qp
-        )
-      );
-    } catch (error) {
-      console.error(
-        `Error fetching prediction for question ${questionId}:`,
-        error
-      );
-      setQuestionPredictions((prev) =>
-        prev.map((qp) =>
-          qp.questionId === questionId
-            ? {
-                ...qp,
-                loading: false,
-                error:
-                  error instanceof Error
-                    ? error.message
-                    : "Failed to fetch prediction",
-              }
-            : qp
-        )
-      );
-    }
-  };
-
-  const getTasksFromPrediction = (
-    prediction: PredictionData,
-    questionId: number
-  ) => {
+  const getTasksFromResult = (result: Result, questionId: number) => {
     const tasks: Array<{
       id: string;
       title: string;
@@ -188,85 +208,152 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }> = [];
 
     // Add action priorities as tasks
-    if (prediction.enhanced?.action_priorities) {
-      prediction.enhanced.action_priorities.forEach((action, index) => {
+    if (result.enhanced?.action_priorities) {
+      result.enhanced.action_priorities.forEach((action, index) => {
+        const impactLevel =
+          action.impact === "CRITICAL" || action.impact === "HIGH"
+            ? "high"
+            : "normal";
         tasks.push({
           id: `q${questionId}-action-${index}`,
-          title: action.title || action.action || "Optimization task",
-          description: action.action || action.details?.improvement || "",
-          impact: action.impact === "high" ? "high" : "normal",
-          category: action.priority || "Content",
+          title: action.action || "Optimization task",
+          description: `${action.current_state} → ${action.target_state}. ${action.estimated_improvement}`,
+          impact: impactLevel,
+          category: action.priority ? `Priority ${action.priority}` : "Content",
           categoryIcon: <Edit3 className="w-3 h-3" />,
           categoryColor: "text-orange-600",
         });
       });
     }
 
-    // Add description suggestions
-    if (prediction.suggestions?.description) {
-      const desc = prediction.suggestions.description;
-      if (desc.keywords && desc.keywords.length > 0) {
+    // Add keyword suggestions
+    if (result.suggestions?.description?.keywords) {
+      result.suggestions.description.keywords.forEach((keyword, index) => {
+        const impactLevel =
+          keyword.priority === "CRITICAL" || keyword.priority === "HIGH"
+            ? "high"
+            : "normal";
         tasks.push({
-          id: `q${questionId}-keywords`,
-          title: "Add keywords",
-          description: `Missing keywords: ${desc.keywords.join(", ")}`,
-          impact: "high",
+          id: `q${questionId}-keyword-${index}`,
+          title: keyword.suggestion || "Add keywords",
+          description: `${keyword.current_state} → ${keyword.target_state}. ${keyword.impact}`,
+          impact: impactLevel,
           category: "Keywords",
           categoryIcon: <Hash className="w-3 h-3" />,
           categoryColor: "text-blue-600",
         });
-      }
-      if (desc.length && desc.length.length > 0) {
+      });
+    }
+
+    // Add readability suggestions
+    if (result.suggestions?.description?.readability) {
+      result.suggestions.description.readability.forEach(
+        (readability, index) => {
+          const impactLevel =
+            readability.priority === "CRITICAL" ||
+            readability.priority === "HIGH"
+              ? "high"
+              : "normal";
+          tasks.push({
+            id: `q${questionId}-readability-${index}`,
+            title: readability.suggestion || "Improve readability",
+            description: `${readability.current_state} → ${readability.target_state}. ${readability.impact}`,
+            impact: impactLevel,
+            category: "Readability",
+            categoryIcon: <FileText className="w-3 h-3" />,
+            categoryColor: "text-green-600",
+          });
+        }
+      );
+    }
+
+    // Add content suggestions from description.content
+    if (result.suggestions?.description?.content) {
+      result.suggestions.description.content.forEach((content, index) => {
+        // Check if content has priority property (not all DescriptionContent types have it)
+        const priority = "priority" in content ? content.priority : undefined;
+        const impactLevel =
+          priority === "CRITICAL" || priority === "HIGH" ? "high" : "normal";
         tasks.push({
-          id: `q${questionId}-length`,
-          title: "Optimize description length",
-          description: desc.length.join(" "),
-          impact: "high",
-          category: "Content",
-          categoryIcon: <Edit3 className="w-3 h-3" />,
-          categoryColor: "text-orange-600",
-        });
-      }
-      if (desc.content && desc.content.length > 0) {
-        tasks.push({
-          id: `q${questionId}-content`,
-          title: "Improve content",
-          description: desc.content.join(" "),
-          impact: "normal",
+          id: `q${questionId}-content-${index}`,
+          title: content.title || content.action || "Improve content",
+          description: content.summary || content.suggestion || "",
+          impact: impactLevel,
           category: "Content",
           categoryIcon: <FileText className="w-3 h-3" />,
           categoryColor: "text-green-600",
         });
-      }
-      if (desc.structure && desc.structure.length > 0) {
+      });
+    }
+
+    // Add structure suggestions
+    if (result.suggestions?.description?.structure) {
+      result.suggestions.description.structure.forEach((structure, index) => {
+        // Structure types always have priority property
+        const impactLevel =
+          structure.priority === "CRITICAL" || structure.priority === "HIGH"
+            ? "high"
+            : "normal";
         tasks.push({
-          id: `q${questionId}-structure`,
-          title: "Improve structure",
-          description: desc.structure.join(" "),
-          impact: "normal",
-          category: "Content",
+          id: `q${questionId}-structure-${index}`,
+          title: structure.title || structure.action || "Improve structure",
+          description: structure.summary || structure.suggestion || "",
+          impact: impactLevel,
+          category: "Structure",
           categoryIcon: <Edit3 className="w-3 h-3" />,
           categoryColor: "text-orange-600",
         });
-      }
+      });
     }
 
     return tasks;
   };
 
   const allTasks = questionPredictions
-    .filter((qp) => qp.prediction)
-    .flatMap((qp) => getTasksFromPrediction(qp.prediction!, qp.questionId));
+    .filter((qp) => qp.result && qp.result.success)
+    .flatMap((qp) => getTasksFromResult(qp.result!, qp.questionId));
 
+  // Debug: Log tasks and results
+  console.log("All tasks:", allTasks);
+  console.log(
+    "Question predictions with results:",
+    questionPredictions.filter((qp) => qp.result && qp.result.success)
+  );
+
+  // Get average current rank from all successful predictions
+  const successfulResults = questionPredictions.filter(
+    (qp) => qp.result && qp.result.success
+  );
   const currentRank =
-    questionPredictions.find((qp) => qp.prediction)?.prediction?.prediction
-      ?.current_rank || 12.0;
+    successfulResults.length > 0
+      ? successfulResults.reduce(
+          (sum, qp) =>
+            sum +
+            (qp.result?.prediction?.current_rank ??
+              qp.result?.prediction?.predicted_rank ??
+              0),
+          0
+        ) / successfulResults.length
+      : 12.0;
+
+  // Get average predicted rank
   const predictedRank =
-    questionPredictions.find((qp) => qp.prediction)?.prediction?.prediction
-      ?.predicted_rank || null;
+    successfulResults.length > 0
+      ? successfulResults.reduce(
+          (sum, qp) => sum + (qp.result?.prediction?.predicted_rank ?? 0),
+          0
+        ) / successfulResults.length
+      : null;
+
+  // Get average content quality score
   const contentQuality =
-    questionPredictions.find((qp) => qp.prediction)?.prediction?.enhanced
-      ?.content_quality?.overall_score || 58;
+    successfulResults.length > 0
+      ? successfulResults.reduce(
+          (sum, qp) =>
+            sum + (qp.result?.enhanced?.content_quality?.overall_score ?? 0),
+          0
+        ) / successfulResults.length
+      : 58;
 
   return (
     <div className="flex gap-6 p-6 bg-gray-50 min-h-screen">
@@ -396,7 +483,14 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
           </div>
 
           <div className="">
-            {allTasks.length > 0 ? (
+            {questionPredictions.some((qp) => qp.loading) ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-12 h-12 text-green-600 animate-spin mb-4" />
+                <p className="text-sm text-gray-600">
+                  Analyzing predictions...
+                </p>
+              </div>
+            ) : allTasks.length > 0 ? (
               allTasks.map((task) => (
                 <div
                   key={task.id}
@@ -452,11 +546,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
               ))
             ) : selectedPayload ? (
               <div className="px-6 py-4 bg-white rounded-[20px] shadow-sm border border-gray-200">
-                {questionPredictions.some((qp) => qp.loading) ? (
-                  <p className="text-sm text-gray-600 text-center">
-                    Loading predictions for questions...
-                  </p>
-                ) : questionPredictions.some((qp) => qp.error) ? (
+                {questionPredictions.some((qp) => qp.error) ? (
                   <div className="space-y-2">
                     {questionPredictions
                       .filter((qp) => qp.error)
@@ -466,9 +556,45 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
                         </p>
                       ))}
                   </div>
+                ) : questionPredictions.some(
+                    (qp) => qp.result && qp.result.success
+                  ) ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600 text-center mb-2">
+                      Predictions received but no tasks generated. Check console
+                      for details.
+                    </p>
+                    {questionPredictions
+                      .filter((qp) => qp.result && qp.result.success)
+                      .map((qp) => (
+                        <div
+                          key={qp.questionId}
+                          className="text-xs text-gray-500 p-2 bg-gray-50 rounded"
+                        >
+                          <p className="font-medium">
+                            Question: {qp.questionText}
+                          </p>
+                          <p>
+                            Predicted Rank:{" "}
+                            {qp.result?.prediction?.predicted_rank}
+                          </p>
+                          <p>
+                            Actions:{" "}
+                            {qp.result?.enhanced?.action_priorities?.length ||
+                              0}
+                          </p>
+                          <p>
+                            Keywords:{" "}
+                            {qp.result?.suggestions?.description?.keywords
+                              ?.length || 0}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
                 ) : (
                   <p className="text-sm text-gray-600 text-center">
-                    No tasks available yet. Predictions are being processed...
+                    No predictions available. Please submit to fetch
+                    predictions.
                   </p>
                 )}
               </div>

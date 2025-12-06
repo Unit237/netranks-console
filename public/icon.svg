@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="92" height="92">
+    <mask id="eye-mask">
+        <path d="
+            M 8 45
+            A 44 53 0 0 1 84 45
+            A 44 56 0 0 1 8 45
+        " fill="white" />
+        <path d="
+            M 16 45
+            A 33 34 0 0 1 75 45
+            A 33 37 0 0 1 16 45
+        " fill="black" />
+        <rect x="8" y="45" width="10" height="8" fill="black" />
+        <circle cx="15.4" cy="51.2" r="3.45" fill="white" />
+        <circle cx="45.5" cy="46" r="13.5" fill="white" />
+    </mask>
+    <rect x="0" y="0" width="92" height="92" fill="#008AD0" mask="url(#eye-mask)" />
+</svg>

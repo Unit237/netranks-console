@@ -6,6 +6,7 @@ import type {
   CreateSearchPayload,
   FilterResponse,
 } from "../@types/optimization";
+import type { RankingAnalysisResponse } from "../@types/prediction";
 
 export const getDashboardFilterFields = async (surveyId: number) => {
   try {
@@ -203,6 +204,74 @@ export const getPrediction = async (
       error instanceof Error
         ? error.message
         : "Unable to schedule survey. Please try again."
+    );
+  }
+};
+
+export interface BatchPredictionItem {
+  question_text: string;
+  suggest_name: string;
+  url_title: string;
+  url: string;
+  current_rank?: number;
+  model_name?: string;
+}
+
+export interface BatchPredictionRequest {
+  items: BatchPredictionItem[];
+}
+
+export const getBatchPrediction = async (
+  brandName: string,
+  url: string,
+  questions: Array<{ Id: number; Text: string }>
+): Promise<RankingAnalysisResponse> => {
+  try {
+    // Build the items array for batch request
+    const items: BatchPredictionItem[] = questions.map((question) => ({
+      question_text: question.Text,
+      suggest_name: brandName,
+      url_title: brandName,
+      url: url,
+    }));
+
+    const response = await fetch(`${prms.API_BASE_URL}/predict/batch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = "Failed to fetch batch predictions";
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error || errorJson.message || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const results: RankingAnalysisResponse = await response.json();
+
+    return results;
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to fetch batch predictions:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to fetch batch predictions. Please try again."
     );
   }
 };

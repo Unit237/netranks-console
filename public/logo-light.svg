@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="380" height="65">
+    <mask id="eye-mask">
+        <path d="
+            M 8 32
+            A 44 53 0 0 1 84 32
+            A 44 56 0 0 1 8 32
+        " fill="white" />
+        <path d="
+            M 16 32
+            A 33 34 0 0 1 75 32
+            A 33 37 0 0 1 16 32
+        " fill="black" />
+        <rect x="8" y="32" width="10" height="8" fill="black" />
+        <circle cx="15.4" cy="38.2" r="3.45" fill="white" />
+        <circle cx="45.5" cy="32.8" r="13.5" fill="white" />
+    </mask>
+    <rect x="0" y="0" width="200" height="300" fill="#008AD0" mask="url(#eye-mask)" />
+    <text x="92" y="52" font-size="0" font-family="Arial" font-weight="bold">
+        <tspan font-size="54" fill="black">net</tspan>
+        <tspan font-size="20" fill="transparent">.</tspan>
+        <tspan font-size="54" fill="#008AD0">RANKS</tspan>
+    </text>
+</svg>

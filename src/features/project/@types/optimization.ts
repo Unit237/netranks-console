@@ -34,3 +34,16 @@ export interface CreateSearchPayload {
   BrandName: string | undefined;
   ModelIds: number[];
 }
+
+export interface BatchPredictionRequest {
+  items: BatchPredictionItem[];
+}
+
+export interface BatchPredictionItem {
+  question_text: string;
+  suggest_name: string;
+  url_title: string;
+  url: string;
+  current_rank?: number; // optional because some items don't include it
+  model_name?: string; // optional because only one item includes it
+}
