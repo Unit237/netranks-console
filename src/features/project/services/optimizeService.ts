@@ -1,7 +1,7 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
 import prms from "../../../app/shared/utils/prms";
 import type { PredictionData } from "../../prediction/refactor/Brand";
-import type { SurveyDetails } from "../@types";
+import type { Dashboard } from "../@types";
 import type {
   CreateSearchPayload,
   FilterResponse,
@@ -34,24 +34,44 @@ export const getDashboardFilterFields = async (surveyId: number) => {
   }
 };
 
-export const getSurveyDashboard = async (
+export const getSurveyDashboard = async (surveyId: number) => {
+  console.log(surveyId);
+  try {
+    const surveyRun: FilterResponse = await apiClient.get(
+      `api/GetSurveyDashboard/${surveyId}`
+    );
+    return surveyRun;
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to schedule survey:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to schedule survey. Please try again."
+    );
+  }
+};
+
+export const getSurveyMainDashboard = async (
   surveyId: number,
   filterDto?: CreateSearchPayload
 ) => {
   try {
-    if (filterDto) {
-      const res: SurveyDetails = await apiClient.post(
-        `api/GetSurveyDashboard/${surveyId}`,
-        filterDto
-      );
+    const res: Dashboard = await apiClient.post(
+      `api/GetSurveyDashboard/${surveyId}`,
+      filterDto
+    );
 
-      return res;
-    } else {
-      const surveyRun: FilterResponse = await apiClient.get(
-        `api/GetSurveyDashboard/${surveyId}`
-      );
-      return surveyRun;
-    }
+    return res;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {

@@ -6,7 +6,7 @@ import type { CreateSearchPayload } from "../@types/optimization";
 import NewOptimizePageTab from "../components/tabs/NewOptimizePageTab";
 import QuestionPageTab from "../components/tabs/NewQuestionTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
-import { getSurveyDashboard } from "../services/optimizeService";
+import { getSurveyMainDashboard } from "../services/optimizeService";
 import { getSurveyById } from "../services/projectService";
 
 const SurveyDetails = () => {
@@ -54,19 +54,25 @@ const SurveyDetails = () => {
   };
 
   const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
-    if (!surveyId) return;
+    if (!surveyId || !surveyDetails) return;
 
     try {
       setLoading(true);
-      const res = await getSurveyDashboard(
+      const dashboardData = await getSurveyMainDashboard(
         parseInt(surveyId, 10),
         searchPayload
       );
 
-      console.log(res);
+      console.log(dashboardData);
 
-      if (res) {
-        setSurveyDetails(res as SurveyDetailsType);
+      if (dashboardData) {
+        setSurveyDetails((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            Dashboard: dashboardData,
+          };
+        });
       }
     } catch (err) {
       console.error("Error fetching survey dashboard:", err);

@@ -38,6 +38,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   const [questionPredictions, setQuestionPredictions] = useState<
     QuestionPrediction[]
   >([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Initialize question predictions
@@ -64,49 +65,63 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
   const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
     setSelectedPayload(searchPayload);
+    // Reset predictions and URL when brand changes
+    setQuestionPredictions(
+      surveyDetails?.Questions?.map((q) => ({
+        questionId: q.Id,
+        questionText: q.Text,
+        prediction: null,
+        loading: false,
+        error: null,
+      })) || []
+    );
+    setManualUrl("");
+    setBrandUrl(null);
 
-    // Call parent's onBrandSelect if provided
-    if (onBrandSelect) {
-      onBrandSelect(searchPayload);
-    }
-
-    // Search for brand URL
+    // Search for brand URL (but don't trigger predictions yet)
     if (searchPayload.BrandName) {
       try {
         const brands = await searchBrands(searchPayload.BrandName);
         const url = brands[0]?.domain || "";
         setBrandUrl(url);
-
-        // Use manual URL as fallback if searchBrands didn't return a valid domain
-        // If searchBrands returned empty and manualUrl exists, use manualUrl
-        // Otherwise, if searchBrands returned a URL, use it
-        const finalUrl = url && url.trim() !== "" ? url : manualUrl;
-
-        // Fetch predictions for all questions only if we have a URL
-        if (finalUrl && finalUrl.trim() !== "") {
-          triggerPredictions(searchPayload.BrandName || "", finalUrl);
-        }
       } catch (error) {
         console.error("Error searching brands:", error);
         setBrandUrl(null);
-        // If searchBrands fails, use manual URL if available
-        if (manualUrl && manualUrl.trim() !== "") {
-          triggerPredictions(searchPayload.BrandName || "", manualUrl);
-        }
       }
     }
   };
 
   const handleManualUrlChange = (url: string) => {
     setManualUrl(url);
+  };
 
-    // If brand is selected and URL is provided, fetch predictions
-    // Use brandUrl from searchBrands if available, otherwise use manual URL
-    if (selectedPayload && url && surveyDetails?.Questions) {
-      const finalUrl = brandUrl && brandUrl.trim() !== "" ? brandUrl : url;
-      if (finalUrl && finalUrl.trim() !== "") {
-        triggerPredictions(selectedPayload.BrandName || "", finalUrl);
+  const handleSubmit = async () => {
+    if (!selectedPayload || !selectedPayload.BrandName) {
+      return;
+    }
+
+    // Determine which URL to use: manual URL takes precedence, then brandUrl from search
+    const finalUrl = manualUrl.trim() || brandUrl || "";
+
+    if (!finalUrl || finalUrl.trim() === "") {
+      alert("Please enter a brand URL");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Call parent's onBrandSelect to update dashboard
+      if (onBrandSelect) {
+        await onBrandSelect(selectedPayload);
       }
+
+      // Fetch predictions for all questions
+      triggerPredictions(selectedPayload.BrandName, finalUrl);
+    } catch (error) {
+      console.error("Error submitting:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -273,8 +288,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
         {selectedPayload && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Brand URL{" "}
-              {brandUrl && brandUrl.trim() !== "" ? "(fallback)" : "(required)"}
+              Brand URL <span className="text-red-500">*</span>
             </label>
             <input
               type="url"
@@ -283,27 +297,40 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
               placeholder={
                 brandUrl && brandUrl.trim() !== ""
                   ? `Using: ${brandUrl} (or enter custom URL)`
-                  : "Enter brand URL"
+                  : "Enter brand URL (required)"
               }
+              required
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-all"
             />
             {brandUrl && brandUrl.trim() !== "" && !manualUrl && (
               <p className="mt-1 text-xs text-gray-500">
-                Using URL from search: {brandUrl}
+                URL found from search: {brandUrl}. You can override it above or
+                click Submit to use it.
               </p>
             )}
             {manualUrl && (
               <p className="mt-1 text-xs text-green-600">
                 {brandUrl && brandUrl.trim() !== ""
-                  ? `Overriding with manual URL: ${manualUrl}`
+                  ? `Will override search URL with: ${manualUrl}`
                   : `Using manual URL: ${manualUrl}`}
               </p>
             )}
             {!brandUrl && !manualUrl && (
               <p className="mt-1 text-xs text-orange-600">
-                No URL found from search. Please enter a URL to continue.
+                No URL found from search. Please enter a URL.
               </p>
             )}
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting ||
+                (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === ""))
+              }
+              className="mt-3 w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
           </div>
         )}
 
