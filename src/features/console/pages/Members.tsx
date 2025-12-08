@@ -162,25 +162,21 @@ const Members = () => {
   };
 
   const handleRoleChange = (memberId: number, newRole: "Owner" | "Editor" | "Viewer") => {
-    console.log('handleRoleChange:', { memberId, newRole });
     
     // Update member role using functional update
     setMembers(prevMembers => {
       const updated = prevMembers.map(member => {
         if (member.Id === memberId) {
-          console.log('Updating member:', member, 'to role:', newRole);
           // Create a new object with updated role flags
           const updatedMember = {
             ...member,
             IsOwner: newRole === "Owner",
             IsEditor: newRole === "Editor",
           };
-          console.log('Updated member:', updatedMember);
           return updatedMember;
         }
         return member;
       });
-      console.log('All updated members:', updated);
       return updated;
     });
     
@@ -335,7 +331,6 @@ const Members = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Owner clicked for member:', member.Id);
                     handleRoleChange(member.Id, "Owner");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"
@@ -354,7 +349,6 @@ const Members = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Editor clicked for member:', member.Id);
                     handleRoleChange(member.Id, "Editor");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"
@@ -373,7 +367,6 @@ const Members = () => {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Viewer clicked for member:', member.Id);
                     handleRoleChange(member.Id, "Viewer");
                   }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"

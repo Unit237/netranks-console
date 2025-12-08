@@ -165,10 +165,12 @@ const Questions: React.FC = () => {
           surveyRunId = await startSurvey(survey.Id, questionIndices);
         } catch (error) {
           // Fallback: if POST doesn't work, try GET (backend might not support filtering yet)
-          console.warn(
-            "POST with questionIndices failed, falling back to GET. Backend may need to support question filtering.",
-            error
-          );
+          if (import.meta.env.DEV) {
+            console.warn(
+              "POST with questionIndices failed, falling back to GET. Backend may need to support question filtering.",
+              error
+            );
+          }
           surveyRunId = await startSurvey(survey.Id);
         }
       } else {

@@ -41,7 +41,6 @@ const SurveyDashboard: React.FC = () => {
       try {
         setLoading(true);
         const response = await getSurveyRunForDashboard(surveyRunId, p1, p2);
-        console.log(response);
         setData(response);
       } catch (error) {
         console.error("Failed to fetch survey dashboard data:", error);

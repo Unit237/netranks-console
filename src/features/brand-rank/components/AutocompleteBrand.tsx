@@ -61,8 +61,6 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
   );
 
   const handleContinue = useCallback(() => {
-    console.log("selectedBrand", selectedBrand);
-    console.log("input", input);
 
     if (selectedBrand) {
       onSelect(selectedBrand);

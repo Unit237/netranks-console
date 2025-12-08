@@ -44,7 +44,9 @@ function getBrowserLocale(): BrowserLocale {
       CountryCode: tokens[1] || "",
     };
   } catch (error) {
-    console.warn("Failed to get locale", error);
+    if (import.meta.env.DEV) {
+      console.warn("Failed to get locale", error);
+    }
     return {
       Locale: "",
       LanguageCode: "",
@@ -102,7 +104,9 @@ function fillMissingFields(
       fillMissingFields(language[key], fallbackValue);
     } else {
       if (languageValue === undefined) {
-        console.warn("Missing translation", key, fallbackValue);
+        if (import.meta.env.DEV) {
+          console.warn("Missing translation", key, fallbackValue);
+        }
         language[key] = fallbackValue;
       }
     }

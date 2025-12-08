@@ -55,10 +55,12 @@ export async function createOnboardingSession(): Promise<void> {
     if (tokenValue && typeof tokenValue === "string") {
       token.set(tokenValue);
     } else {
-      console.warn(
-        "[Onboarding] Received invalid token from CreateVisitorSession",
-        { tokenValue }
-      );
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[Onboarding] Received invalid token from CreateVisitorSession",
+          { tokenValue }
+        );
+      }
     }
   } catch (error) {
     // Handle specific error types

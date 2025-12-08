@@ -1,0 +1,8 @@
+aws_region  = "eu-central-1"
+bucket_name = "console.netranks.ai"
+environment = "production"
+
+# Optional: Uncomment if using custom domain
+# domain_name         = "console.netranks.ai"
+# acm_certificate_arn = "arn:aws:acm:eu-central-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
+

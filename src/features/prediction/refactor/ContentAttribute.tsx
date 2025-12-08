@@ -231,7 +231,6 @@ const ContentAttributionAnalyzer: React.FC = () => {
         setError(result.error || "Analysis failed");
       }
     } catch (error) {
-      console.log("Error: " + (error as Error).message);
       setError("Error: " + (error as Error).message);
     } finally {
       setIsLoading(false);

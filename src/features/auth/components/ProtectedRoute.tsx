@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { debugLog, debugError } from "../../../app/utils/debugLogger";
 import token from "../../../app/utils/token";
 import { useUser } from "../context/UserContext";
 
@@ -19,21 +20,32 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
 
   useEffect(() => {
+    debugLog("ProtectedRoute", "useEffect triggered", {
+      pathname: location.pathname,
+      isDashboardRoute,
+      loading,
+      hasUser: !!user,
+      hasError: !!error,
+      errorMessage: error?.message
+    });
+
     // Skip authentication check for dashboard route
     if (isDashboardRoute) {
+      debugLog("ProtectedRoute", "Skipping auth check (dashboard route)");
       return;
     }
 
     const authToken = token.get();
 
     if (!authToken) {
-      console.log("no token");
+      debugLog("ProtectedRoute", "No token found, redirecting to signin");
       navigate("/signin", { replace: true });
       return;
     }
 
     // Track when loading starts (API call initiated)
     if (loading) {
+      debugLog("ProtectedRoute", "Loading in progress");
       hasStartedLoading.current = true;
       hasLoggedAuthStatus.current = false;
       return;
@@ -44,19 +56,26 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
       // Only log if API call completed and user is not authenticated
       if (error || !user) {
-        console.log("user not logged in");
+        debugLog("ProtectedRoute", "User not authenticated, redirecting", {
+          hasError: !!error,
+          hasUser: !!user
+        });
         navigate("/signin", { replace: true });
+      } else {
+        debugLog("ProtectedRoute", "User authenticated successfully");
       }
     }
-  }, [user, loading, error, navigate, isDashboardRoute]);
+  }, [user, loading, error, navigate, isDashboardRoute, location.pathname]);
 
   // Allow dashboard route without authentication
   if (isDashboardRoute) {
+    debugLog("ProtectedRoute", "Rendering children (dashboard route)");
     return <>{children}</>;
   }
 
   // Show loading state while checking authentication
   if (loading || !user) {
+    debugLog("ProtectedRoute", "Showing loading state", { loading, hasUser: !!user });
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Loading...</div>
@@ -64,6 +83,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
+  debugLog("ProtectedRoute", "Rendering protected children");
   return <>{children}</>;
 };
 

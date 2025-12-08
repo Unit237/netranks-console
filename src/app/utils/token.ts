@@ -25,7 +25,6 @@ const get = (): string | null => {
 
 const set = (token: string | null) => {
   if (TOKEN === token) {
-    console.log("skip token set");
     return;
   }
   TOKEN = token || "";

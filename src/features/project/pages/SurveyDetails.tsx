@@ -63,7 +63,6 @@ const SurveyDetails = () => {
         searchPayload
       );
 
-      console.log(dashboardData);
 
       if (dashboardData) {
         setSurveyDetails((prev) => {

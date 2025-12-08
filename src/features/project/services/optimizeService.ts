@@ -36,7 +36,6 @@ export const getDashboardFilterFields = async (surveyId: number) => {
 };
 
 export const getSurveyDashboard = async (surveyId: number) => {
-  console.log(surveyId);
   try {
     const surveyRun: FilterResponse = await apiClient.get(
       `api/GetSurveyDashboard/${surveyId}`

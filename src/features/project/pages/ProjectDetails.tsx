@@ -1,5 +1,5 @@
 import { Check, Pause, Plus, Settings2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
@@ -11,14 +11,11 @@ const ProjectDetails = () => {
 
   const [project, setProject] = useState<Project | null>(null);
 
-  const { user } = useUser();
+  const { user, useActiveProjectId } = useUser();
 
   const navigate = useNavigate();
 
   const { addTab } = useTabs();
-  const { useActiveProjectId } = useUser();
-
-  console.log(useActiveProjectId());
 
   const handleCreateNewSurvey = () => {
     addTab({
@@ -29,17 +26,21 @@ const ProjectDetails = () => {
     navigate(`/console/new-survey/${projectId}`);
   };
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
+      if (!user || !user.Projects || user.Projects.length === 0) {
+        return;
+      }
+
       const primaryId = Number(projectId);
 
       let project = primaryId
-        ? user?.Projects.find((p) => p.Id === primaryId)
+        ? user.Projects.find((p) => p.Id === primaryId)
         : undefined;
 
       if (projectId && !project) {
         const fallbackId = Number(useActiveProjectId());
-        project = user?.Projects.find((p) => p.Id === fallbackId);
+        project = user.Projects.find((p) => p.Id === fallbackId);
       }
 
       if (!project) return;
@@ -49,11 +50,13 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error("Failed to fetch product:", error);
     }
-  };
+  }, [projectId, user, useActiveProjectId]);
 
   useEffect(() => {
-    fetchProduct();
-  }, [projectId]);
+    if (user) {
+      fetchProduct();
+    }
+  }, [user, fetchProduct]);
 
   if (!project) {
     return <>Loading...</>;
@@ -161,7 +164,7 @@ const ProjectDetails = () => {
                 Active surveys
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {project.Surveys.length}
+                {project.Surveys?.length || 0}
                 <span className="text-xl text-gray-400 dark:text-gray-500">
                   + 0
                 </span>
@@ -248,7 +251,7 @@ const ProjectDetails = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {project.Surveys.map((survey) => {
+                {(project.Surveys || []).map((survey) => {
                   const plan = getPlanByPeriod(survey.SchedulePeriodHours);
                   return (
                     <tr

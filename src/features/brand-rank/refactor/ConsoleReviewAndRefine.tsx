@@ -192,7 +192,6 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         })),
     };
 
-    console.log(selectedData);
 
     if (!projectId) {
       console.error("Project ID not found");
@@ -200,14 +199,12 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     }
 
     try {
-      console.log(selectedFrequencyData);
       const schedule = await changeSurveySchedule(
         survey.Id,
         selectedFrequencyData?.period
       );
 
       if (schedule) {
-        console.log("Schedule updated:", schedule);
 
         // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
         const questionsToSend =

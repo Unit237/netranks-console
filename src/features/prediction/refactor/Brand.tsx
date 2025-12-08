@@ -354,7 +354,6 @@ const Brand = () => {
         }
 
         const result = await response.json();
-        console.log("API response:", result);
 
         // Validate response structure
         if (!result || typeof result !== "object") {
@@ -401,7 +400,6 @@ const Brand = () => {
                   url: url,
                 })
               );
-              console.log("Content Attribution data saved");
             }
           } catch (err) {
             console.error("Failed to save content attribution:", err);

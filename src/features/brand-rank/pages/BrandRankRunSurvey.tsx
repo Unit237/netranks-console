@@ -66,7 +66,6 @@ export default function BrandRankSurveyRun() {
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Share button clicked");
 
     const shareData = {
       title: "NetRanks",
@@ -77,13 +76,10 @@ export default function BrandRankSurveyRun() {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-        console.log("Share successful");
       } catch (error) {
-        console.log("Share cancelled or error, falling back to copy", error);
         copyToClipboard();
       }
     } else {
-      console.log("navigator.share not available, using copy");
       copyToClipboard();
     }
   };

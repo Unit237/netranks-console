@@ -48,7 +48,9 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       if (response.results && Array.isArray(response.results)) {
         setQuestionPredictions(response.results);
       } else {
-        console.warn("Response.results is not an array:", response.results);
+        if (import.meta.env.DEV) {
+          console.warn("Response.results is not an array:", response.results);
+        }
         setQuestionPredictions([]);
       }
     } catch (error) {
@@ -111,7 +113,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }
   };
 
-  console.log("questionPredictions", questionPredictions);
 
   return (
     <div className="flex gap-6 p-6 bg-gray-50 min-h-screen">

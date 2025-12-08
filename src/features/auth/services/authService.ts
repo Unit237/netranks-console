@@ -80,7 +80,39 @@ export const getUser = async () => {
   try {
     const res: UserData = await apiClient.get(`api/GetUser`);
 
-    // const res = DUMMY_USER;
+    // Validate response structure - check if response is HTML (error page)
+    if (typeof res === "string") {
+      if (res.trim().startsWith("<!DOCTYPE") || res.trim().startsWith("<html")) {
+        console.error("Received HTML instead of JSON:", res.substring(0, 200));
+        throw new ApiError("Server returned an error page instead of user data");
+      }
+      // Try to parse as JSON if it's a string
+      try {
+        const parsed = JSON.parse(res);
+        if (!parsed || typeof parsed !== "object") {
+          throw new ApiError("Invalid user data format received from server");
+        }
+        return parsed as UserData;
+      } catch (parseError) {
+        throw new ApiError("Failed to parse user data response");
+      }
+    }
+
+    // Validate response structure
+    if (!res || typeof res !== "object") {
+      console.error("Invalid user data received:", res);
+      throw new ApiError("Invalid user data format received from server");
+    }
+
+    // Ensure Projects is an array (even if empty)
+    if (res.Projects && !Array.isArray(res.Projects)) {
+      if (import.meta.env.DEV) {
+        console.warn("User Projects is not an array, converting to empty array");
+      }
+      res.Projects = [];
+    } else if (!res.Projects) {
+      res.Projects = [];
+    }
 
     return res;
   } catch (error) {

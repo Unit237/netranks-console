@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import ErrorBoundary from "../../../app/components/ErrorBoundary";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import { useTabs } from "../context/TabContext";
@@ -47,27 +48,31 @@ const Console = () => {
   }, [location.pathname, tabs, activeTabId, setActiveTab]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-900">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        {tabs.length === 0 && location.pathname.endsWith("/console") ? (
-          <main className="flex-1 overflow-auto flex items-center justify-center">
-            <button
-              onClick={handleCreateNewSurvey}
-              className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Create new survey</span>
-            </button>
-          </main>
-        ) : (
-          <main className="flex-1 overflow-auto bg-white dark:bg-gray-900">
-            <Outlet />
-          </main>
-        )}
+    <ErrorBoundary>
+      <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-900">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          {tabs.length === 0 && location.pathname.endsWith("/console") ? (
+            <main className="flex-1 overflow-auto flex items-center justify-center">
+              <button
+                onClick={handleCreateNewSurvey}
+                className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Create new survey</span>
+              </button>
+            </main>
+          ) : (
+            <main className="flex-1 overflow-auto bg-white dark:bg-gray-900">
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
+            </main>
+          )}
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 };
 

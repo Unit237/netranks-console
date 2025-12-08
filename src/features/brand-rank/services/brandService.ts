@@ -81,8 +81,6 @@ export const fetchBrandQuestions = async (
 
     if (!questions) throw new Error("No questions found");
 
-    console.log(questions);
-
     return questions;
   } catch (error) {
     // Re-throw canceled requests
@@ -118,8 +116,6 @@ export const fetchQueryQuestions = async (
     // const questions = await searchBrand(query);
 
     if (!questions) throw new Error("No questions found");
-
-    console.log(questions);
 
     return questions;
   } catch (error) {
@@ -165,7 +161,6 @@ export const startSurvey = async (
       );
     }
 
-    console.log("Survey started:", response);
     return response;
   } catch (error) {
     // Re-throw canceled requests
