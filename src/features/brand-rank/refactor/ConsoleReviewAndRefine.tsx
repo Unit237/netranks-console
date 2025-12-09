@@ -175,22 +175,23 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   };
 
   const handleSubmit = async () => {
-    const selectedData = {
-      surveyName,
-      frequency,
-      questions: questionCountValue,
-      totalIterations,
-      runsPerMonth,
-      costPerPrompt,
-      monthlyCost,
-      models: models
-        .filter((m) => m.enabled)
-        .map((m) => ({
-          name: m.name,
-          iterations: m.iterations,
-          costPerPrompt: m.costPerPrompt,
-        })),
-    };
+    // selectedData is prepared but not currently used in the submission
+    // const selectedData = {
+    //   surveyName,
+    //   frequency,
+    //   questions: questionCountValue,
+    //   totalIterations,
+    //   runsPerMonth,
+    //   costPerPrompt,
+    //   monthlyCost,
+    //   models: models
+    //     .filter((m) => m.enabled)
+    //     .map((m) => ({
+    //       name: m.name,
+    //       iterations: m.iterations,
+    //       costPerPrompt: m.costPerPrompt,
+    //     })),
+    // };
 
 
     if (!projectId) {

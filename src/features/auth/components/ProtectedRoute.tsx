@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { debugLog, debugError } from "../../../app/utils/debugLogger";
+import { debugLog } from "../../../app/utils/debugLogger";
 import token from "../../../app/utils/token";
 import { useUser } from "../context/UserContext";
 

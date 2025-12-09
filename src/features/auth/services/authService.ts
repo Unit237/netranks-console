@@ -78,7 +78,7 @@ export const consumeMagicLink = async (
 
 export const getUser = async () => {
   try {
-    const res: UserData = await apiClient.get(`api/GetUser`);
+    const res: UserData | string = await apiClient.get(`api/GetUser`);
 
     // Validate response structure - check if response is HTML (error page)
     if (typeof res === "string") {

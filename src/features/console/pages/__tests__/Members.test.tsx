@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Members from '../Members';
-import { UserContext } from '../../../../auth/context/UserContext';
+import { UserContext } from '../../../auth/context/UserContext';
 
 // Mock the apiClient
 vi.mock('../../../../app/lib/api', () => ({
@@ -22,14 +22,20 @@ const mockUser = {
       Id: 1,
       Name: 'Test Project',
       IsActive: true,
+      IsOwner: true,
+      IsEditor: true,
+      Surveys: [],
     },
   ],
 };
 
 const mockUserContextValue = {
   user: mockUser,
+  setUser: vi.fn(),
   refreshUser: vi.fn(),
   loading: false,
+  error: null,
+  useActiveProjectId: () => 1,
 };
 
 const renderWithProviders = (component: React.ReactElement) => {

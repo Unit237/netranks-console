@@ -4,11 +4,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
 import { truncate } from "../../../app/utils/utils";
 import { useUser } from "../../auth/context/UserContext";
-import { useTabs } from "../context/TabContext";
 
 const Sidebar = () => {
   const { user } = useUser();
-  const { tabs } = useTabs();
+  // const { tabs } = useTabs(); // tabs not currently used
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -18,8 +17,7 @@ const Sidebar = () => {
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
 
   // Check if current location has a tab (is available in tabs)
-  const currentTab = tabs.find((tab) => tab.path === location.pathname);
-  const isCurrentPageInTabs = !!currentTab;
+  // const currentTab = tabs.find((tab) => tab.path === location.pathname);
 
   // Check if user is authenticated
   const isAuthenticated = () => {
@@ -78,8 +76,8 @@ const Sidebar = () => {
 
   const handleProjectClick = (
     projectId: number,
-    projectName: string,
-    headerName: string
+    _projectName: string,
+    _headerName: string
   ) => {
     if (!isAuthenticated()) {
       navigate("/signin");

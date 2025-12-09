@@ -33,7 +33,7 @@ interface QuestionPageTabProps {
   surveyStats: SurveyStatsResponse;
 }
 
-const QuestionPageTab: React.FC<QuestionPageTabProps> = ({ surveyStats }) => {
+const QuestionPageTab: React.FC<QuestionPageTabProps> = ({ surveyStats: _surveyStats }) => {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );

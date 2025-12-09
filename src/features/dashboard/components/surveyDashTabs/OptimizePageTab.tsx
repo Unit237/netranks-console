@@ -25,7 +25,7 @@ interface OptimizePageTabProps {
   surveyStats: SurveyStatsResponse;
 }
 
-const OptimizePageTab: React.FC<OptimizePageTabProps> = ({ surveyStats }) => {
+const OptimizePageTab: React.FC<OptimizePageTabProps> = ({ surveyStats: _surveyStats }) => {
   const tasks: Task[] = [
     {
       id: "1",

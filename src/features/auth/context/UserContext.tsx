@@ -7,9 +7,8 @@ import React, {
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
-import { DUMMY_USER } from "../../../app/utils/constant";
 import { debugLog, debugError } from "../../../app/utils/debugLogger";
-import Hub, { HubType, useHub } from "../../../app/utils/Hub";
+import { HubType, useHub } from "../../../app/utils/Hub";
 import token from "../../../app/utils/token";
 import type { UserData } from "../@types";
 import { getUser } from "../services/authService";
@@ -23,7 +22,7 @@ interface UserContextType {
   useActiveProjectId: () => number;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
   children,
@@ -36,10 +35,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   
   // Debug: Log pathname changes
   // Listen for token changes (e.g., after magic link authentication)
-  const [tokenValue, setTokenValue] = useState<string | null>(token.get());
   useHub(HubType.AuthTokenChanged, (newToken: string | null) => {
     debugLog("UserContext", "Token changed", { hasToken: !!newToken });
-    setTokenValue(newToken);
     
     // If token was just set and we're on console route, fetch user data
     if (newToken && isConsoleRoute && !user && !loading) {

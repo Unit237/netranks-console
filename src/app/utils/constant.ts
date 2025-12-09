@@ -117,18 +117,9 @@ export const BRAND_DATA: BrandData[] = [
     iterations: 30,
     runsPerMonth: 12,
     Questions: [
-      {
-        Id: 101,
-        Text: "What do people think about Netranks AI in the last 30 days?",
-      },
-      {
-        Id: 102,
-        Text: "How recognizable is the Netranks AI brand across social platforms?",
-      },
-      {
-        Id: 103,
-        Text: "What are users saying about Netranks AI’s features?",
-      },
+      "What do people think about Netranks AI in the last 30 days?",
+      "How recognizable is the Netranks AI brand across social platforms?",
+      "What are users saying about Netranks AI's features?",
     ],
   },
   {
@@ -147,14 +138,8 @@ export const BRAND_DATA: BrandData[] = [
     iterations: 15,
     runsPerMonth: 4,
     Questions: [
-      {
-        Id: 201,
-        Text: "How much do customers trust Mellon Bank for daily financial transactions?",
-      },
-      {
-        Id: 202,
-        Text: "What features of Mellon Bank do users like the most?",
-      },
+      "How much do customers trust Mellon Bank for daily financial transactions?",
+      "What features of Mellon Bank do users like the most?",
     ],
   },
   {
@@ -174,18 +159,9 @@ export const BRAND_DATA: BrandData[] = [
     iterations: 20,
     runsPerMonth: 8,
     Questions: [
-      {
-        Id: 301,
-        Text: "Which destinations are most searched by Timbu Travel users this month?",
-      },
-      {
-        Id: 302,
-        Text: "What do users think about Timbu’s pricing structure?",
-      },
-      {
-        Id: 303,
-        Text: "How does Timbu Travel compare to Booking.com or Airbnb?",
-      },
+      "Which destinations are most searched by Timbu Travel users this month?",
+      "What do users think about Timbu's pricing structure?",
+      "How does Timbu Travel compare to Booking.com or Airbnb?",
     ],
   },
   {
@@ -204,11 +180,8 @@ export const BRAND_DATA: BrandData[] = [
     iterations: 10,
     runsPerMonth: 2,
     Questions: [
-      { Id: 401, Text: "How do users rate the durability of DS9 devices?" },
-      {
-        Id: 402,
-        Text: "What features are users requesting in upcoming DS9 releases?",
-      },
+      "How do users rate the durability of DS9 devices?",
+      "What features are users requesting in upcoming DS9 releases?",
     ],
   },
 ];

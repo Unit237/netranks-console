@@ -25,7 +25,7 @@ const MembersTab = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [_showInviteModal, setShowInviteModal] = useState(false);
 
   // Get active project ID
   const activeProjectId = user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id;
