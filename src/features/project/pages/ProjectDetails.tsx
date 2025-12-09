@@ -5,11 +5,33 @@ import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
+import { getProjectById } from "../services/projectService";
+
+interface ProjectMetrics {
+  SpendThisMonth?: {
+    Label: string;
+    Amount: number;
+    Currency: string;
+    Display: string;
+  };
+  ActiveSurveys?: {
+    Count: number;
+    Delta: number;
+    DeltaDirection: string;
+  };
+  Competitors?: {
+    Count: number;
+    Delta: number;
+    DeltaDirection: string;
+  };
+}
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
 
   const [project, setProject] = useState<Project | null>(null);
+  const [projectMetrics, setProjectMetrics] = useState<ProjectMetrics | null>(null);
+  const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   const { user, useActiveProjectId } = useUser();
 
@@ -52,11 +74,35 @@ const ProjectDetails = () => {
     }
   }, [projectId, user, useActiveProjectId]);
 
+  const fetchProjectMetrics = useCallback(async () => {
+    if (!projectId) return;
+    
+    try {
+      setLoadingMetrics(true);
+      const projectData = await getProjectById(Number(projectId));
+      
+      // The API returns project data with Metrics property
+      if (projectData && (projectData as any).Metrics) {
+        setProjectMetrics((projectData as any).Metrics);
+      }
+    } catch (error) {
+      console.error("Failed to fetch project metrics:", error);
+    } finally {
+      setLoadingMetrics(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     if (user) {
       fetchProduct();
     }
   }, [user, fetchProduct]);
+
+  useEffect(() => {
+    if (projectId && user) {
+      fetchProjectMetrics();
+    }
+  }, [projectId, user, fetchProjectMetrics]);
 
   if (!project) {
     return <>Loading...</>;
@@ -133,28 +179,18 @@ const ProjectDetails = () => {
       <div className="p-4">
         {/* Status cards */}
         <div className="">
-          <div className="grid grid-cols-4 gap-4 mb-8 rounded-[20px] border border-gray-200 dark:border-gray-700">
-            {/* Health status card */}
-            <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
-              <div className="flex items-start gap-3 mb-16">
-                <div className="h-1 w-16 bg-gradient-to-r from-orange-500 to-yellow-400 rounded-full"></div>
-              </div>
-              {/* <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Okay-ish health
-              </h3> */}
-              <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                Engagement metrics are steady with a small 12% increase this
-                week, and brand sentiment is holding up
-              </p>
-            </div>
-
+          <div className="grid grid-cols-3 gap-4 mb-8 rounded-[20px] border border-gray-200 dark:border-gray-700">
             {/* Spent card */}
             <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
-                Spent in Dec
+                {projectMetrics?.SpendThisMonth?.Label || "Spent this month"}
               </div>
               <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                $450
+                {loadingMetrics ? (
+                  <span className="text-gray-400">Loading...</span>
+                ) : (
+                  projectMetrics?.SpendThisMonth?.Display || "$0"
+                )}
               </div>
             </div>
 
