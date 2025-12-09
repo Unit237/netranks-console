@@ -1,68 +1,175 @@
-import { BarChart3, CheckCircle2, TrendingUp, XCircle } from "lucide-react";
-import React, { useState } from "react";
+import {
+  AlertCircle,
+  Menu,
+  TrendingUp,
+} from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
 import type { CreateSearchPayload } from "../../@types/optimization";
-import type { RankingAnalysisResponse, Result } from "../../@types/prediction";
+import type { RankingAnalysisResponse } from "../../@types/prediction";
 import { getBatchPrediction } from "../../services/optimizeService";
 import BrandDropdownMenu from "../BrandDropdownMenu";
 
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  impact: "high" | "normal";
+  completed?: boolean;
+}
+
 interface OptimizePageTabProps {
   surveyDetails: SurveyDetails;
+  batchResponse?: RankingAnalysisResponse | null;
+  onBatchResponseChange?: (response: RankingAnalysisResponse | null) => void;
+  selectedPayload?: CreateSearchPayload | null;
+  onSelectedPayloadChange?: (payload: CreateSearchPayload | null) => void;
+  brandUrl?: string | null;
+  onBrandUrlChange?: (url: string | null) => void;
+  manualUrl?: string;
+  onManualUrlChange?: (url: string) => void;
   onBrandSelect?: (searchPayload: CreateSearchPayload) => void;
 }
 
 const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   surveyDetails,
+  batchResponse: batchResponseProp,
+  onBatchResponseChange,
+  selectedPayload: selectedPayloadProp,
+  onSelectedPayloadChange,
+  brandUrl: brandUrlProp,
+  onBrandUrlChange,
+  manualUrl: manualUrlProp,
+  onManualUrlChange,
   onBrandSelect,
 }) => {
-  const [selectedPayload, setSelectedPayload] =
-    useState<CreateSearchPayload | null>(null);
-  const [brandUrl, setBrandUrl] = useState<string | null>(null);
-  const [manualUrl, setManualUrl] = useState<string>("");
-  const [questionPredictions, setQuestionPredictions] = useState<Result[]>([]);
+  // Use prop if provided, otherwise use local state
+  const [localSelectedPayload, setLocalSelectedPayload] = useState<CreateSearchPayload | null>(null);
+  const selectedPayload = selectedPayloadProp !== undefined ? selectedPayloadProp : localSelectedPayload;
+  const setSelectedPayload = onSelectedPayloadChange || setLocalSelectedPayload;
+  
+  const [localBrandUrl, setLocalBrandUrl] = useState<string | null>(null);
+  const brandUrl = brandUrlProp !== undefined ? brandUrlProp : localBrandUrl;
+  const setBrandUrl = onBrandUrlChange || setLocalBrandUrl;
+  
+  const [localManualUrl, setLocalManualUrl] = useState<string>("");
+  const manualUrl = manualUrlProp !== undefined ? manualUrlProp : localManualUrl;
+  const setManualUrl = onManualUrlChange || setLocalManualUrl;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [batchResponse, setBatchResponse] =
-    useState<RankingAnalysisResponse | null>(null);
+  
+  // Use prop if provided, otherwise use local state
+  const [localBatchResponse, setLocalBatchResponse] = useState<RankingAnalysisResponse | null>(null);
+  const batchResponse = batchResponseProp !== undefined ? batchResponseProp : localBatchResponse;
+  const setBatchResponse = onBatchResponseChange || setLocalBatchResponse;
+
+  // Debug: Watch for batchResponse changes
+  useEffect(() => {
+    console.log("🔄 batchResponse changed:", {
+      hasBatchResponse: !!batchResponse,
+      resultsCount: batchResponse?.results?.length || 0,
+      success: batchResponse?.success,
+      batchResponseObject: batchResponse,
+    });
+  }, [batchResponse]);
+
+  // Debug: Check if component is mounting/unmounting
+  useEffect(() => {
+    console.log("🟢 NewOptimizePageTab mounted");
+    return () => {
+      console.log("🔴 NewOptimizePageTab unmounting");
+    };
+  }, []);
+
+  // Helper function to normalize URL - ensure it has a protocol
+  const normalizeUrl = (url: string): string => {
+    if (!url || typeof url !== "string") return url;
+    const trimmed = url.trim();
+    if (!trimmed) return trimmed;
+    
+    // If URL already has protocol, return as-is
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+    
+    // Otherwise, add https://
+    return `https://${trimmed}`;
+  };
 
   const triggerPredictions = async (brandName: string, url: string) => {
+    console.log("🟢 triggerPredictions called", { brandName, url });
+    
+    // Normalize URL to ensure it has a protocol
+    const normalizedUrl = normalizeUrl(url);
+    console.log("🟢 URL normalized in triggerPredictions:", { url, normalizedUrl });
+    
     if (
-      !url ||
+      !normalizedUrl ||
       !surveyDetails?.Questions ||
       surveyDetails.Questions.length === 0
     ) {
+      console.warn("❌ triggerPredictions early return:", {
+        hasNormalizedUrl: !!normalizedUrl,
+        hasQuestions: !!surveyDetails?.Questions,
+        questionCount: surveyDetails?.Questions?.length || 0,
+      });
       return;
     }
+
+    console.log("✅ Calling getBatchPrediction", {
+      brandName,
+      normalizedUrl,
+      questionCount: surveyDetails.Questions.length,
+    });
 
     try {
       // Fetch batch predictions for all questions at once
       const response: RankingAnalysisResponse = await getBatchPrediction(
         brandName,
-        url,
+        normalizedUrl,
         surveyDetails.Questions
       );
 
-      // Store the full response
-      setBatchResponse(response);
+      console.log("✅ Batch prediction response received", {
+        success: response.success,
+        resultsCount: response.results?.length || 0,
+        successfulPredictions: response.successful_predictions,
+      });
 
-      if (response.results && Array.isArray(response.results)) {
-        setQuestionPredictions(response.results);
-      } else {
-        if (import.meta.env.DEV) {
-          console.warn("Response.results is not an array:", response.results);
-        }
-        setQuestionPredictions([]);
+      // Log the structure of the first result to debug
+      if (response.results && response.results.length > 0) {
+        const firstResult = response.results[0];
+        console.log("🔍 First result structure:", {
+          success: firstResult.success,
+          hasEnhanced: !!firstResult.enhanced,
+          hasActionPriorities: !!firstResult.enhanced?.action_priorities,
+          actionPrioritiesCount: firstResult.enhanced?.action_priorities?.length || 0,
+          actionPriorities: firstResult.enhanced?.action_priorities?.slice(0, 2),
+          fullResult: firstResult,
+        });
       }
+
+      // Store the full response
+      console.log("💾 Setting batchResponse state", {
+        responseExists: !!response,
+        resultsCount: response.results?.length || 0,
+        responseSuccess: response.success,
+        responseObject: response,
+      });
+      
+      // Set state directly
+      console.log("📝 Calling setBatchResponse directly with response");
+      setBatchResponse(response);
+      console.log("✅ setBatchResponse called");
     } catch (error) {
-      console.error("Error fetching batch predictions:", error);
+      console.error("❌ Error fetching batch predictions:", error);
       setBatchResponse(null);
     }
   };
 
   const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
     setSelectedPayload(searchPayload);
-
-    setBatchResponse(null);
+    // Don't clear batchResponse - keep it so brand selection persists
     setManualUrl("");
     setBrandUrl(null);
 
@@ -83,31 +190,141 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     setManualUrl(url);
   };
 
+  // Transform action_priorities from batch response into tasks
+  const tasks = useMemo(() => {
+    console.log("🔄 Computing tasks from batchResponse", {
+      hasBatchResponse: !!batchResponse,
+      hasResults: !!batchResponse?.results,
+      resultsCount: batchResponse?.results?.length || 0,
+    });
+
+    if (!batchResponse?.results) {
+      console.log("❌ No batchResponse.results, returning empty tasks");
+      return [];
+    }
+
+    const allTasks: Task[] = [];
+    let taskId = 1;
+
+    batchResponse.results.forEach((result, idx) => {
+      console.log(`📋 Processing result ${idx}:`, {
+        success: result.success,
+        hasEnhanced: !!result.enhanced,
+        hasActionPriorities: !!result.enhanced?.action_priorities,
+        actionPrioritiesCount: result.enhanced?.action_priorities?.length || 0,
+      });
+
+      if (result.success && result.enhanced?.action_priorities) {
+        result.enhanced.action_priorities.forEach((priority) => {
+          // Determine impact
+          const impact: "high" | "normal" =
+            priority.impact === "CRITICAL" || priority.impact === "HIGH"
+              ? "high"
+              : "normal";
+
+          // Build description from current_state, target_state, and estimated_improvement
+          const description = [
+            priority.current_state,
+            priority.target_state && `Target: ${priority.target_state}`,
+            priority.estimated_improvement && `Expected: ${priority.estimated_improvement}`,
+          ]
+            .filter(Boolean)
+            .join(". ");
+
+          allTasks.push({
+            id: `task-${taskId++}`,
+            title: priority.action.replace(/^(CRITICAL|HIGH|MEDIUM|LOW):\s*/i, ""),
+            description: description || priority.quick_tip || priority.action,
+            impact,
+            completed: false,
+          });
+        });
+      } else {
+        console.log(`⚠️ Result ${idx} skipped - no action_priorities`);
+      }
+    });
+
+    console.log("✅ Tasks computed:", {
+      totalTasks: allTasks.length,
+      tasks: allTasks.map((t) => ({ id: t.id, title: t.title, impact: t.impact })),
+    });
+
+    // Sort tasks by impact: high impact first, then normal impact
+    const sortedTasks = allTasks.sort((a, b) => {
+      if (a.impact === "high" && b.impact === "normal") return -1;
+      if (a.impact === "normal" && b.impact === "high") return 1;
+      return 0; // Keep original order for same impact level
+    });
+
+    return sortedTasks;
+  }, [batchResponse]);
+
+  // Calculate average rank and content quality from results
+  const averageRank = useMemo(() => {
+    if (!batchResponse?.results) return null;
+    // Use only predicted_rank
+    const ranks = batchResponse.results
+      .filter((r) => r.success && r.prediction?.predicted_rank !== null)
+      .map((r) => r.prediction!.predicted_rank);
+    return ranks.length > 0
+      ? ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length
+      : null;
+  }, [batchResponse]);
+
+  const averageContentQuality = useMemo(() => {
+    if (!batchResponse?.results) return null;
+    const scores = batchResponse.results
+      .filter((r) => r.success && r.enhanced?.content_quality?.overall_score !== undefined)
+      .map((r) => r.enhanced!.content_quality!.overall_score);
+    return scores.length > 0
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      : null;
+  }, [batchResponse]);
+
   const handleSubmit = async () => {
+    console.log("🔵 handleSubmit called", {
+      selectedPayload,
+      manualUrl,
+      brandUrl,
+      hasQuestions: !!surveyDetails?.Questions,
+      questionCount: surveyDetails?.Questions?.length || 0,
+    });
+
     if (!selectedPayload || !selectedPayload.BrandName) {
+      console.warn("❌ No selectedPayload or BrandName");
       return;
     }
 
     // Determine which URL to use: manual URL takes precedence, then brandUrl from search
-    const finalUrl = manualUrl.trim() || brandUrl || "";
+    const rawUrl = manualUrl.trim() || brandUrl || "";
 
-    if (!finalUrl || finalUrl.trim() === "") {
+    if (!rawUrl || rawUrl.trim() === "") {
+      console.warn("❌ No URL provided");
       alert("Please enter a brand URL");
       return;
     }
 
+    // Normalize URL to ensure it has a protocol
+    const finalUrl = normalizeUrl(rawUrl);
+    console.log("✅ URL normalized:", { rawUrl, finalUrl });
+
     setIsSubmitting(true);
 
     try {
-      // Call parent's onBrandSelect to update dashboard
+      // Fetch predictions for all questions FIRST, before calling onBrandSelect
+      // This prevents the parent from re-rendering and potentially resetting state
+      console.log("🚀 Calling triggerPredictions", {
+        brandName: selectedPayload.BrandName,
+        url: finalUrl,
+      });
+      await triggerPredictions(selectedPayload.BrandName, finalUrl);
+
+      // Call parent's onBrandSelect to update dashboard AFTER predictions are fetched
       if (onBrandSelect) {
         await onBrandSelect(selectedPayload);
       }
-
-      // Fetch predictions for all questions
-      await triggerPredictions(selectedPayload.BrandName, finalUrl);
     } catch (error) {
-      console.error("Error submitting:", error);
+      console.error("❌ Error submitting:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -122,6 +339,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
           {surveyDetails?.Id ? (
             <BrandDropdownMenu
               surveyId={surveyDetails.Id}
+              selectedBrandName={selectedPayload?.BrandName || null}
               onBrandSelect={handleBrandSelect}
             />
           ) : (
@@ -168,7 +386,19 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
             )}
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("🟢 Submit button clicked!", {
+                  isSubmitting,
+                  manualUrl,
+                  brandUrl,
+                  selectedPayload,
+                  disabled: isSubmitting ||
+                    (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === "")),
+                });
+                handleSubmit();
+              }}
               disabled={
                 isSubmitting ||
                 (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === ""))
@@ -179,466 +409,120 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
             </button>
           </div>
         )}
-      </div>
 
-      {/* Right Column - Results */}
-      <div className="flex-1">
-        {batchResponse ? (
-          <div className="space-y-4">
-            {/* Summary Card */}
+        {/* Rank and Content Quality Cards */}
+        {batchResponse && averageRank !== null && (
+          <div className="bg-gray-100 rounded-[20px] shadow-sm border border-gray-200 space-y-4">
             <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Prediction Results
-                </h2>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>
-                    {new Date(batchResponse.timestamp).toLocaleString()}
+              <div className="text-sm text-gray-600 mb-4">Current rank</div>
+              <div className="pt-24 flex items-end justify-between gap-2">
+                <div className="text-[19px] font-normal">
+                  {averageRank.toFixed(1)}
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <span className="font-medium text-green-600">
+                    {averageRank < 10 ? "Improving" : "Needs work"}
                   </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Total Items</div>
-                  <div className="text-2xl font-semibold text-gray-900">
-                    {batchResponse.total_items}
-                  </div>
-                </div>
-                <div className="bg-green-50 rounded-xl p-4">
-                  <div className="text-sm text-green-700 mb-1 flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Successful
-                  </div>
-                  <div className="text-2xl font-semibold text-green-700">
-                    {batchResponse.successful_predictions}
-                  </div>
-                </div>
-                <div className="bg-red-50 rounded-xl p-4">
-                  <div className="text-sm text-red-700 mb-1 flex items-center gap-1">
-                    <XCircle className="w-4 h-4" />
-                    Failed
-                  </div>
-                  <div className="text-2xl font-semibold text-red-700">
-                    {batchResponse.failed_predictions}
-                  </div>
-                </div>
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <div className="text-sm text-blue-700 mb-1 flex items-center gap-1">
-                    <BarChart3 className="w-4 h-4" />
-                    Success Rate
-                  </div>
-                  <div className="text-2xl font-semibold text-blue-700">
-                    {batchResponse.total_items > 0
-                      ? Math.round(
-                          (batchResponse.successful_predictions /
-                            batchResponse.total_items) *
-                            100
-                        )
-                      : 0}
-                    %
-                  </div>
-                </div>
-              </div>
-
-              {/* Response Data Display */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <details className="cursor-pointer">
-                  <summary className="text-sm font-semibold text-gray-700 hover:text-gray-900">
-                    View Full Response Data from getBatchPrediction
-                  </summary>
-                  <div className="mt-3 space-y-2">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-xs font-medium text-gray-700 mb-2">
-                        Response Structure:
-                      </div>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        <div>
-                          <span className="font-semibold">success:</span>{" "}
-                          {String(batchResponse.success)}
-                        </div>
-                        <div>
-                          <span className="font-semibold">total_items:</span>{" "}
-                          {batchResponse.total_items}
-                        </div>
-                        <div>
-                          <span className="font-semibold">
-                            successful_predictions:
-                          </span>{" "}
-                          {batchResponse.successful_predictions}
-                        </div>
-                        <div>
-                          <span className="font-semibold">
-                            failed_predictions:
-                          </span>{" "}
-                          {batchResponse.failed_predictions}
-                        </div>
-                        <div>
-                          <span className="font-semibold">timestamp:</span>{" "}
-                          {batchResponse.timestamp}
-                        </div>
-                        <div>
-                          <span className="font-semibold">results:</span>{" "}
-                          {batchResponse.results?.length || 0} items
-                        </div>
-                        <div>
-                          <span className="font-semibold">errors:</span>{" "}
-                          {batchResponse.errors?.length || 0} items
-                        </div>
-                      </div>
-                    </div>
-                    <details className="mt-2">
-                      <summary className="text-xs text-gray-600 hover:text-gray-800 cursor-pointer">
-                        View Raw Response JSON
-                      </summary>
-                      <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-96 border border-gray-200">
-                        {JSON.stringify(batchResponse, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                </details>
-              </div>
-            </div>
-
-            {/* Results Field Summary */}
-            <div className="bg-blue-50 rounded-[20px] border-2 border-blue-200 p-4 mb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                    Results Field from getBatchPrediction
-                  </h3>
-                  <p className="text-xs text-blue-700">
-                    Total results: {batchResponse.results?.length || 0} items
-                    {batchResponse.results &&
-                      batchResponse.results.length > 0 && (
-                        <span className="ml-2">
-                          • Successful:{" "}
-                          {
-                            batchResponse.results.filter((r) => r.success)
-                              .length
-                          }{" "}
-                          • Failed:{" "}
-                          {
-                            batchResponse.results.filter((r) => !r.success)
-                              .length
-                          }
-                        </span>
-                      )}
-                  </p>
+                  <span className="text-gray-400">expected rank</span>
                 </div>
               </div>
             </div>
 
-            {/* Question Results */}
-            <div className="space-y-3">
-              {questionPredictions && questionPredictions.length > 0 ? (
-                questionPredictions.map((qp) => {
-                  const result = qp;
-                  const isSuccess = result && result.success;
-
-                  return (
-                    <div
-                      key={qp.item_index}
-                      className={`bg-white rounded-[20px] shadow-sm border-2 ${
-                        isSuccess
-                          ? "border-green-200"
-                          : result
-                          ? "border-red-200"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <div className="p-6">
-                        {/* Question Header */}
-                        <div className="flex items-start gap-3 mb-4">
-                          <div className="mt-1">
-                            {isSuccess ? (
-                              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                                <CheckCircle2 className="w-5 h-5 text-white" />
-                              </div>
-                            ) : result ? (
-                              <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                                <XCircle className="w-5 h-5 text-white" />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">
-                                  ?
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            {result && (
-                              <div className="text-xs text-gray-500">
-                                Item Index: {result.item_index} • Detail Level:{" "}
-                                {result.detail_level}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {result && (
-                          <div className="space-y-4">
-                            {/* Prediction Data */}
-                            {result.prediction && (
-                              <div className="bg-gray-50 rounded-xl p-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                                  Rank Prediction
-                                </h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <div className="text-xs text-gray-600 mb-1">
-                                      Current Rank
-                                    </div>
-                                    <div className="text-lg font-semibold text-gray-900">
-                                      {result.prediction.current_rank !== null
-                                        ? result.prediction.current_rank.toFixed(
-                                            1
-                                          )
-                                        : "N/A"}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="text-xs text-gray-600 mb-1 flex items-center gap-1">
-                                      Predicted Rank
-                                      <TrendingUp className="w-3 h-3 text-green-600" />
-                                    </div>
-                                    <div className="text-lg font-semibold text-green-600">
-                                      {result.prediction.predicted_rank.toFixed(
-                                        1
-                                      )}
-                                    </div>
-                                  </div>
-                                  {result.prediction.improvement !== null && (
-                                    <div>
-                                      <div className="text-xs text-gray-600 mb-1">
-                                        Improvement
-                                      </div>
-                                      <div className="text-lg font-semibold text-gray-900">
-                                        {result.prediction.improvement > 0
-                                          ? "+"
-                                          : ""}
-                                        {result.prediction.improvement.toFixed(
-                                          1
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                  <div>
-                                    <div className="text-xs text-gray-600 mb-1">
-                                      Uncertainty
-                                    </div>
-                                    <div className="text-lg font-semibold text-gray-900">
-                                      {result.prediction.uncertainty.toFixed(2)}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Content Quality */}
-                            {result.enhanced?.content_quality && (
-                              <div className="bg-gray-50 rounded-xl p-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                                  Content Quality
-                                </h4>
-                                <div className="flex items-baseline gap-2 mb-3">
-                                  <div className="text-3xl font-semibold text-gray-900">
-                                    {
-                                      result.enhanced.content_quality
-                                        .overall_score
-                                    }
-                                  </div>
-                                  <div className="text-sm text-gray-500">
-                                    / 100
-                                  </div>
-                                  <div className="ml-auto px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                    {result.enhanced.content_quality.grade}
-                                  </div>
-                                </div>
-                                {result.enhanced.content_quality
-                                  .top_priorities &&
-                                  result.enhanced.content_quality.top_priorities
-                                    .length > 0 && (
-                                    <div className="mt-3 pt-3 border-t border-gray-200">
-                                      <div className="text-xs font-medium text-gray-700 mb-2">
-                                        Top Priorities:
-                                      </div>
-                                      <div className="space-y-1">
-                                        {result.enhanced.content_quality.top_priorities.map(
-                                          (priority, idx) => (
-                                            <div
-                                              key={idx}
-                                              className="text-xs text-gray-600"
-                                            >
-                                              • {priority.action} (
-                                              {priority.component})
-                                            </div>
-                                          )
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                              </div>
-                            )}
-
-                            {/* Action Priorities */}
-                            {result.enhanced?.action_priorities &&
-                              result.enhanced.action_priorities.length > 0 && (
-                                <div className="bg-gray-50 rounded-xl p-4">
-                                  <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                                    Action Priorities (
-                                    {result.enhanced.action_priorities.length})
-                                  </h4>
-                                  <div className="space-y-2">
-                                    {result.enhanced.action_priorities
-                                      .slice(0, 5)
-                                      .map((action, idx) => (
-                                        <div
-                                          key={idx}
-                                          className="bg-white rounded-lg p-3 border border-gray-200"
-                                        >
-                                          <div className="flex items-start justify-between mb-1">
-                                            <div className="text-sm font-medium text-gray-900">
-                                              {action.action}
-                                            </div>
-                                            <div
-                                              className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                                action.impact === "CRITICAL" ||
-                                                action.impact === "HIGH"
-                                                  ? "bg-red-100 text-red-700"
-                                                  : "bg-gray-100 text-gray-700"
-                                              }`}
-                                            >
-                                              {action.impact}
-                                            </div>
-                                          </div>
-                                          <div className="text-xs text-gray-600">
-                                            {action.current_state} →{" "}
-                                            {action.target_state}
-                                          </div>
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            {action.estimated_improvement}
-                                          </div>
-                                        </div>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-
-                            {/* Suggestions Summary */}
-                            {result.suggestions && (
-                              <div className="bg-gray-50 rounded-xl p-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                                  Suggestions Summary
-                                </h4>
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                  <div>
-                                    <span className="text-gray-600">
-                                      Keywords:{" "}
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                      {result.suggestions.description?.keywords
-                                        ?.length || 0}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">
-                                      Readability:{" "}
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                      {result.suggestions.description
-                                        ?.readability?.length || 0}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">
-                                      Content:{" "}
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                      {result.suggestions.description?.content
-                                        ?.length || 0}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-gray-600">
-                                      Structure:{" "}
-                                    </span>
-                                    <span className="font-medium text-gray-900">
-                                      {result.suggestions.description?.structure
-                                        ?.length || 0}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Raw JSON (Collapsible) */}
-                            <details className="mt-2">
-                              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 font-medium">
-                                View Raw JSON Data
-                              </summary>
-                              <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto max-h-96 border border-gray-200">
-                                {JSON.stringify(result, null, 2)}
-                              </pre>
-                            </details>
-                          </div>
-                        )}
-
-                        {!result && (
-                          <div className="text-sm text-gray-500 text-center py-4">
-                            No result data available for this question
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="bg-yellow-50 rounded-[20px] border-2 border-yellow-200 p-6">
-                  <div className="text-center">
-                    <p className="text-sm text-yellow-800 font-medium mb-2">
-                      No results found in response
-                    </p>
-                    <p className="text-xs text-yellow-700">
-                      The results field from getBatchPrediction is empty or not
-                      available.
-                    </p>
-                    {batchResponse && (
-                      <details className="mt-3 text-left">
-                        <summary className="text-xs text-yellow-600 cursor-pointer">
-                          View response structure
-                        </summary>
-                        <pre className="mt-2 p-3 bg-white rounded text-xs overflow-auto max-h-48 border border-yellow-200">
-                          {JSON.stringify(batchResponse, null, 2)}
-                        </pre>
-                      </details>
-                    )}
+            {averageContentQuality !== null && (
+              <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-6">
+                <div className="text-sm text-gray-600 mb-4">Content quality</div>
+                <div className="pt-24 flex items-center justify-between gap-2">
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <Menu className="w-4 h-4 text-orange-600" />
+                    <span className="text-gray-600 text-[19px] font-normal">
+                      {averageContentQuality}
+                    </span>
+                    <span className="text-gray-300 text-[19px] font-light">
+                      / 100
+                    </span>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Errors Section */}
-            {batchResponse.errors && batchResponse.errors.length > 0 && (
-              <div className="bg-red-50 rounded-[20px] border-2 border-red-200 p-6">
-                <h3 className="text-sm font-semibold text-red-900 mb-3">
-                  Errors ({batchResponse.errors.length})
-                </h3>
-                <div className="space-y-2">
-                  {batchResponse.errors.map((error, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white rounded-lg p-3 border border-red-200"
-                    >
-                      <pre className="text-xs text-red-700 overflow-auto">
-                        {JSON.stringify(error, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                  <div className="text-sm text-gray-800">
+                    {tasks.length} tasks{" "}
+                    <span className="text-gray-300">to increase your score</span>
+                  </div>
                 </div>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Right Column - Tasks */}
+      <div className="flex-1">
+        {(() => {
+          console.log("🎨 Rendering right column:", {
+            hasBatchResponse: !!batchResponse,
+            tasksLength: tasks.length,
+            batchResponseResultsCount: batchResponse?.results?.length || 0,
+          });
+          return null;
+        })()}
+        {batchResponse && tasks.length > 0 ? (
+          <div className="bg-gray-100 rounded-[20px] shadow-sm border border-gray-200">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Your tasks
+                </span>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                  {tasks.length}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 p-2">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors bg-white rounded-[20px] shadow-sm border border-gray-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">
+                        {task.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {task.description}
+                      </p>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          {task.impact === "high" ? (
+                            <>
+                              <AlertCircle className="w-3 h-3 text-red-600" />
+                              <span className="text-xs font-medium text-red-600">
+                                High impact
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-3 h-3 rounded-full border-2 border-gray-300" />
+                              <span className="text-xs text-gray-500">
+                                Normal impact
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : batchResponse ? (
+          <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-12">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                No optimization tasks found. The prediction response did not contain actionable tasks.
+              </p>
+            </div>
           </div>
         ) : selectedPayload ? (
           <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-12">

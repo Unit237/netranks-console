@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails as SurveyDetailsType } from "../@types";
 import type { CreateSearchPayload } from "../@types/optimization";
+import type { RankingAnalysisResponse } from "../@types/prediction";
 import NewOptimizePageTab from "../components/tabs/NewOptimizePageTab";
 import QuestionPageTab from "../components/tabs/NewQuestionTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
@@ -22,6 +23,10 @@ const SurveyDetails = () => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [batchResponse, setBatchResponse] = useState<RankingAnalysisResponse | null>(null);
+  const [selectedPayload, setSelectedPayload] = useState<CreateSearchPayload | null>(null);
+  const [brandUrl, setBrandUrl] = useState<string | null>(null);
+  const [manualUrl, setManualUrl] = useState<string>("");
 
   const fetchProjectDetails = async () => {
     if (!surveyId) {
@@ -54,6 +59,9 @@ const SurveyDetails = () => {
   };
 
   const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
+    // Store the selected payload so it persists across remounts
+    setSelectedPayload(searchPayload);
+    
     if (!surveyId || !surveyDetails) return;
 
     try {
@@ -129,20 +137,29 @@ const SurveyDetails = () => {
         </div>
 
         {/* Tabs Content */}
-        {activeTab === "Overview" && (
+        <div className={activeTab === "Overview" ? "" : "hidden"}>
           <OverviewPageTab surveyDetails={surveyDetails} />
-        )}
+        </div>
 
-        {activeTab === "Questions" && (
+        <div className={activeTab === "Questions" ? "" : "hidden"}>
           <QuestionPageTab questions={surveyDetails.Questions || []} />
-        )}
+        </div>
 
-        {activeTab === "Optimize" && (
+        <div className={activeTab === "Optimize" ? "" : "hidden"}>
           <NewOptimizePageTab
+            key={`optimize-${surveyDetails?.Id}`}
             surveyDetails={surveyDetails}
+            batchResponse={batchResponse}
+            onBatchResponseChange={setBatchResponse}
+            selectedPayload={selectedPayload}
+            onSelectedPayloadChange={setSelectedPayload}
+            brandUrl={brandUrl}
+            onBrandUrlChange={setBrandUrl}
+            manualUrl={manualUrl}
+            onManualUrlChange={setManualUrl}
             onBrandSelect={handleBrandSelect}
           />
-        )}
+        </div>
       </div>
     </div>
   );
