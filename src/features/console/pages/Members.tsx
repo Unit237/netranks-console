@@ -1,41 +1,31 @@
-import { Plus, Trash2, Pencil, Eye, ChevronDown, User, Mail, Send, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Pencil, Eye, User, Mail, Send, Check, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useUser } from "../../auth/context/UserContext";
 import { apiClient } from "../../../app/lib/api";
 
 interface Member {
   Id: number;
+  UserId?: number;
   FullName: string;
   Email: string;
   IsOwner: boolean;
   IsEditor: boolean;
   CreatedAt: string;
-}
-
-interface PendingInvitation {
-  Id: number;
-  FullName: string;
-  Email: string;
-  Role: "Owner" | "Editor" | "Viewer";
-  SentAt: string;
+  IsProjectOwner?: boolean; // True if this is the original project owner (cannot be deleted)
 }
 
 const Members = () => {
   const { user } = useUser();
   const [members, setMembers] = useState<Member[]>([]);
-  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"Owner" | "Editor" | "Viewer">("Viewer");
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [deleteConfirmType, setDeleteConfirmType] = useState<"member" | "invitation" | null>(null);
-  const dropdownRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const [lastInvitationId, setLastInvitationId] = useState<number | null>(null);
+  const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get active project ID
   const activeProjectId = user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id;
@@ -48,35 +38,11 @@ const Members = () => {
     }
   }, [activeProjectId]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (openDropdownId !== null) {
-        const dropdownElement = dropdownRefs.current[openDropdownId];
-        const target = event.target as Node;
-        if (dropdownElement && !dropdownElement.contains(target)) {
-          // Check if click is on the backdrop or outside
-          const isBackdrop = (target as HTMLElement).getAttribute('aria-hidden') === 'true';
-          if (isBackdrop || !dropdownElement.contains(target)) {
-            setOpenDropdownId(null);
-            setDropdownPosition(null);
-          }
-        }
-      }
-    };
-
-    if (openDropdownId !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [openDropdownId]);
-
   // Handle ESC key to close delete confirmation modal
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && deleteConfirmId !== null) {
         setDeleteConfirmId(null);
-        setDeleteConfirmType(null);
       }
     };
 
@@ -86,6 +52,15 @@ const Members = () => {
     }
   }, [deleteConfirmId]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const fetchMembers = async () => {
     if (!activeProjectId) {
       setLoading(false);
@@ -94,54 +69,22 @@ const Members = () => {
     
     try {
       setLoading(true);
-      // Mock data matching screenshot
-      const dummyMembers: Member[] = [
-        {
-          Id: 1,
-          FullName: "Ali",
-          Email: "ali@baked.design",
-          IsOwner: true,
-          IsEditor: false,
-          CreatedAt: "",
-        },
-        {
-          Id: 2,
-          FullName: "Nick",
-          Email: "nick@baked.design",
-          IsOwner: false,
-          IsEditor: true,
-          CreatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          Id: 3,
-          FullName: "Cat",
-          Email: "cat@netranks.ai",
-          IsOwner: false,
-          IsEditor: true,
-          CreatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
-      setMembers(dummyMembers);
-
-      const dummyInvitations: PendingInvitation[] = [
-        {
-          Id: 2,
-          FullName: "Nick",
-          Email: "nick@baked.design",
-          Role: "Viewer",
-          SentAt: "Just now",
-        },
-        {
-          Id: 3,
-          FullName: "Cat",
-          Email: "cat@netranks.ai",
-          Role: "Viewer",
-          SentAt: "2 hours ago",
-        },
-      ];
-      setPendingInvitations(dummyInvitations);
-    } catch (error) {
-      console.error("Failed to fetch members:", error);
+      
+      // Fetch members
+      try {
+        const membersData = await apiClient.get<Member[]>(`api/GetMembers/${activeProjectId}`);
+        setMembers(membersData || []);
+      } catch (error: any) {
+        // If endpoint doesn't exist (404), just use empty array
+        if (error?.status === 404 || error?.status === 406) {
+          setMembers([]);
+        } else {
+          console.error("Failed to fetch members:", error);
+          // Still set empty array to prevent page breakage
+          setMembers([]);
+        }
+      }
+      
     } finally {
       setLoading(false);
     }
@@ -150,95 +93,180 @@ const Members = () => {
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return `${date.getDate()} ${months[date.getMonth()]}`;
-  };
-
-  const formatRelativeTime = (sentAt: string) => {
-    if (sentAt === "Just now" || sentAt.includes("ago") || sentAt.includes("hour")) {
-      return sentAt;
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    // Just now (< 1 minute)
+    if (diffInSeconds < 60) {
+      return "Just now";
     }
-    return formatDate(sentAt);
+    
+    // Minutes ago (< 1 hour)
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
+    }
+    
+    // Hours ago (< 24 hours)
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+    }
+    
+    // Days ago (< 7 days)
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+    }
+    
+    // Weeks ago (< 4 weeks)
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) {
+      return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} ago`;
+    }
+    
+    // Months ago (< 12 months)
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) {
+      return `${diffInMonths} ${diffInMonths === 1 ? "month" : "months"} ago`;
+    }
+    
+    // Years ago
+    const diffInYears = Math.floor(diffInDays / 365);
+    if (diffInYears >= 1) {
+      return `${diffInYears} ${diffInYears === 1 ? "year" : "years"} ago`;
+    }
+    
+    // Fallback to formatted date
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const currentYear = now.getFullYear();
+    
+    // If same year, don't show year
+    if (year === currentYear) {
+      return `${day} ${month}`;
+    }
+    
+    return `${day} ${month} ${year}`;
+  };
+  
+  // Format full date for tooltip/hover
+  const formatFullDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = days[date.getDay()];
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    
+    return `${dayName}, ${day} ${month} ${year} at ${hours}:${minutes}`;
   };
 
-  const handleRoleChange = (memberId: number, newRole: "Owner" | "Editor" | "Viewer") => {
-    
-    // Update member role using functional update
-    setMembers(prevMembers => {
-      const updated = prevMembers.map(member => {
-        if (member.Id === memberId) {
-          // Create a new object with updated role flags
-          const updatedMember = {
-            ...member,
-            IsOwner: newRole === "Owner",
-            IsEditor: newRole === "Editor",
-          };
-          return updatedMember;
-        }
-        return member;
-      });
-      return updated;
-    });
-    
-    // Close dropdown after update
-    setOpenDropdownId(null);
-    setDropdownPosition(null);
-  };
 
   const handleDeleteMember = async (memberId: number) => {
     try {
       await apiClient.delete(`api/DeleteMember/${memberId}`);
       setMembers(prevMembers => prevMembers.filter(m => m.Id !== memberId));
       setDeleteConfirmId(null);
-      setDeleteConfirmType(null);
     } catch (error) {
       console.error("Failed to delete member:", error);
     }
   };
 
-  const handleDeleteInvitation = (invitationId: number) => {
-    setPendingInvitations(pendingInvitations.filter((inv) => inv.Id !== invitationId));
-    setDeleteConfirmId(null);
-    setDeleteConfirmType(null);
-  };
 
-  const handleSendInvitation = () => {
-    if (!inviteName.trim() || !inviteEmail.trim()) {
+  const handleSendInvitation = async () => {
+    if (!inviteName.trim() || !inviteEmail.trim() || !activeProjectId) {
       return;
     }
 
-    const newInvitation: PendingInvitation = {
-      Id: Date.now(),
-      FullName: inviteName,
-      Email: inviteEmail,
-      Role: inviteRole,
-      SentAt: "Just now",
-    };
+    try {
+      // Send invitation via API
+      const invitationId = await apiClient.post<number>(`api/AddMember`, {
+        ProjectId: activeProjectId,
+        FullName: inviteName,
+        EMail: inviteEmail,
+        IsOwner: inviteRole === "Owner",
+        IsEditor: inviteRole === "Editor" || inviteRole === "Owner",
+      });
 
-    setPendingInvitations([...pendingInvitations, newInvitation]);
-    setLastInvitationId(newInvitation.Id);
-    setShowInviteModal(false);
-    setInviteName("");
-    setInviteEmail("");
-    setInviteRole("Viewer");
-    setShowNotification(true);
+      // Store invitation ID for undo
+      setLastInvitationId(invitationId);
 
-    // Auto-hide notification after 5 seconds
-    setTimeout(() => {
-      setShowNotification(false);
-      setLastInvitationId(null);
-    }, 5000);
-  };
+      // Close modal first
+      setShowInviteModal(false);
+      setInviteName("");
+      setInviteEmail("");
+      setInviteRole("Viewer");
 
-  const handleUndoInvitation = () => {
-    if (lastInvitationId !== null) {
-      setPendingInvitations(prevInvitations => 
-        prevInvitations.filter(inv => inv.Id !== lastInvitationId)
-      );
-      setShowNotification(false);
-      setLastInvitationId(null);
+      // Show notification
+      setShowNotification(true);
+
+      // Clear any existing timeout
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+      }
+
+      // Auto-hide notification after 5 seconds
+      notificationTimeoutRef.current = setTimeout(() => {
+        setShowNotification(false);
+        setLastInvitationId(null);
+      }, 5000);
+
+      // Fetch updated data
+      await fetchMembers();
+    } catch (error: any) {
+      console.error("Failed to send invitation:", error);
+      // Show user-friendly error message
+      if (error?.status === 404 || error?.status === 406) {
+        alert("The invitation endpoint is not available. Please use the local mock backend for testing.");
+      } else {
+        alert("Failed to send invitation. Please try again.");
+      }
     }
   };
+
+  const handleUndoInvitation = async () => {
+    if (!lastInvitationId || !activeProjectId) {
+      setShowNotification(false);
+      return;
+    }
+
+    try {
+      // Clear the auto-hide timeout
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+        notificationTimeoutRef.current = null;
+      }
+
+      // Delete the invitation
+      await apiClient.delete(`api/DeleteInvitation/${lastInvitationId}`);
+      
+      // Hide notification
+      setShowNotification(false);
+      setLastInvitationId(null);
+
+      // Refresh members list to update the UI
+      await fetchMembers();
+    } catch (error: any) {
+      console.error("Failed to undo invitation:", error);
+      // Still hide notification even if undo fails
+      setShowNotification(false);
+      setLastInvitationId(null);
+      
+      // Clear timeout if it exists
+      if (notificationTimeoutRef.current) {
+        clearTimeout(notificationTimeoutRef.current);
+        notificationTimeoutRef.current = null;
+      }
+    }
+  };
+
 
   const handleCloseModal = () => {
     setShowInviteModal(false);
@@ -248,163 +276,26 @@ const Members = () => {
   };
 
   const getRoleBadge = (member: Member) => {
-    const isOpen = openDropdownId === member.Id;
     const currentRole = member.IsOwner ? "Owner" : member.IsEditor ? "Editor" : "Viewer";
-
+    
     return (
-      <div 
-        className="relative" 
-        ref={(el) => {
-          dropdownRefs.current[member.Id] = el;
-        }}
-      >
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            if (!isOpen) {
-              // Calculate position for dropdown
-              const buttonRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              setDropdownPosition({
-                top: buttonRect.bottom + 4,
-                left: buttonRect.left,
-              });
-              setOpenDropdownId(member.Id);
-            } else {
-              setOpenDropdownId(null);
-              setDropdownPosition(null);
-            }
-          }}
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
-            member.IsOwner
-              ? "bg-blue-50 text-owner-blue"
-              : member.IsEditor
-              ? "bg-orange-50 text-editor-orange"
-              : "bg-gray-100 text-gray-700"
-          }`}
-          aria-expanded={isOpen}
-          aria-haspopup="true"
-        >
-          {member.IsOwner ? (
-            <Send className="w-3.5 h-3.5 fill-current" />
-          ) : member.IsEditor ? (
-            <Pencil className="w-3.5 h-3.5" />
-          ) : (
-            <Eye className="w-3.5 h-3.5" />
-          )}
-          <span>{currentRole}</span>
-          <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-        </button>
-
-        {isOpen && dropdownPosition && (
-          <>
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => {
-                // Close dropdown when clicking on backdrop
-                setOpenDropdownId(null);
-                setDropdownPosition(null);
-              }}
-              aria-hidden="true"
-            />
-            <div 
-              className="fixed z-50 bg-white rounded-lg shadow-lg border border-card-border min-w-[180px] py-1"
-              style={{
-                top: `${dropdownPosition.top}px`,
-                left: `${dropdownPosition.left}px`,
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-            >
-              {currentRole !== "Owner" && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleRoleChange(member.Id, "Owner");
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"
-                >
-                  <Send className="w-4 h-4 text-owner-blue fill-current" />
-                  <span>Owner</span>
-                </button>
-              )}
-              {currentRole !== "Editor" && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleRoleChange(member.Id, "Editor");
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"
-                >
-                  <Pencil className="w-4 h-4 text-editor-orange" />
-                  <span>Editor</span>
-                </button>
-              )}
-              {currentRole !== "Viewer" && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleRoleChange(member.Id, "Viewer");
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-hover-bg transition-colors text-left"
-                >
-                  <Eye className="w-4 h-4 text-gray-600" />
-                  <span>Viewer</span>
-                </button>
-              )}
-            </div>
-          </>
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
+        member.IsOwner
+          ? "bg-blue-50 text-owner-blue"
+          : member.IsEditor
+          ? "bg-orange-50 text-editor-orange"
+          : "bg-gray-100 text-gray-700"
+      }`}>
+        {member.IsOwner ? (
+          <Send className="w-3.5 h-3.5 fill-current" />
+        ) : member.IsEditor ? (
+          <Pencil className="w-3.5 h-3.5" />
+        ) : (
+          <Eye className="w-3.5 h-3.5" />
         )}
+        <span>{currentRole}</span>
       </div>
     );
-  };
-
-  const getPendingRoleBadge = (role: "Owner" | "Editor" | "Viewer") => {
-    if (role === "Owner") {
-      return (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-owner-blue text-xs font-medium">
-          <Send className="w-3.5 h-3.5 fill-current" />
-          <span>Owner</span>
-        </div>
-      );
-    } else if (role === "Editor") {
-      return (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-50 text-editor-orange text-xs font-medium">
-          <Pencil className="w-3.5 h-3.5" />
-          <span>Editor</span>
-        </div>
-      );
-    } else {
-      return (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium">
-          <Eye className="w-3.5 h-3.5" />
-          <span>Viewer</span>
-        </div>
-      );
-    }
   };
 
   if (loading) {
@@ -473,18 +364,22 @@ const Members = () => {
                           {member.Email}
                         </td>
                         <td className="py-4 px-6 text-sm text-muted-text">
-                          {member.CreatedAt ? formatDate(member.CreatedAt) : "—"}
+                          {member.CreatedAt ? (
+                            <span 
+                              title={formatFullDate(member.CreatedAt)}
+                              className="cursor-help"
+                            >
+                              {formatDate(member.CreatedAt)}
+                            </span>
+                          ) : "—"}
                         </td>
                         <td className="py-4 px-6">
                           {getRoleBadge(member)}
                         </td>
                         <td className="py-4 px-6 text-right">
-                          {!member.IsOwner && (
+                          {!member.IsProjectOwner && (
                             <button
-                              onClick={() => {
-                                setDeleteConfirmId(member.Id);
-                                setDeleteConfirmType("member");
-                              }}
+                              onClick={() => setDeleteConfirmId(member.Id)}
                               className="text-trash-red hover:text-red-700 transition-colors"
                               aria-label={`Delete ${member.FullName}`}
                             >
@@ -511,12 +406,9 @@ const Members = () => {
                           {member.Email}
                         </div>
                       </div>
-                      {!member.IsOwner && (
+                      {!member.IsProjectOwner && (
                         <button
-                          onClick={() => {
-                            setDeleteConfirmId(member.Id);
-                            setDeleteConfirmType("member");
-                          }}
+                          onClick={() => setDeleteConfirmId(member.Id)}
                           className="text-trash-red hover:text-red-700 transition-colors ml-2"
                           aria-label={`Delete ${member.FullName}`}
                         >
@@ -526,112 +418,17 @@ const Members = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-muted-text">
-                        Added: {member.CreatedAt ? formatDate(member.CreatedAt) : "—"}
+                        Added: {member.CreatedAt ? (
+                          <span 
+                            title={formatFullDate(member.CreatedAt)}
+                            className="cursor-help"
+                          >
+                            {formatDate(member.CreatedAt)}
+                          </span>
+                        ) : "—"}
                       </div>
                       <div>
                         {getRoleBadge(member)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Pending Invitations Card */}
-        {pendingInvitations.length > 0 && (
-          <div>
-            <h2 className="text-sm font-medium text-gray-900 mb-4">
-              Pending invitations
-            </h2>
-            <div className="bg-card-bg rounded-card-xl border border-card-border shadow-subtle">
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-x-auto overflow-y-visible">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-card-border">
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                        Email
-                      </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                        Sent
-                      </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th className="text-right py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-card-border">
-                    {pendingInvitations.map((invitation) => (
-                      <tr key={invitation.Id} className="hover:bg-hover-bg transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="text-base font-semibold text-gray-900">
-                            {invitation.FullName}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-sm text-muted-text">
-                          {invitation.Email}
-                        </td>
-                        <td className="py-4 px-6 text-sm text-muted-text">
-                          {formatRelativeTime(invitation.SentAt)}
-                        </td>
-                        <td className="py-4 px-6">
-                          {getPendingRoleBadge(invitation.Role)}
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <button
-                            onClick={() => {
-                              setDeleteConfirmId(invitation.Id);
-                              setDeleteConfirmType("invitation");
-                            }}
-                            className="text-trash-red hover:text-red-700 transition-colors"
-                            aria-label={`Cancel invitation for ${invitation.FullName}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden divide-y divide-card-border">
-                {pendingInvitations.map((invitation) => (
-                  <div key={invitation.Id} className="p-4 hover:bg-hover-bg transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="text-base font-semibold text-gray-900 mb-1">
-                          {invitation.FullName}
-                        </div>
-                        <div className="text-sm text-muted-text mb-2">
-                          {invitation.Email}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setDeleteConfirmId(invitation.Id);
-                          setDeleteConfirmType("invitation");
-                        }}
-                        className="text-trash-red hover:text-red-700 transition-colors ml-2"
-                        aria-label={`Cancel invitation for ${invitation.FullName}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-text">
-                        Sent: {formatRelativeTime(invitation.SentAt)}
-                      </div>
-                      <div>
-                        {getPendingRoleBadge(invitation.Role)}
                       </div>
                     </div>
                   </div>
@@ -714,13 +511,13 @@ const Members = () => {
                       }`}
                       aria-pressed={inviteRole === "Owner"}
                     >
-                      <Send className={`w-5 h-5 flex-shrink-0 fill-current ${inviteRole === "Owner" ? "text-owner-blue" : "text-gray-400"}`} />
+                      <Send className={`w-5 h-5 flex-shrink-0 ${inviteRole === "Owner" ? "text-owner-blue fill-owner-blue" : "text-gray-400"}`} />
                       <div className="flex-1 min-w-0">
                         <div className={`text-sm font-medium mb-0.5 ${inviteRole === "Owner" ? "text-owner-blue" : "text-gray-900"}`}>
                           Owner
                         </div>
                         <div className="text-xs text-muted-text">
-                          Full access to all features, members, and billing
+                          Full access to all projects and settings
                         </div>
                       </div>
                     </button>
@@ -764,7 +561,7 @@ const Members = () => {
                           Viewer
                         </div>
                         <div className="text-xs text-muted-text">
-                          Can create and edit surveys, view all reports
+                          Can view surveys and reports
                         </div>
                       </div>
                     </button>
@@ -795,22 +592,15 @@ const Members = () => {
         )}
 
         {/* Delete Confirmation Modal */}
-        {deleteConfirmId !== null && deleteConfirmType && (() => {
-          const memberToDelete = deleteConfirmType === "member" 
-            ? members.find(m => m.Id === deleteConfirmId)
-            : null;
-          const invitationToDelete = deleteConfirmType === "invitation"
-            ? pendingInvitations.find(inv => inv.Id === deleteConfirmId)
-            : null;
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmId !== null && (() => {
+          const memberToDelete = members.find(m => m.Id === deleteConfirmId);
 
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
               <div 
                 className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => {
-                  setDeleteConfirmId(null);
-                  setDeleteConfirmType(null);
-                }}
+                onClick={() => setDeleteConfirmId(null)}
                 aria-hidden="true"
               />
               
@@ -822,10 +612,7 @@ const Members = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setDeleteConfirmId(null);
-                      setDeleteConfirmType(null);
-                    }}
+                    onClick={() => setDeleteConfirmId(null)}
                     className="text-muted-text hover:text-gray-900 transition-colors text-sm"
                     aria-label="Close"
                   >
@@ -835,35 +622,24 @@ const Members = () => {
 
                 <div className="p-6 pt-4">
                   <h2 id="delete-modal-title" className="text-lg font-semibold text-gray-900 mb-4">
-                    {deleteConfirmType === "member" ? "Remove team member?" : "Cancel invitation?"}
+                    Remove team member?
                   </h2>
                   <p className="text-sm text-gray-700 mb-6">
-                    {deleteConfirmType === "member" && memberToDelete
+                    {memberToDelete
                       ? `You're about to remove ${memberToDelete.FullName} (${memberToDelete.Email}) from this workspace. They will immediately lose access to all projects and reports.`
-                      : deleteConfirmType === "invitation" && invitationToDelete
-                      ? `You're about to cancel the invitation for ${invitationToDelete.FullName} (${invitationToDelete.Email}). They will not be able to join the workspace.`
                       : "This action cannot be undone."}
                   </p>
                   <div className="flex justify-end gap-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        setDeleteConfirmId(null);
-                        setDeleteConfirmType(null);
-                      }}
+                      onClick={() => setDeleteConfirmId(null)}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-card-border rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Do not remove
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (deleteConfirmType === "member") {
-                          handleDeleteMember(deleteConfirmId);
-                        } else {
-                          handleDeleteInvitation(deleteConfirmId);
-                        }
-                      }}
+                      onClick={() => handleDeleteMember(deleteConfirmId!)}
                       className="px-4 py-2 text-sm font-medium text-white bg-trash-red rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -878,20 +654,22 @@ const Members = () => {
 
         {/* Invitation Sent Notification */}
         {showNotification && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-out animate-[slideUp_0.3s_ease-out]">
-            <div className="flex items-center rounded-lg overflow-hidden shadow-lg">
-              {/* Left portion - Black background with checkmark and text */}
-              <div className="bg-gray-900 text-white px-4 py-3 flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                <span className="text-sm font-medium">Invitation sent</span>
-              </div>
-              {/* Right portion - Black button with Undo */}
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-gray-900 rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 min-w-[320px] animate-[slideUp_0.3s_ease-out]">
+              {/* Green Checkmark Icon */}
+              <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+              
+              {/* Invitation Sent Text */}
+              <span className="text-white text-sm font-medium flex-1">
+                Invitation sent
+              </span>
+              
+              {/* Undo Button */}
               <button
-                type="button"
                 onClick={handleUndoInvitation}
-                className="bg-gray-900 border-l border-gray-700 px-4 py-3 flex items-center gap-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+                className="flex items-center gap-1 text-white text-sm font-medium hover:text-gray-300 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <RotateCcw className="w-4 h-4" />
                 <span>Undo</span>
               </button>
             </div>

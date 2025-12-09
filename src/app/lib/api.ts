@@ -548,6 +548,11 @@ class ApiClient {
 
 // Export apiClient instance for the main API
 const serverUrl = prms.SERVER_URL;
+if (import.meta.env.DEV) {
+  console.log("[ApiClient] Backend URL:", serverUrl || "http://localhost:4000");
+  console.log("[ApiClient] VITE_PROD:", import.meta.env.VITE_PROD);
+  console.log("[ApiClient] VITE_BACKEND_API_URL:", import.meta.env.VITE_BACKEND_API_URL);
+}
 if (!serverUrl && import.meta.env.DEV) {
   console.error("SERVER_URL is undefined! Using fallback localhost:4000");
 }
