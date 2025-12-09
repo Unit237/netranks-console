@@ -527,8 +527,8 @@ class ApiClient {
       // Absolute URL - ensure proper joining
       url = `${this.baseURL}${normalizedEndpoint}`;
     } else {
-      // Relative URL for proxy - use as is
-      url = `${this.baseURL}${endpoint}`;
+      // Relative URL for proxy - use normalized endpoint to ensure it starts with /
+      url = `${this.baseURL}${normalizedEndpoint}`;
     }
     
     // Validate URL is not invalid

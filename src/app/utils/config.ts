@@ -1,4 +1,4 @@
-const devServerId = 1; // 0: localhost, 1: netranks server
+const devServerId = 0; // 0: use vite proxy (localhost), 1: direct URL (netranks server)
 
 // Use demo backend URL for local development, main backend URL for production
 const SERVER = import.meta.env.VITE_PROD === "true"
@@ -11,12 +11,14 @@ const cleanServerUrl = SERVER && typeof SERVER === "string"
   ? (SERVER.endsWith("/") ? SERVER.slice(0, -1) : SERVER)
   : "http://localhost:4000"; // Fallback to localhost if invalid
 
+// In development, use vite proxy (empty string = relative URLs) to avoid CORS issues
+// In production, use the full backend URL
 const SERVER_URL = import.meta.env.VITE_PROD === "true"
   ? cleanServerUrl
-  : (["/", cleanServerUrl][devServerId] || cleanServerUrl); // Ensure we always have a value
+  : (devServerId === 0 ? "" : cleanServerUrl); // Empty string means use relative URLs (vite proxy)
 
-// Validate SERVER_URL is not undefined
-const validatedServerUrl = SERVER_URL || "http://localhost:4000";
+// Validate SERVER_URL is not undefined (but allow empty string for proxy)
+const validatedServerUrl = SERVER_URL !== undefined ? SERVER_URL : "http://localhost:4000";
 
 const HOMEWORK_API_BASE_URL =
   "https://qmnga6hmp3.eu-central-1.awsapprunner.com";
