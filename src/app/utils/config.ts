@@ -1,21 +1,21 @@
-const devServerId = 0; // 0: use vite proxy (localhost), 1: direct URL (netranks server)
+const useViteProxy = false; // true: use vite proxy (localhost), false: direct URL (netranks server)
 
 // Use demo backend URL for local development, main backend URL for production
 const SERVER = import.meta.env.VITE_PROD === "true"
   ? import.meta.env.VITE_BACKEND_API_URL || "https://netranks.azurewebsites.net"
-  : import.meta.env.VITE_DEMO_BACKEND_API_URL || import.meta.env.VITE_BACKEND_API_URL || "http://localhost:4000";
+  : import.meta.env.VITE_DEMO_BACKEND_API_URL || import.meta.env.VITE_BACKEND_API_URL || "https://netranks.azurewebsites.net";
 const netranksDomain = import.meta.env.VITE_NETRANKS_DOMAIN || "https://www.netranks.ai";
 
 // Remove trailing slash if present and ensure we have a valid URL
 const cleanServerUrl = SERVER && typeof SERVER === "string" 
   ? (SERVER.endsWith("/") ? SERVER.slice(0, -1) : SERVER)
-  : "http://localhost:4000"; // Fallback to localhost if invalid
+  : "https://netranks.azurewebsites.net"; // Fallback to real backend if invalid
 
 // In development, use vite proxy (empty string = relative URLs) to avoid CORS issues
 // In production, use the full backend URL
 const SERVER_URL = import.meta.env.VITE_PROD === "true"
   ? cleanServerUrl
-  : (devServerId === 0 ? "" : cleanServerUrl); // Empty string means use relative URLs (vite proxy)
+  : (useViteProxy ? "" : cleanServerUrl); // Empty string means use relative URLs (vite proxy)
 
 // Validate SERVER_URL is not undefined (but allow empty string for proxy)
 const validatedServerUrl = SERVER_URL !== undefined ? SERVER_URL : "http://localhost:4000";
