@@ -1,10 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import { User, Mail } from "lucide-react";
+import { User, Mail, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../../auth/context/UserContext";
 import { apiClient } from "../../../app/lib/api";
+import token from "../../../app/utils/token";
+import { useTabs } from "../../console/context/TabContext";
 
 const ProfileTab = () => {
   const { user, refreshUser } = useUser();
+  const navigate = useNavigate();
+  const { closeAllTabs } = useTabs();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(false);
@@ -106,6 +111,25 @@ const ProfileTab = () => {
       setNotificationFrequency(originalValues.notificationFrequency);
     }
     setSaveError(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Call logout API
+      await apiClient.get("api/Logout");
+    } catch (error) {
+      // Continue with logout even if API call fails
+      console.error("Logout API call failed:", error);
+    } finally {
+      // Clear all tokens
+      token.clear();
+
+      // Close all tabs
+      closeAllTabs();
+
+      // Navigate to sign in page
+      navigate("/", { replace: true });
+    }
   };
 
   return (
@@ -303,6 +327,18 @@ const ProfileTab = () => {
           </button>
         </div>
       )}
+
+      {/* Logout Section */}
+      <div className="pt-6 mt-8 border-t border-gray-200 dark:border-gray-700">
+        <button
+          onClick={handleLogout}
+          type="button"
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
+      </div>
     </div>
   );
 };
