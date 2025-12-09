@@ -71,11 +71,26 @@ export const fetchBrandQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    // Use GenerateQuestionsFromQuery with brand name/description as query
-    const query = brand.description || brand.name || "";
-    const response = await apiClient.post<any>(
-      `api/GenerateQuestionsFromQuery`,
-      query,
+    // Ensure we have a token before making the request
+    const tokenModule = await import("../../../app/utils/token");
+    const onboardingModule = await import("../../../app/services/onboardingService");
+    
+    if (!tokenModule.default.get()) {
+      console.log("[fetchBrandQuestions] No token found, creating visitor session...");
+      await onboardingModule.createOnboardingSession();
+    }
+
+    // Backend-main expects BrandDto with lowercase properties: brandId, domain, name, icon
+    const brandDto = {
+      brandId: brand.brandId,
+      domain: brand.domain,
+      name: brand.name,
+      icon: brand.icon,
+    };
+
+    const questions = await apiClient.post<BrandData>(
+      `api/CreateSurveyFromBrand`,
+      brandDto,
       options
     );
 
@@ -117,6 +132,35 @@ export const fetchBrandQuestions = async (
       throw error;
     }
 
+    // If 401 Unauthorized, try to recreate token and retry once
+    if (error instanceof ApiError && error.status === 401) {
+      console.warn("[fetchBrandQuestions] 401 Unauthorized, attempting to recreate token and retry...");
+      try {
+        const onboardingModule = await import("../../../app/services/onboardingService");
+        await onboardingModule.createOnboardingSession();
+        
+        // Retry the request once
+        const brandDto = {
+          brandId: brand.brandId,
+          domain: brand.domain,
+          name: brand.name,
+          icon: brand.icon,
+        };
+        
+        const questions = await apiClient.post<BrandData>(
+          `api/CreateSurveyFromBrand`,
+          brandDto,
+          options
+        );
+        
+        if (!questions) throw new Error("No questions found");
+        return questions;
+      } catch (retryError) {
+        console.error("[fetchBrandQuestions] Retry after token recreation failed:", retryError);
+        throw error; // Throw original error
+      }
+    }
+
     // Re-throw ApiError as-is
     if (error instanceof ApiError) {
       throw error;
@@ -136,8 +180,18 @@ export const fetchQueryQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const response = await apiClient.post<any>(
-      `api/GenerateQuestionsFromQuery`,
+    // Ensure we have a token before making the request
+    // Import token and createOnboardingSession dynamically to avoid circular dependencies
+    const tokenModule = await import("../../../app/utils/token");
+    const onboardingModule = await import("../../../app/services/onboardingService");
+    
+    if (!tokenModule.default.get()) {
+      console.log("[fetchQueryQuestions] No token found, creating visitor session...");
+      await onboardingModule.createOnboardingSession();
+    }
+
+    const questions = await apiClient.post<BrandData>(
+      `api/CreateSurveyFromQuery`,
       query,
       options
     );
@@ -178,6 +232,28 @@ export const fetchQueryQuestions = async (
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {
       throw error;
+    }
+
+    // If 401 Unauthorized, try to recreate token and retry once
+    if (error instanceof ApiError && error.status === 401) {
+      console.warn("[fetchQueryQuestions] 401 Unauthorized, attempting to recreate token and retry...");
+      try {
+        const onboardingModule = await import("../../../app/services/onboardingService");
+        await onboardingModule.createOnboardingSession();
+        
+        // Retry the request once
+        const questions = await apiClient.post<BrandData>(
+          `api/CreateSurveyFromQuery`,
+          query,
+          options
+        );
+        
+        if (!questions) throw new Error("No questions found");
+        return questions;
+      } catch (retryError) {
+        console.error("[fetchQueryQuestions] Retry after token recreation failed:", retryError);
+        throw error; // Throw original error
+      }
     }
 
     // Re-throw ApiError as-is

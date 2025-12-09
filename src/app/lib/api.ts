@@ -66,72 +66,46 @@ axios.interceptors.request.use(async (config) => {
     config.headers = {} as any;
   }
 
-  if (!config.headers.post) {
-    config.headers.post = {} as any;
-  }
-  if (!config.headers.put) {
-    config.headers.put = {} as any;
-  }
-  if (!config.headers.patch) {
-    config.headers.patch = {} as any;
-  }
-  if (!config.headers.common) {
-    config.headers.common = {} as any;
+  // Set Content-Type for POST, PUT, PATCH requests
+  if (config.method === "post" || config.method === "put" || config.method === "patch") {
+    config.headers["Content-Type"] = "application/json";
   }
 
-  config.headers.post["Content-Type"] = "application/json";
-  config.headers.put["Content-Type"] = "application/json";
-  config.headers.patch["Content-Type"] = "application/json";
-
-  // Check if this is a public endpoint that should skip authentication
-  const shouldSkipAuth = (config as any).__skipAuth === true;
-  
-  // Also check URL for public endpoints as fallback
-  const url = config.url || "";
-  let endpoint = "";
-  if (url.includes("/api/")) {
-    endpoint = url.split("/api/")[1].split("?")[0];
-  } else if (url.startsWith("/api/")) {
-    endpoint = url.substring(5).split("?")[0];
-  } else if (url.startsWith("api/")) {
-    endpoint = url.substring(4).split("?")[0];
-  }
-  
-  const isPublicEndpoint = shouldSkipAuth || 
-                          endpoint.includes("GenerateQuestionsFromQuery") || 
-                          endpoint.includes("GenerateQuestionsFromBrand") ||
-                          endpoint.includes("CreateVisitorSession") ||
-                          endpoint.includes("CreateMagicLink") ||
-                          endpoint.includes("ConsumeMagicLink");
-  
-  if (isPublicEndpoint) {
-    // Explicitly remove token headers for public endpoints to prevent 401 errors
-    if (config.headers?.common) {
-      delete config.headers.common["token"];
+  // Always retrieve token fresh from storage on each request
+  // This ensures we have the latest token value
+  const authToken = token.get();
+  if (authToken) {
+    // Safety check: ensure token is not HTML or invalid
+    const tokenStr = String(authToken).trim();
+    if (tokenStr.startsWith("<!DOCTYPE") || tokenStr.startsWith("<html")) {
+      console.error("Invalid token detected (HTML), skipping header");
+      return config;
     }
-    if (config.headers) {
-      delete config.headers["token"];
-      delete config.headers["authorization"];
-    }
-    if (import.meta.env.DEV) {
-      console.log(`[API] Skipping auth for public endpoint: ${endpoint || url}`);
+    
+    // Backend-main expects token in the "token" header (not Authorization)
+    // Set it directly on headers object - this works for all HTTP methods
+    // Use lowercase header name to ensure compatibility
+    config.headers["token"] = tokenStr;
+    config.headers["Token"] = tokenStr; // Also set with capital T for compatibility
+    
+    if (import.meta.env.DEV || import.meta.env.VITE_PROD === "true") {
+      console.log("[API] Adding token to request headers", {
+        endpoint: config.url,
+        method: config.method,
+        hasToken: !!authToken,
+        tokenLength: tokenStr.length,
+        tokenPreview: tokenStr.substring(0, 20) + "...",
+        headers: Object.keys(config.headers),
+      });
     }
   } else {
-    const authToken = token.get();
-    if (authToken) {
-      // Safety check: ensure token is not HTML or invalid
-      const tokenStr = String(authToken);
-      if (tokenStr.trim().startsWith("<!DOCTYPE") || tokenStr.trim().startsWith("<html")) {
-        console.error("Invalid token detected (HTML), skipping header");
-        return config;
-      }
-      // Add token to common headers so it's included in all requests
-      config.headers.common["token"] = authToken;
-      // Also explicitly set it on the request headers as a fallback
-      config.headers["token"] = authToken;
+    if (import.meta.env.DEV) {
+      console.warn("[API] No token available for request", {
+        endpoint: config.url,
+        method: config.method,
+      });
     }
   }
-
 
   return config;
 });
@@ -231,10 +205,7 @@ async function myFetch<T>(
       }
 
       // Unauthorized
-      // Note: We don't clear the token automatically on 401 errors
-      // to prevent accidental token deletion. Token management should be
-      // handled by the calling code or authentication flow.
-      // For public endpoints, 401 errors shouldn't happen, but if they do, log and continue
+      // For visitor auth endpoints (like CreateSurveyFromQuery), try to recreate token
       if (response.status === 401) {
         const url = config?.url || "";
         const isPublicEndpoint = url.includes("GenerateQuestionsFromQuery") || 
@@ -246,6 +217,25 @@ async function myFetch<T>(
         }
         
         loading(setLoading, false);
+        
+        // Check if this is a visitor auth endpoint that might need a fresh token
+        const url = config?.url || "";
+        const isVisitorAuthEndpoint = 
+          url.includes("CreateSurveyFromQuery") || 
+          url.includes("CreateSurveyFromBrand") ||
+          url.includes("CreateVisitorSession");
+        
+        if (isVisitorAuthEndpoint && import.meta.env.VITE_PROD === "true") {
+          // In production, try to recreate the token once
+          console.warn("[API] 401 Unauthorized on visitor auth endpoint, token may be invalid", {
+            url,
+            hasToken: !!token.get(),
+          });
+          
+          // Don't auto-retry here - let the calling code handle it
+          // But log the issue for debugging
+        }
+        
         reject(new ApiError("Unauthorized", 401, response.data));
         return;
       }
