@@ -41,30 +41,54 @@ const MembersTab = () => {
     
     try {
       setLoading(true);
-      const data: Member[] = await apiClient.get(`api/GetMembers/${activeProjectId}`);
-      setMembers(data);
       
-      // Mock pending invitations for now
-      setPendingInvitations([
-        {
-          Id: 1,
-          FullName: "Nick",
-          Email: "nick@baked.design",
-          Role: "Viewer",
-          SentAt: "Just now",
-        },
-        {
-          Id: 2,
-          FullName: "Cat",
-          Email: "cat@netranks.ai",
-          Role: "Viewer",
-          SentAt: "2 hours ago",
-        },
-      ]);
+      // Fetch members
+      const membersData = await apiClient.get<Member[]>(`api/GetMembers/${activeProjectId}`);
+      setMembers(membersData || []);
+      
+      // Fetch pending invitations
+      const invitationsData = await apiClient.get<Array<{
+        Id: number;
+        FullName: string;
+        Email: string;
+        Role: "Owner" | "Editor" | "Viewer";
+        SentAt: string;
+      }>>(`api/GetPendingInvitations/${activeProjectId}`);
+      
+      // Convert to relative time format
+      const formattedInvitations: PendingInvitation[] = (invitationsData || []).map(inv => ({
+        Id: inv.Id,
+        FullName: inv.FullName,
+        Email: inv.Email,
+        Role: inv.Role,
+        SentAt: formatRelativeTimeFromISO(inv.SentAt),
+      }));
+      setPendingInvitations(formattedInvitations);
     } catch (error) {
       console.error("Failed to fetch members:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatRelativeTimeFromISO = (isoString: string): string => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMinutes < 1) {
+      return "Just now";
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else {
+      return formatDate(isoString);
     }
   };
 
@@ -146,9 +170,15 @@ const MembersTab = () => {
     }
   };
 
-  const handleDeleteInvitation = (invitationId: number) => {
+  const handleDeleteInvitation = async (invitationId: number) => {
     if (!confirm("Are you sure you want to cancel this invitation?")) return;
-    setPendingInvitations(pendingInvitations.filter((inv) => inv.Id !== invitationId));
+    
+    try {
+      await apiClient.delete(`api/DeleteInvitation/${invitationId}`);
+      setPendingInvitations(prevInvitations => prevInvitations.filter((inv) => inv.Id !== invitationId));
+    } catch (error) {
+      console.error("Failed to delete invitation:", error);
+    }
   };
 
   if (loading) {

@@ -20,6 +20,18 @@ const SERVER_URL = import.meta.env.VITE_PROD === "true"
 // Validate SERVER_URL is not undefined (but allow empty string for proxy)
 const validatedServerUrl = SERVER_URL !== undefined ? SERVER_URL : "http://localhost:4000";
 
+// Log configuration in dev mode for debugging
+if (import.meta.env.DEV) {
+  console.log("[Config] Backend Configuration:", {
+    VITE_PROD: import.meta.env.VITE_PROD,
+    VITE_BACKEND_API_URL: import.meta.env.VITE_BACKEND_API_URL,
+    VITE_DEMO_BACKEND_API_URL: import.meta.env.VITE_DEMO_BACKEND_API_URL,
+    cleanServerUrl,
+    SERVER_URL: validatedServerUrl,
+    devServerId,
+  });
+}
+
 const HOMEWORK_API_BASE_URL =
   "https://qmnga6hmp3.eu-central-1.awsapprunner.com";
 
