@@ -3,7 +3,7 @@ import {
   Menu,
   TrendingUp,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
 import type { CreateSearchPayload } from "../../@types/optimization";
@@ -63,23 +63,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   const batchResponse = batchResponseProp !== undefined ? batchResponseProp : localBatchResponse;
   const setBatchResponse = onBatchResponseChange || setLocalBatchResponse;
 
-  // Debug: Watch for batchResponse changes
-  useEffect(() => {
-    console.log("🔄 batchResponse changed:", {
-      hasBatchResponse: !!batchResponse,
-      resultsCount: batchResponse?.results?.length || 0,
-      success: batchResponse?.success,
-      batchResponseObject: batchResponse,
-    });
-  }, [batchResponse]);
-
-  // Debug: Check if component is mounting/unmounting
-  useEffect(() => {
-    console.log("🟢 NewOptimizePageTab mounted");
-    return () => {
-      console.log("🔴 NewOptimizePageTab unmounting");
-    };
-  }, []);
 
   // Helper function to normalize URL - ensure it has a protocol
   const normalizeUrl = (url: string): string => {
@@ -97,11 +80,8 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   };
 
   const triggerPredictions = async (brandName: string, url: string) => {
-    console.log("🟢 triggerPredictions called", { brandName, url });
-    
     // Normalize URL to ensure it has a protocol
     const normalizedUrl = normalizeUrl(url);
-    console.log("🟢 URL normalized in triggerPredictions:", { url, normalizedUrl });
     
     if (
       !normalizedUrl ||
@@ -116,12 +96,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       return;
     }
 
-    console.log("✅ Calling getBatchPrediction", {
-      brandName,
-      normalizedUrl,
-      questionCount: surveyDetails.Questions.length,
-    });
-
     try {
       // Fetch batch predictions for all questions at once
       const response: RankingAnalysisResponse = await getBatchPrediction(
@@ -130,37 +104,8 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
         surveyDetails.Questions
       );
 
-      console.log("✅ Batch prediction response received", {
-        success: response.success,
-        resultsCount: response.results?.length || 0,
-        successfulPredictions: response.successful_predictions,
-      });
-
-      // Log the structure of the first result to debug
-      if (response.results && response.results.length > 0) {
-        const firstResult = response.results[0];
-        console.log("🔍 First result structure:", {
-          success: firstResult.success,
-          hasEnhanced: !!firstResult.enhanced,
-          hasActionPriorities: !!firstResult.enhanced?.action_priorities,
-          actionPrioritiesCount: firstResult.enhanced?.action_priorities?.length || 0,
-          actionPriorities: firstResult.enhanced?.action_priorities?.slice(0, 2),
-          fullResult: firstResult,
-        });
-      }
-
       // Store the full response
-      console.log("💾 Setting batchResponse state", {
-        responseExists: !!response,
-        resultsCount: response.results?.length || 0,
-        responseSuccess: response.success,
-        responseObject: response,
-      });
-      
-      // Set state directly
-      console.log("📝 Calling setBatchResponse directly with response");
       setBatchResponse(response);
-      console.log("✅ setBatchResponse called");
     } catch (error) {
       console.error("❌ Error fetching batch predictions:", error);
       setBatchResponse(null);
@@ -192,28 +137,14 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
   // Transform action_priorities from batch response into tasks
   const tasks = useMemo(() => {
-    console.log("🔄 Computing tasks from batchResponse", {
-      hasBatchResponse: !!batchResponse,
-      hasResults: !!batchResponse?.results,
-      resultsCount: batchResponse?.results?.length || 0,
-    });
-
     if (!batchResponse?.results) {
-      console.log("❌ No batchResponse.results, returning empty tasks");
       return [];
     }
 
     const allTasks: Task[] = [];
     let taskId = 1;
 
-    batchResponse.results.forEach((result, idx) => {
-      console.log(`📋 Processing result ${idx}:`, {
-        success: result.success,
-        hasEnhanced: !!result.enhanced,
-        hasActionPriorities: !!result.enhanced?.action_priorities,
-        actionPrioritiesCount: result.enhanced?.action_priorities?.length || 0,
-      });
-
+    batchResponse.results.forEach((result) => {
       if (result.success && result.enhanced?.action_priorities) {
         result.enhanced.action_priorities.forEach((priority) => {
           // Determine impact
@@ -239,14 +170,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
             completed: false,
           });
         });
-      } else {
-        console.log(`⚠️ Result ${idx} skipped - no action_priorities`);
       }
-    });
-
-    console.log("✅ Tasks computed:", {
-      totalTasks: allTasks.length,
-      tasks: allTasks.map((t) => ({ id: t.id, title: t.title, impact: t.impact })),
     });
 
     // Sort tasks by impact: high impact first, then normal impact
@@ -282,14 +206,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   }, [batchResponse]);
 
   const handleSubmit = async () => {
-    console.log("🔵 handleSubmit called", {
-      selectedPayload,
-      manualUrl,
-      brandUrl,
-      hasQuestions: !!surveyDetails?.Questions,
-      questionCount: surveyDetails?.Questions?.length || 0,
-    });
-
     if (!selectedPayload || !selectedPayload.BrandName) {
       console.warn("❌ No selectedPayload or BrandName");
       return;
@@ -306,17 +222,12 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
     // Normalize URL to ensure it has a protocol
     const finalUrl = normalizeUrl(rawUrl);
-    console.log("✅ URL normalized:", { rawUrl, finalUrl });
 
     setIsSubmitting(true);
 
     try {
       // Fetch predictions for all questions FIRST, before calling onBrandSelect
       // This prevents the parent from re-rendering and potentially resetting state
-      console.log("🚀 Calling triggerPredictions", {
-        brandName: selectedPayload.BrandName,
-        url: finalUrl,
-      });
       await triggerPredictions(selectedPayload.BrandName, finalUrl);
 
       // Call parent's onBrandSelect to update dashboard AFTER predictions are fetched
@@ -389,14 +300,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log("🟢 Submit button clicked!", {
-                  isSubmitting,
-                  manualUrl,
-                  brandUrl,
-                  selectedPayload,
-                  disabled: isSubmitting ||
-                    (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === "")),
-                });
                 handleSubmit();
               }}
               disabled={
@@ -455,14 +358,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
       {/* Right Column - Tasks */}
       <div className="flex-1">
-        {(() => {
-          console.log("🎨 Rendering right column:", {
-            hasBatchResponse: !!batchResponse,
-            tasksLength: tasks.length,
-            batchResponseResultsCount: batchResponse?.results?.length || 0,
-          });
-          return null;
-        })()}
         {batchResponse && tasks.length > 0 ? (
           <div className="bg-gray-100 rounded-[20px] shadow-sm border border-gray-200">
             <div className="border-b border-gray-200 px-6 py-4">
