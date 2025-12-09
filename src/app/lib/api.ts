@@ -207,6 +207,15 @@ async function myFetch<T>(
       // Unauthorized
       // For visitor auth endpoints (like CreateSurveyFromQuery), try to recreate token
       if (response.status === 401) {
+        const url = config?.url || "";
+        const isPublicEndpoint = url.includes("GenerateQuestionsFromQuery") || 
+                                url.includes("GenerateQuestionsFromBrand") ||
+                                url.includes("CreateVisitorSession");
+        
+        if (isPublicEndpoint && import.meta.env.DEV) {
+          console.warn(`[API] Got 401 on public endpoint ${url}. This shouldn't happen. Response:`, response.data);
+        }
+        
         loading(setLoading, false);
         
         // Check if this is a visitor auth endpoint that might need a fresh token
@@ -561,6 +570,18 @@ class ApiClient {
         console.error("Invalid URL constructed:", { baseURL: this.baseURL, endpoint, url });
       }
       throw new ApiError(`Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`);
+    }
+
+    // Mark public endpoints in config for the interceptor
+    const isPublicEndpoint = normalizedEndpoint.includes("GenerateQuestionsFromQuery") || 
+                            normalizedEndpoint.includes("GenerateQuestionsFromBrand") ||
+                            normalizedEndpoint.includes("CreateVisitorSession") ||
+                            normalizedEndpoint.includes("CreateMagicLink") ||
+                            normalizedEndpoint.includes("ConsumeMagicLink");
+    
+    if (isPublicEndpoint) {
+      // Add a flag to the config so the interceptor knows to skip auth
+      (config as any).__skipAuth = true;
     }
 
     return myFetch<T>(setLoading, {

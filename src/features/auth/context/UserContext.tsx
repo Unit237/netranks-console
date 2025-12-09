@@ -32,6 +32,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
   const location = useLocation();
   const isConsoleRoute = location.pathname.startsWith("/console");
+  const isBrandRankRoute = location.pathname.startsWith("/brand-rank") || 
+                           location.pathname.startsWith("/dashboard") ||
+                           location.pathname.startsWith("/questions") ||
+                           location.pathname === "/";
   
   // Debug: Log pathname changes
   // Listen for token changes (e.g., after magic link authentication)
@@ -136,13 +140,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     // This ensures we fetch user data after magic link authentication
     const hasToken = token.get();
     
-    if (isConsoleRoute) {
+    // Don't call GetUser for brand-rank/initial flow routes - they don't need authentication
+    if (isConsoleRoute && !isBrandRankRoute) {
       debugLog("UserContext", "On console route - calling refreshUser");
       refreshUser().catch((err) => {
         debugError("UserContext", "refreshUser promise rejected", err);
         // Error is handled in refreshUser
       });
-    } else if (hasToken && !user && !loading) {
+    } else if (hasToken && !user && !loading && !isBrandRankRoute) {
       // We have a token but no user data - fetch it (e.g., after magic link auth)
       // BUT: Don't fetch on magic link routes - wait for magic link handler to consume the link first
       // The magic link handler will set the token, then we can fetch user data
