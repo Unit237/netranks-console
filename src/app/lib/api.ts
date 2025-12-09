@@ -219,7 +219,6 @@ async function myFetch<T>(
         loading(setLoading, false);
         
         // Check if this is a visitor auth endpoint that might need a fresh token
-        const url = config?.url || "";
         const isVisitorAuthEndpoint = 
           url.includes("CreateSurveyFromQuery") || 
           url.includes("CreateSurveyFromBrand") ||
