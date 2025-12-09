@@ -18,13 +18,27 @@ import { urlParams } from "../utils/urlUtils";
  * @returns Promise that resolves when onboarding is complete or skipped
  */
 export async function createOnboardingSession(): Promise<void> {
-  // Early return if token already exists
-  // if (token.get()) {
+  const isProduction = import.meta.env.VITE_PROD === "true";
+  const existingToken = token.get();
+  
+  // In production, always try to create a fresh token to ensure it's valid
+  // In dev, skip if token already exists (optional optimization)
+  // if (!isProduction && existingToken) {
   //   return;
   // }
 
   try {
+    if (import.meta.env.DEV || isProduction) {
+      console.log("[Onboarding] Starting visitor session creation", {
+        backend: prms.SERVER_URL,
+        isProduction,
+        hasExistingToken: !!existingToken,
+        existingTokenPreview: existingToken ? existingToken.substring(0, 20) + "..." : null,
+      });
+    }
+
     // Step 1: Create visitor session and get IP/session identifier
+    // This call doesn't need a token (authNeeded: false)
     const ip = await apiClient.get<string>(`api/CreateVisitorSession`);
 
     // Validate response
@@ -47,13 +61,36 @@ export async function createOnboardingSession(): Promise<void> {
     }).toString();
 
     // Step 3: Exchange encrypted secret for visitor token
+    // This call also doesn't need a token (authNeeded: false)
     const tokenValue = await apiClient.get<string>(
       urlParams("api/CreateVisitorSession", { secret })
     );
+    
+    if (import.meta.env.DEV || isProduction) {
+      console.log("[Onboarding] Received token from backend", {
+        tokenLength: tokenValue?.length,
+        tokenPreview: tokenValue ? tokenValue.substring(0, 20) + "..." : null,
+        backend: prms.SERVER_URL,
+      });
+    }
 
     // Step 4: Store token if received
+    // Validate token is a valid Guid format (backend-main expects Guid)
     if (tokenValue && typeof tokenValue === "string") {
-      token.set(tokenValue);
+      // Basic Guid validation: should be in format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (guidPattern.test(tokenValue.trim())) {
+        token.set(tokenValue.trim());
+        if (import.meta.env.DEV) {
+          console.log("[Onboarding] Visitor session token created and stored", {
+            backend: prms.SERVER_URL,
+          });
+        }
+      } else {
+        console.error("[Onboarding] Invalid token format (not a valid Guid)", {
+          tokenValue: tokenValue.substring(0, 50),
+        });
+      }
     } else {
       if (import.meta.env.DEV) {
         console.warn(
