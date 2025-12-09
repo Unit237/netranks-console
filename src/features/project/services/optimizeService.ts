@@ -243,10 +243,6 @@ export const getBatchPrediction = async (
 
     const normalizedUrl = normalizeUrl(url);
 
-    if (import.meta.env.DEV && url !== normalizedUrl) {
-      console.log("🔧 URL normalized:", { original: url, normalized: normalizedUrl });
-    }
-
     // Build the items array for batch request - sending ALL questions at once
     const items: BatchPredictionItem[] = questions.map((question) => ({
       question_text: question.Text,
@@ -257,20 +253,6 @@ export const getBatchPrediction = async (
 
     const requestUrl = `${prms.API_BASE_URL}/predict/batch`;
     const requestBody = { items };
-
-    if (import.meta.env.DEV) {
-      console.log("Batch prediction request - sending ALL questions:", {
-        url: requestUrl,
-        totalQuestions: questions.length,
-        itemCount: items.length,
-        brandName,
-        url,
-        questionTexts: items.map((item, idx) => ({
-          index: idx,
-          question: item.question_text?.substring(0, 60) + "...",
-        })),
-      });
-    }
 
     const response = await fetch(requestUrl, {
       method: "POST",
@@ -301,17 +283,6 @@ export const getBatchPrediction = async (
     }
 
     const results: RankingAnalysisResponse = await response.json();
-
-    if (import.meta.env.DEV) {
-      console.log("Batch prediction response:", {
-        success: results.success,
-        totalItems: results.total_items,
-        successfulPredictions: results.successful_predictions,
-        failedPredictions: results.failed_predictions,
-        resultsCount: results.results?.length || 0,
-        errorsCount: results.errors?.length || 0,
-      });
-    }
 
     return results;
   } catch (error) {
