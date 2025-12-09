@@ -21,10 +21,21 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestionInput, setEditQuestionInput] = useState("");
-  const [questions, setQuestions] = useState<string[]>(survey.Questions ?? []);
+  const [questions, setQuestions] = useState<string[]>(
+    Array.isArray(survey.Questions) ? survey.Questions : []
+  );
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
+
+  // Update questions when survey changes
+  useEffect(() => {
+    if (survey && Array.isArray(survey.Questions)) {
+      setQuestions(survey.Questions);
+    } else {
+      setQuestions([]);
+    }
+  }, [survey]);
   const [showToast, setShowToast] = useState(false);
   const [toastType, setToastType] = useState<"delete" | "add">("delete");
   const [lastDeletedQuestion, setLastDeletedQuestion] = useState<{
@@ -233,7 +244,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
               </div>
             ) : (
               <ul className="m-0 p-0 list-none">
-                {questions.map((q, i) => {
+                {Array.isArray(questions) && questions.map((q, i) => {
                   if (deletedQuestions.has(i)) return null;
 
                   return (

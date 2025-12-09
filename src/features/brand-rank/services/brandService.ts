@@ -71,17 +71,46 @@ export const fetchBrandQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromBrand`,
-      brand,
+    // Use GenerateQuestionsFromQuery with brand name/description as query
+    const query = brand.description || brand.name || "";
+    const response = await apiClient.post<any>(
+      `api/GenerateQuestionsFromQuery`,
+      query,
       options
     );
 
-    // const questions = await searchBrand(brand.name);
+    // Handle different response formats - API might return array directly or wrapped
+    let questionsArray: string[] = [];
+    if (Array.isArray(response)) {
+      questionsArray = response;
+    } else if (response && Array.isArray(response.Questions)) {
+      questionsArray = response.Questions;
+    } else if (response && Array.isArray(response.questions)) {
+      questionsArray = response.questions;
+    } else if (typeof response === 'object' && response !== null) {
+      // Try to extract questions from object
+      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
+      questionsArray = [];
+    }
+    
+    if (questionsArray.length === 0) throw new Error("No questions found");
 
-    if (!questions) throw new Error("No questions found");
+    // Transform response to match BrandData format
+    const brandData: BrandData = {
+      Id: 0, // Not provided by GenerateQuestionsFromQuery
+      PasswordOne: null,
+      PasswordTwo: null,
+      BrandName: brand.name || null,
+      DescriptionOfTheBrand: brand.description || null,
+      DescriptionOfTheBrandShort: brand.description || null,
+      DescriptionOfTheQuestion: null,
+      DescriptionOfTheQuestionShort: null,
+      QueryType: "brand",
+      Questions: questionsArray,
+      WebsiteOfTheBrand: brand.domain || null,
+    };
 
-    return questions;
+    return brandData;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {
@@ -107,17 +136,44 @@ export const fetchQueryQuestions = async (
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
-    const questions = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromQuery`,
+    const response = await apiClient.post<any>(
+      `api/GenerateQuestionsFromQuery`,
       query,
       options
     );
 
-    // const questions = await searchBrand(query);
+    // Handle different response formats - API might return array directly or wrapped
+    let questionsArray: string[] = [];
+    if (Array.isArray(response)) {
+      questionsArray = response;
+    } else if (response && Array.isArray(response.Questions)) {
+      questionsArray = response.Questions;
+    } else if (response && Array.isArray(response.questions)) {
+      questionsArray = response.questions;
+    } else if (typeof response === 'object' && response !== null) {
+      // Try to extract questions from object
+      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
+      questionsArray = [];
+    }
+    
+    if (questionsArray.length === 0) throw new Error("No questions found");
 
-    if (!questions) throw new Error("No questions found");
+    // Transform response to match BrandData format
+    const brandData: BrandData = {
+      Id: 0, // Not provided by GenerateQuestionsFromQuery
+      PasswordOne: null,
+      PasswordTwo: null,
+      BrandName: null,
+      DescriptionOfTheBrand: `Survey about: ${query}`,
+      DescriptionOfTheBrandShort: query.substring(0, 100),
+      DescriptionOfTheQuestion: null,
+      DescriptionOfTheQuestionShort: null,
+      QueryType: "query",
+      Questions: questionsArray,
+      WebsiteOfTheBrand: null,
+    };
 
-    return questions;
+    return brandData;
   } catch (error) {
     // Re-throw canceled requests
     if (error instanceof ApiError && error.isCanceled) {

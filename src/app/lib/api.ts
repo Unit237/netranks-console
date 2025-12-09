@@ -83,20 +83,53 @@ axios.interceptors.request.use(async (config) => {
   config.headers.put["Content-Type"] = "application/json";
   config.headers.patch["Content-Type"] = "application/json";
 
-  // Always retrieve token fresh from storage on each request
-  // This ensures we have the latest token value
-  const authToken = token.get();
-  if (authToken) {
-    // Safety check: ensure token is not HTML or invalid
-    const tokenStr = String(authToken);
-    if (tokenStr.trim().startsWith("<!DOCTYPE") || tokenStr.trim().startsWith("<html")) {
-      console.error("Invalid token detected (HTML), skipping header");
-      return config;
+  // Check if this is a public endpoint that should skip authentication
+  const shouldSkipAuth = (config as any).__skipAuth === true;
+  
+  // Also check URL for public endpoints as fallback
+  const url = config.url || "";
+  let endpoint = "";
+  if (url.includes("/api/")) {
+    endpoint = url.split("/api/")[1].split("?")[0];
+  } else if (url.startsWith("/api/")) {
+    endpoint = url.substring(5).split("?")[0];
+  } else if (url.startsWith("api/")) {
+    endpoint = url.substring(4).split("?")[0];
+  }
+  
+  const isPublicEndpoint = shouldSkipAuth || 
+                          endpoint.includes("GenerateQuestionsFromQuery") || 
+                          endpoint.includes("GenerateQuestionsFromBrand") ||
+                          endpoint.includes("CreateVisitorSession") ||
+                          endpoint.includes("CreateMagicLink") ||
+                          endpoint.includes("ConsumeMagicLink");
+  
+  if (isPublicEndpoint) {
+    // Explicitly remove token headers for public endpoints to prevent 401 errors
+    if (config.headers?.common) {
+      delete config.headers.common["token"];
     }
-    // Add token to common headers so it's included in all requests
-    config.headers.common["token"] = authToken;
-    // Also explicitly set it on the request headers as a fallback
-    config.headers["token"] = authToken;
+    if (config.headers) {
+      delete config.headers["token"];
+      delete config.headers["authorization"];
+    }
+    if (import.meta.env.DEV) {
+      console.log(`[API] Skipping auth for public endpoint: ${endpoint || url}`);
+    }
+  } else {
+    const authToken = token.get();
+    if (authToken) {
+      // Safety check: ensure token is not HTML or invalid
+      const tokenStr = String(authToken);
+      if (tokenStr.trim().startsWith("<!DOCTYPE") || tokenStr.trim().startsWith("<html")) {
+        console.error("Invalid token detected (HTML), skipping header");
+        return config;
+      }
+      // Add token to common headers so it's included in all requests
+      config.headers.common["token"] = authToken;
+      // Also explicitly set it on the request headers as a fallback
+      config.headers["token"] = authToken;
+    }
   }
 
 
@@ -201,7 +234,17 @@ async function myFetch<T>(
       // Note: We don't clear the token automatically on 401 errors
       // to prevent accidental token deletion. Token management should be
       // handled by the calling code or authentication flow.
+      // For public endpoints, 401 errors shouldn't happen, but if they do, log and continue
       if (response.status === 401) {
+        const url = config?.url || "";
+        const isPublicEndpoint = url.includes("GenerateQuestionsFromQuery") || 
+                                url.includes("GenerateQuestionsFromBrand") ||
+                                url.includes("CreateVisitorSession");
+        
+        if (isPublicEndpoint && import.meta.env.DEV) {
+          console.warn(`[API] Got 401 on public endpoint ${url}. This shouldn't happen. Response:`, response.data);
+        }
+        
         loading(setLoading, false);
         reject(new ApiError("Unauthorized", 401, response.data));
         return;
@@ -537,6 +580,18 @@ class ApiClient {
         console.error("Invalid URL constructed:", { baseURL: this.baseURL, endpoint, url });
       }
       throw new ApiError(`Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`);
+    }
+
+    // Mark public endpoints in config for the interceptor
+    const isPublicEndpoint = normalizedEndpoint.includes("GenerateQuestionsFromQuery") || 
+                            normalizedEndpoint.includes("GenerateQuestionsFromBrand") ||
+                            normalizedEndpoint.includes("CreateVisitorSession") ||
+                            normalizedEndpoint.includes("CreateMagicLink") ||
+                            normalizedEndpoint.includes("ConsumeMagicLink");
+    
+    if (isPublicEndpoint) {
+      // Add a flag to the config so the interceptor knows to skip auth
+      (config as any).__skipAuth = true;
     }
 
     return myFetch<T>(setLoading, {
