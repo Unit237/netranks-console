@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ErrorBoundary from "../../../app/components/ErrorBoundary";
+import { useUser } from "../../auth/context/UserContext";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import { useTabs } from "../context/TabContext";
@@ -10,14 +11,24 @@ const Console = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { tabs, activeTabId, setActiveTab, addTab } = useTabs();
+  const { useActiveProjectId } = useUser();
 
   const handleCreateNewSurvey = () => {
+    // Get the active project ID (or first project if none active)
+    const projectId = useActiveProjectId();
+    
+    if (!projectId) {
+      // No projects available, can't create survey
+      console.warn("No projects available to create survey");
+      return;
+    }
+    
     addTab({
-      name: "untitled survey",
-      path: "/console/brand",
-      headerName: "untitled survey",
+      name: "New Survey",
+      path: `/console/new-survey/${projectId}`,
+      headerName: "New Survey",
     });
-    navigate("/console/brand");
+    navigate(`/console/new-survey/${projectId}`);
   };
 
   // Sync active tab with current route

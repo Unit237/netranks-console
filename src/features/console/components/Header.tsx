@@ -8,7 +8,7 @@ const Header = () => {
   const { tabs, activeTabId, closeTab, closeAllTabs, setActiveTab, addTab } =
     useTabs();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, useActiveProjectId } = useUser();
 
   // Check if user is authenticated
   const isAuthenticated = () => {
@@ -30,12 +30,22 @@ const Header = () => {
       navigate("/signin");
       return;
     }
+    
+    // Get the active project ID (or first project if none active)
+    const projectId = useActiveProjectId();
+    
+    if (!projectId) {
+      // No projects available, can't create survey
+      console.warn("No projects available to create survey");
+      return;
+    }
+    
     addTab({
-      name: "untitled survey",
-      path: "/console/brand",
-      headerName: "untitled survey",
+      name: "New Survey",
+      path: `/console/new-survey/${projectId}`,
+      headerName: "New Survey",
     });
-    navigate("/console/brand");
+    navigate(`/console/new-survey/${projectId}`);
   };
 
   const handleTabClick = (tabId: string, path: string) => {
