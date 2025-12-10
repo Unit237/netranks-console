@@ -77,6 +77,14 @@ export const consumeMagicLink = async (
 };
 
 export const getUser = async () => {
+  // Dev mode: Use mock data for testing Last Run functionality
+  // Set VITE_USE_MOCK_USER_DATA=true in .env to enable
+  if (import.meta.env.VITE_USE_MOCK_USER_DATA === "true") {
+    const { DUMMY_USER } = await import("../../../app/utils/constant");
+    console.log("[DEV MODE] Using mock user data for testing");
+    return DUMMY_USER;
+  }
+
   try {
     const res: UserData | string = await apiClient.get(`api/GetUser`);
 
