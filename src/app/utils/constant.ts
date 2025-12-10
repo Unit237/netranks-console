@@ -1,62 +1,107 @@
 import type { Survey, UserData } from "../../features/auth/@types";
 import type { BrandData } from "../../features/brand-rank/@types";
 
+// Helper function to generate NextRunAt dates
+// For testing: NextRunAt = now + hoursUntilNextRun
+const getNextRunAt = (hoursUntilNextRun: number): string => {
+  return new Date(Date.now() + hoursUntilNextRun * 60 * 60 * 1000).toISOString();
+};
+
+// Mock surveys matching backend GetUser SurveyDto format:
+// { Id, Name, DescriptionShort, SchedulePeriodHours, NextRunAt }
+// LastRunAt will be calculated as: NextRunAt - SchedulePeriodHours
 export const surveys: Survey[] = [
+  {
+    Id: 3595,
+    Name: "Owner wants steps to boost their consulting brand's search rankings and visibility.",
+    DescriptionShort: "Consulting brand SEO and visibility improvement survey.",
+    SchedulePeriodHours: 0, // Paused
+    NextRunAt: null, // null → LastRunAt will be null (never ran or paused)
+  },
   {
     Id: 1,
     Name: "Daily Pulse - Social Media Sentiment",
-    DescriptionShort:
-      "Tracks daily perception trends across major social platforms.",
-    SchedulePeriodHours: 24,
-    Status: "Active",
-    Schedule: "Daily",
-    LastRun: "15 mins ago",
-    Cost: "$1200/pm",
-    HasIndicator: false,
+    DescriptionShort: "Tracks daily perception trends across major social platforms.",
+    SchedulePeriodHours: 24, // Active - runs every 24 hours
+    NextRunAt: getNextRunAt(24 - 0.25), // Next run in ~23.75 hours → LastRunAt = ~15 minutes ago
   },
   {
     Id: 2,
     Name: "Q3 Brand Report",
     DescriptionShort: "Weekly brand visibility and sentiment tracking.",
-    SchedulePeriodHours: 168,
-    Status: "Active",
-    Schedule: "Weekly",
-    LastRun: "2 hours ago",
-    Cost: "$200/pm",
-    HasIndicator: true,
+    SchedulePeriodHours: 168, // Active - runs every week (168 hours)
+    NextRunAt: getNextRunAt(168 - 2), // Next run in ~166 hours → LastRunAt = ~2 hours ago
   },
   {
     Id: 3,
     Name: "Q2 2025 Competitor Analysis",
     DescriptionShort: "Competitor sentiment benchmarking and insights.",
-    SchedulePeriodHours: 168,
-    Status: "Paused",
-    Schedule: "Weekly",
-    LastRun: "3 months ago",
-    Cost: "$200/pm",
-    HasIndicator: true,
+    SchedulePeriodHours: 0, // Paused
+    NextRunAt: null, // null → LastRunAt will be null (paused)
   },
   {
     Id: 4,
     Name: "Ad Campaign Pre-Launch Analysis",
     DescriptionShort: "Single-run campaign performance prediction.",
-    SchedulePeriodHours: 0,
-    Status: "Error",
-    Schedule: "Single Run",
-    LastRun: "Failed",
-    Cost: "$25/pm",
-    HasIndicator: true,
+    SchedulePeriodHours: 0, // Paused
+    NextRunAt: null, // null → LastRunAt will be null (never ran)
   },
   {
     Id: 5,
     Name: "FFFFFF Head-to-Head",
     DescriptionShort: "Brand matchups and audience preference comparisons.",
-    SchedulePeriodHours: 168,
-    Status: "Active",
-    Schedule: "Weekly",
-    LastRun: "2 weeks ago",
-    Cost: "$200/pm",
-    HasIndicator: false,
+    SchedulePeriodHours: 168, // Active - runs every week
+    NextRunAt: getNextRunAt(168 - (14 * 24)), // Next run in ~0 hours → LastRunAt = ~14 days ago
+  },
+  // Additional test surveys for different LastRunAt scenarios
+  {
+    Id: 6,
+    Name: "Just Now Test Survey",
+    DescriptionShort: "Test survey that ran just now.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: getNextRunAt(24 - (0.5 / 60)), // Next run in ~24 hours → LastRunAt = ~30 seconds ago
+  },
+  {
+    Id: 7,
+    Name: "One Hour Ago Test",
+    DescriptionShort: "Test survey that ran 1 hour ago.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: getNextRunAt(24 - 1), // Next run in ~23 hours → LastRunAt = ~1 hour ago
+  },
+  {
+    Id: 8,
+    Name: "One Day Ago Test",
+    DescriptionShort: "Test survey that ran 1 day ago.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: getNextRunAt(24 - 24), // Next run in ~0 hours → LastRunAt = ~1 day ago
+  },
+  {
+    Id: 9,
+    Name: "Three Days Ago Test",
+    DescriptionShort: "Test survey that ran 3 days ago.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: getNextRunAt(24 - (3 * 24)), // Next run in ~0 hours → LastRunAt = ~3 days ago
+  },
+  {
+    Id: 10,
+    Name: "Six Days Ago Test",
+    DescriptionShort: "Test survey that ran 6 days ago.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: getNextRunAt(24 - (6 * 24)), // Next run in ~0 hours → LastRunAt = ~6 days ago
+  },
+  {
+    Id: 11,
+    Name: "Never Run Survey",
+    DescriptionShort: "Test survey that has never run.",
+    SchedulePeriodHours: 24, // Active
+    NextRunAt: null, // null → LastRunAt will be null (never ran)
+  },
+  {
+    Id: 12,
+    Name: "Paused Never Run",
+    DescriptionShort: "Paused survey that has never run.",
+    SchedulePeriodHours: 0, // Paused
+    NextRunAt: null, // null → LastRunAt will be null (paused)
   },
 ];
 

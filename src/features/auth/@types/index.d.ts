@@ -3,11 +3,13 @@ export interface Survey {
   Name: string | null;
   DescriptionShort: string | null;
   SchedulePeriodHours: number;
-  Status: string;
-  Schedule: string;
-  LastRun: string;
-  Cost: string;
-  HasIndicator: boolean;
+  NextRunAt?: string | null; // ISO date string from backend - when survey will run next
+  Status?: string; // Calculated from SchedulePeriodHours
+  Schedule?: string;
+  LastRun?: string; // Formatted from calculated LastRunAt
+  LastRunAt?: string | null; // Calculated from NextRunAt - SchedulePeriodHours
+  Cost?: string;
+  HasIndicator?: boolean;
   CostDisplay?: string;
 }
 

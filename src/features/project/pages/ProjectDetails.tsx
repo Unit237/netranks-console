@@ -6,6 +6,8 @@ import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
 import { getProjectById } from "../services/projectService";
+import { formatLastRun } from "../utils/formatLastRun";
+import { calculateLastRunAt } from "../utils/calculateLastRunAt";
 
 interface ProjectMetrics {
   SpendThisMonth?: {
@@ -270,7 +272,20 @@ const ProjectDetails = () => {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {(project.Surveys || []).map((survey) => {
-                  const plan = getPlanByPeriod(survey.SchedulePeriodHours);
+                  const plan = getPlanByPeriod(survey.SchedulePeriodHours || 0);
+                  
+                  // Calculate Status from SchedulePeriodHours
+                  const status = (survey.SchedulePeriodHours || 0) > 0 ? "Active" : "Paused";
+                  
+                  // Calculate LastRunAt from NextRunAt - SchedulePeriodHours
+                  const calculatedLastRunAt = calculateLastRunAt(
+                    survey.NextRunAt,
+                    survey.SchedulePeriodHours || 0
+                  );
+                  
+                  // Format LastRunAt for display
+                  const lastRunDisplay = formatLastRun(calculatedLastRunAt);
+                  
                   return (
                     <tr
                       onClick={() => surveyDetails(survey)}
@@ -297,17 +312,17 @@ const ProjectDetails = () => {
                         <div
                           className={`flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300`}
                         >
-                          <span className={getStatusStyles(survey.Status)}>
-                            {getStatusIcon(survey.Status)}
+                          <span className={getStatusStyles(status)}>
+                            {getStatusIcon(status)}
                           </span>
-                          <span>{survey.Status}</span>
+                          <span>{status}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                        {plan?.name}
+                        {plan?.name || "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
-                        {survey.LastRun}
+                        {lastRunDisplay}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                         {plan?.cost === 0 ? "Free" : `${plan?.cost}/pm`}
