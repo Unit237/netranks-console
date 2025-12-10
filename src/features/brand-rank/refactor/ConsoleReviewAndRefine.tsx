@@ -426,7 +426,8 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                   setShowModelsDropdown(!showModelsDropdown);
                   setShowFrequencyDropdown(false);
                 }}
-                className="w-full px-4 py-4 border border-gray-200 rounded-[20px] hover:border-gray-300 transition-colors flex items-center justify-between bg-white"
+                className="w-full px-4 py-4 border border-gray-200 rounded-[20px] hover:border-gray-300 transition-colors flex items-center justify-between bg-white blur-sm opacity-60 pointer-events-none"
+                disabled
               >
                 <div className="flex items-center gap-3">
                   <Layers className="w-5 h-5 text-gray-400" />
@@ -446,6 +447,11 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                   <ChevronDown className="w-5 h-5 text-gray-400" />
                 )}
               </button>
+              <div className="absolute top-2 right-4 z-20 pointer-events-none">
+                <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-gray-900 bg-white border border-gray-300 rounded-md shadow-[0_1px_2px_0_rgba(0,0,0,0.1)] whitespace-nowrap backdrop-blur-sm">
+                  Coming soon
+                </span>
+              </div>
 
               {showModelsDropdown && (
                 <div className="absolute top-full right-0 mt-2 w-[22vw] bg-gray-100 border border-gray-200 rounded-[20px] shadow-lg z-10">

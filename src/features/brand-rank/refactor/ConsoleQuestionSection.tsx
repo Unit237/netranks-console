@@ -237,13 +237,13 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
           <h1>Click on a question to edit it</h1>
         </div>
         {survey && (
-          <div className="">
+          <div className="overflow-x-hidden">
             {questions.length === 0 && !showAddQuestion ? (
               <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
                 No questions were returned for this survey.
               </div>
             ) : (
-              <ul className="m-0 p-0 list-none">
+              <ul className="m-0 p-0 list-none overflow-x-hidden">
                 {Array.isArray(questions) && questions.map((q, i) => {
                   if (deletedQuestions.has(i)) return null;
 
@@ -307,15 +307,15 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-center justify-between w-full h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex items-center justify-between w-full min-h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
                           <div
-                            className="flex items-start gap-6 flex-1 cursor-pointer px-4"
+                            className="flex items-start gap-6 flex-1 min-w-0 cursor-pointer px-4 py-3"
                             onClick={() => handleClickQuestion(i, q)}
                           >
-                            <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400">
+                            <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 flex-shrink-0">
                               {String(i + 1)}.
                             </span>
-                            <p className="text-sm w-[440px] leading-5 m-0 text-gray-900 dark:text-gray-100">
+                            <p className="text-sm flex-1 min-w-0 leading-5 m-0 text-gray-900 dark:text-gray-100 break-words overflow-wrap-anywhere">
                               {q}
                             </p>
                           </div>
