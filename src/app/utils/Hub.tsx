@@ -3,6 +3,8 @@ export const HubType = {
   LanguageChanged: 1,
   UserChanged: 2,
   MemberAdded: 3,
+  UserTokenChanged: 4,    // New: fired when user token changes
+  VisitorTokenChanged: 5, // New: fired when visitor token changes
 } as const;
 
 export type HubType = typeof HubType[keyof typeof HubType];

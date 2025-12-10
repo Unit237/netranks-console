@@ -73,7 +73,28 @@ axios.interceptors.request.use(async (config) => {
 
   // Always retrieve token fresh from storage on each request
   // This ensures we have the latest token value
-  const authToken = token.get();
+  // Determine which token to use based on endpoint type
+  const url = config.url || "";
+
+  // Endpoints that require VisitorSession (anonymous) - these need visitor token
+  const isVisitorEndpoint =
+    url.includes("CreateSurveyFromQuery") ||
+    url.includes("CreateSurveyFromBrand") ||
+    url.includes("StartSurvey") ||
+    url.includes("GenerateQuestionsFromQuery") ||
+    url.includes("GenerateQuestionsFromBrand");
+
+  // Select the appropriate token
+  let authToken: string | null;
+  if (isVisitorEndpoint) {
+    // Visitor endpoints MUST use visitor token
+    authToken = token.getVisitor();
+  } else {
+    // All other endpoints: prefer user token, fall back to visitor
+    authToken = token.getUser() || token.getVisitor();
+  }
+
+
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
     const tokenStr = String(authToken).trim();
@@ -207,10 +228,18 @@ async function myFetch<T>(
       // Unauthorized
       // For visitor auth endpoints (like CreateSurveyFromQuery), try to recreate token
       if (response.status === 401) {
+        const url = config?.url || "";
+        const isPublicEndpoint = url.includes("GenerateQuestionsFromQuery") || 
+                                url.includes("GenerateQuestionsFromBrand") ||
+                                url.includes("CreateVisitorSession");
+        
+        if (isPublicEndpoint && import.meta.env.DEV) {
+          console.warn(`[API] Got 401 on public endpoint ${url}. This shouldn't happen. Response:`, response.data);
+        }
+        
         loading(setLoading, false);
         
         // Check if this is a visitor auth endpoint that might need a fresh token
-        const url = config?.url || "";
         const isVisitorAuthEndpoint = 
           url.includes("CreateSurveyFromQuery") || 
           url.includes("CreateSurveyFromBrand") ||
@@ -561,6 +590,18 @@ class ApiClient {
         console.error("Invalid URL constructed:", { baseURL: this.baseURL, endpoint, url });
       }
       throw new ApiError(`Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`);
+    }
+
+    // Mark public endpoints in config for the interceptor
+    const isPublicEndpoint = normalizedEndpoint.includes("GenerateQuestionsFromQuery") || 
+                            normalizedEndpoint.includes("GenerateQuestionsFromBrand") ||
+                            normalizedEndpoint.includes("CreateVisitorSession") ||
+                            normalizedEndpoint.includes("CreateMagicLink") ||
+                            normalizedEndpoint.includes("ConsumeMagicLink");
+    
+    if (isPublicEndpoint) {
+      // Add a flag to the config so the interceptor knows to skip auth
+      (config as any).__skipAuth = true;
     }
 
     return myFetch<T>(setLoading, {

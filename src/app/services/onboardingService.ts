@@ -19,7 +19,7 @@ import { urlParams } from "../utils/urlUtils";
  */
 export async function createOnboardingSession(): Promise<void> {
   const isProduction = import.meta.env.VITE_PROD === "true";
-  const existingToken = token.get();
+  const existingToken = token.getVisitor();
   
   // In production, always try to create a fresh token to ensure it's valid
   // In dev, skip if token already exists (optional optimization)
@@ -80,7 +80,7 @@ export async function createOnboardingSession(): Promise<void> {
       // Basic Guid validation: should be in format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
       const guidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (guidPattern.test(tokenValue.trim())) {
-        token.set(tokenValue.trim());
+        token.setVisitor(tokenValue.trim());
         if (import.meta.env.DEV) {
           console.log("[Onboarding] Visitor session token created and stored", {
             backend: prms.SERVER_URL,

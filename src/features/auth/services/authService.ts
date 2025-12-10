@@ -50,7 +50,7 @@ export const consumeMagicLink = async (
 
     // Set token if we got a successful response
     if (typeof res === "string") {
-      token.set(res);
+      token.setUser(res);
       return res;
     } else {
       throw new ApiError("Invalid response format");

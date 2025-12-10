@@ -32,10 +32,17 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
   const location = useLocation();
   const isConsoleRoute = location.pathname.startsWith("/console");
+  const isBrandRankRoute = location.pathname.startsWith("/brand-rank") || 
+                           location.pathname.startsWith("/dashboard") ||
+                           location.pathname.startsWith("/questions") ||
+                           location.pathname === "/";
   
   // Debug: Log pathname changes
   // Listen for token changes (e.g., after magic link authentication)
-  useHub(HubType.AuthTokenChanged, (newToken: string | null) => {
+  // Why: This context should only react to user token changes, not visitor token changes. 
+  // When a user logs in via magic link, UserTokenChanged is dispatched. 
+  // We don't want to trigger user data refresh when a visitor token changes.
+  useHub(HubType.UserTokenChanged, (newToken: string | null) => {
     debugLog("UserContext", "Token changed", { hasToken: !!newToken });
     
     // If token was just set and we're on console route, fetch user data
@@ -134,15 +141,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     
     // Fetch user data when on console route OR when we have a token but user is null
     // This ensures we fetch user data after magic link authentication
-    const hasToken = token.get();
+    const hasToken = token.getUser();
     
-    if (isConsoleRoute) {
+    // Don't call GetUser for brand-rank/initial flow routes - they don't need authentication
+    if (isConsoleRoute && !isBrandRankRoute) {
       debugLog("UserContext", "On console route - calling refreshUser");
       refreshUser().catch((err) => {
         debugError("UserContext", "refreshUser promise rejected", err);
         // Error is handled in refreshUser
       });
-    } else if (hasToken && !user && !loading) {
+    } else if (hasToken && !user && !loading && !isBrandRankRoute) {
       // We have a token but no user data - fetch it (e.g., after magic link auth)
       // BUT: Don't fetch on magic link routes - wait for magic link handler to consume the link first
       // The magic link handler will set the token, then we can fetch user data

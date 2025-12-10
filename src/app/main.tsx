@@ -45,11 +45,11 @@ window.addEventListener("error", (event) => {
 });
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <BrowserRouter>
       <ToastProvider>
         <App />
       </ToastProvider>
     </BrowserRouter>
-  </StrictMode>
+  // </StrictMode>
 );
