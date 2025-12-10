@@ -246,10 +246,6 @@ export function RenderBrandItemWithIcon({
                 ✋
               </div>
             )}
-
-            <span className="text-gray-600 dark:text-gray-400 text-[14px] border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-1">
-              #{brand.brandId}
-            </span>
           </div>
 
           {selected && (
