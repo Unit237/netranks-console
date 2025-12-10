@@ -75,7 +75,7 @@ export const fetchBrandQuestions = async (
     const tokenModule = await import("../../../app/utils/token");
     const onboardingModule = await import("../../../app/services/onboardingService");
     
-    if (!tokenModule.default.get()) {
+    if (!tokenModule.default.getVisitor()) {
       console.log("[fetchBrandQuestions] No token found, creating visitor session...");
       await onboardingModule.createOnboardingSession();
     }
@@ -88,7 +88,7 @@ export const fetchBrandQuestions = async (
       icon: brand.icon,
     };
 
-    const questions = await apiClient.post<BrandData>(
+    const response = await apiClient.post<BrandData>(
       `api/CreateSurveyFromBrand`,
       brandDto,
       options
@@ -101,7 +101,7 @@ export const fetchBrandQuestions = async (
     } else if (response && Array.isArray(response.Questions)) {
       questionsArray = response.Questions;
     } else if (response && Array.isArray(response.questions)) {
-      questionsArray = response.questions;
+      questionsArray = response.Questions;
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
       console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
@@ -110,19 +110,19 @@ export const fetchBrandQuestions = async (
     
     if (questionsArray.length === 0) throw new Error("No questions found");
 
-    // Transform response to match BrandData format
+    // Transform response to match BrandData format, using API response values when available
     const brandData: BrandData = {
-      Id: 0, // Not provided by GenerateQuestionsFromQuery
-      PasswordOne: null,
-      PasswordTwo: null,
-      BrandName: brand.name || null,
-      DescriptionOfTheBrand: brand.description || null,
-      DescriptionOfTheBrandShort: brand.description || null,
-      DescriptionOfTheQuestion: null,
-      DescriptionOfTheQuestionShort: null,
-      QueryType: "brand",
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? brand.name ?? null,
+      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? brand.description ?? null,
+      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? brand.description ?? null,
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "brand",
       Questions: questionsArray,
-      WebsiteOfTheBrand: brand.domain || null,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? brand.domain ?? null,
     };
 
     return brandData;
@@ -185,12 +185,12 @@ export const fetchQueryQuestions = async (
     const tokenModule = await import("../../../app/utils/token");
     const onboardingModule = await import("../../../app/services/onboardingService");
     
-    if (!tokenModule.default.get()) {
+    if (!tokenModule.default.getVisitor()) {
       console.log("[fetchQueryQuestions] No token found, creating visitor session...");
       await onboardingModule.createOnboardingSession();
     }
 
-    const questions = await apiClient.post<BrandData>(
+    const response = await apiClient.post<BrandData>(
       `api/CreateSurveyFromQuery`,
       query,
       options
@@ -203,7 +203,7 @@ export const fetchQueryQuestions = async (
     } else if (response && Array.isArray(response.Questions)) {
       questionsArray = response.Questions;
     } else if (response && Array.isArray(response.questions)) {
-      questionsArray = response.questions;
+      questionsArray = response.Questions;
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
       console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
@@ -212,19 +212,19 @@ export const fetchQueryQuestions = async (
     
     if (questionsArray.length === 0) throw new Error("No questions found");
 
-    // Transform response to match BrandData format
+    // Transform response to match BrandData format, using API response values when available
     const brandData: BrandData = {
-      Id: 0, // Not provided by GenerateQuestionsFromQuery
-      PasswordOne: null,
-      PasswordTwo: null,
-      BrandName: null,
-      DescriptionOfTheBrand: `Survey about: ${query}`,
-      DescriptionOfTheBrandShort: query.substring(0, 100),
-      DescriptionOfTheQuestion: null,
-      DescriptionOfTheQuestionShort: null,
-      QueryType: "query",
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? null,
+      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? `Survey about: ${query}`,
+      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? query.substring(0, 100),
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "query",
       Questions: questionsArray,
-      WebsiteOfTheBrand: null,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
     };
 
     return brandData;

@@ -39,7 +39,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   
   // Debug: Log pathname changes
   // Listen for token changes (e.g., after magic link authentication)
-  useHub(HubType.AuthTokenChanged, (newToken: string | null) => {
+  // Why: This context should only react to user token changes, not visitor token changes. 
+  // When a user logs in via magic link, UserTokenChanged is dispatched. 
+  // We don't want to trigger user data refresh when a visitor token changes.
+  useHub(HubType.UserTokenChanged, (newToken: string | null) => {
     debugLog("UserContext", "Token changed", { hasToken: !!newToken });
     
     // If token was just set and we're on console route, fetch user data
@@ -138,7 +141,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     
     // Fetch user data when on console route OR when we have a token but user is null
     // This ensures we fetch user data after magic link authentication
-    const hasToken = token.get();
+    const hasToken = token.getUser();
     
     // Don't call GetUser for brand-rank/initial flow routes - they don't need authentication
     if (isConsoleRoute && !isBrandRankRoute) {

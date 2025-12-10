@@ -73,7 +73,28 @@ axios.interceptors.request.use(async (config) => {
 
   // Always retrieve token fresh from storage on each request
   // This ensures we have the latest token value
-  const authToken = token.get();
+  // Determine which token to use based on endpoint type
+  const url = config.url || "";
+
+  // Endpoints that require VisitorSession (anonymous) - these need visitor token
+  const isVisitorEndpoint =
+    url.includes("CreateSurveyFromQuery") ||
+    url.includes("CreateSurveyFromBrand") ||
+    url.includes("StartSurvey") ||
+    url.includes("GenerateQuestionsFromQuery") ||
+    url.includes("GenerateQuestionsFromBrand");
+
+  // Select the appropriate token
+  let authToken: string | null;
+  if (isVisitorEndpoint) {
+    // Visitor endpoints MUST use visitor token
+    authToken = token.getVisitor();
+  } else {
+    // All other endpoints: prefer user token, fall back to visitor
+    authToken = token.getUser() || token.getVisitor();
+  }
+
+
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
     const tokenStr = String(authToken).trim();

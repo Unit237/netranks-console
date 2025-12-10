@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       return;
     }
 
-    const authToken = token.get();
+    const authToken = token.getUser();
 
     if (!authToken) {
       debugLog("ProtectedRoute", "No token found, redirecting to signin");
