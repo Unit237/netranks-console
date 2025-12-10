@@ -40,6 +40,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
   const [showModelsDropdown, setShowModelsDropdown] = useState(false);
+  const [isCreatingSurvey, setIsCreatingSurvey] = useState(false);
 
   const navigate = useNavigate();
   const { activeTabId, replaceTab, navigateToTab, addTab } = useTabs();
@@ -197,6 +198,8 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     }
 
     try {
+      setIsCreatingSurvey(true);
+      
       // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
       const questionsToSend =
         questions.length > 0 ? questions : survey.Questions;
@@ -284,11 +287,21 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     } catch (error) {
       console.error("Failed to create survey:", error);
       toast.error("Failed to create survey. Please try again.");
+    } finally {
+      setIsCreatingSurvey(false);
     }
   };
 
   return (
-    <div className="border border-gray-200 rounded-[20px] p-4">
+    <div className="border border-gray-200 rounded-[20px] p-4 relative">
+      {isCreatingSurvey && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-[20px] z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin"></div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Creating survey...</p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col w-[40vw] h-[75vh] mx-auto">
         <div className="">
           <h1 className="text-md font- mb-8">Review & refine</h1>
@@ -521,9 +534,17 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-1 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2"
+            disabled={isCreatingSurvey}
+            className="px-6 py-1 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Finish & save →
+            {isCreatingSurvey ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Creating...
+              </>
+            ) : (
+              "Finish & save →"
+            )}
           </button>
         </div>
       </div>

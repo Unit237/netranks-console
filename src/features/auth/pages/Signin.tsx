@@ -2,7 +2,6 @@ import { Keyboard } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
-import ToggleTheme from "../../../app/shared/components/ToggleTheme";
 import token from "../../../app/utils/token";
 import Hand from "../../../assets/col.svg";
 import Logo from "../../../assets/user.svg";
@@ -47,12 +46,11 @@ const Signin: React.FC = () => {
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-[23vw] px-4">
           <div className="flex flex-col items-start text-start">
-            {/* Avatar and Dark Mode Button */}
-            <div className="flex items-center gap-3 mb-4">
+            {/* Avatar */}
+            <div className="mb-4">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-600 p-2">
                 <img src={Logo} alt="User" className="h-full w-full" />
               </div>
-              <ToggleTheme />
             </div>
 
             {/* Title */}
