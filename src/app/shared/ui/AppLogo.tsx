@@ -1,14 +1,36 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Logo from "../../../assets/logo.svg";
 
 export default function AppLogo() {
+  const [isDark, setIsDark] = useState(() =>
+    typeof window !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : false
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Link
       to="/"
-      className="flex items-center w-[125px] no-underline cursor-pointer"
+      className="flex items-center no-underline cursor-pointer"
     >
-      <img src={Logo} alt="Netranks Logo" className="h-[22px] w-[22px] mr-2" />
-      <span className={`text-lg font-semibold`}>netranks</span>
+      <img
+        src={isDark ? "/logo-dark.svg" : "/logo-light.svg"}
+        alt="NetRanks Logo"
+        className="h-auto w-auto max-h-[32px] object-contain"
+      />
     </Link>
   );
 }

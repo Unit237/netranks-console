@@ -1,7 +1,5 @@
 import { Keyboard } from "lucide-react";
 import React, { useState } from "react";
-import { FaLinkedinIn } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
 import ToggleTheme from "../../../app/shared/components/ToggleTheme";
@@ -49,39 +47,21 @@ const Signin: React.FC = () => {
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-[23vw] px-4">
           <div className="flex flex-col items-start text-start">
-            {/* Avatar */}
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-600 mb-4 p-2">
-              <img src={Logo} alt="User" className="h-full w-full" />
+            {/* Avatar and Dark Mode Button */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-gray-600 p-2">
+                <img src={Logo} alt="User" className="h-full w-full" />
+              </div>
+              <ToggleTheme />
             </div>
-
-            <ToggleTheme />
 
             {/* Title */}
             <h1 className="text-xl font-normal mb-1">
               Sign up or log In to NetRanks
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Use SSO or enter your email to get started
+              Enter your email to get started
             </p>
-
-            {/* Google Button */}
-            <button className="flex items-center justify-center gap-2 w-full border border-gray-300 text-gray-900 font-medium rounded-full py-2 mb-3 transition hover:bg-gray-50 dark:hover:bg-black dark:border-gray-700 dark:text-gray-100">
-              <FcGoogle size={20} />
-              Continue with Google
-            </button>
-
-            {/* LinkedIn Button */}
-            <button className="flex items-center justify-center gap-2 w-full border border-gray-300 text-gray-900 font-medium rounded-full py-2 mb-5 transition hover:bg-gray-50 dark:hover:bg-black dark:border-gray-700 dark:text-gray-100">
-              <FaLinkedinIn className="text-[#0A66C2]" size={18} />
-              Continue with LinkedIn
-            </button>
-
-            {/* Divider */}
-            <div className="flex w-full items-center justify-center gap-4 mb-4">
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600" />
-              <p className="text-sm text-gray-500 dark:text-gray-400">OR</p>
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-600" />
-            </div>
 
             <form onSubmit={handleSubmit} className="w-full">
               {/* Email Input */}

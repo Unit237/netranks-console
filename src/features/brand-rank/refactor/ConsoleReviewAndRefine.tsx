@@ -10,10 +10,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
-import {
-  changeSurveySchedule,
-  createSurvey,
-} from "../../project/services/projectService";
+import { createSurvey } from "../../project/services/projectService";
 import type { BrandData } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
@@ -200,25 +197,19 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
     }
 
     try {
-      const schedule = await changeSurveySchedule(
-        survey.Id,
-        selectedFrequencyData?.period
+      // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
+      const questionsToSend =
+        questions.length > 0 ? questions : survey.Questions;
+
+      // Create survey with schedule - schedule is set during creation, no need to call changeSurveySchedule
+      const surveyId = await createSurvey(
+        Number(projectId),
+        selectedFrequencyData?.period,
+        surveyName,
+        questionsToSend
       );
 
-      if (schedule) {
-
-        // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
-        const questionsToSend =
-          questions.length > 0 ? questions : survey.Questions;
-
-        const surveyId = await createSurvey(
-          Number(projectId),
-          selectedFrequencyData?.period,
-          surveyName,
-          questionsToSend
-        );
-
-        if (surveyId) {
+      if (surveyId) {
           const surveyPath = `/console/survey/${surveyId}`;
 
           // Show toast notification with View button at the bottom
@@ -290,8 +281,10 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           navigateToTab(`/console/project/${projectId}`);
           navigate(`/console/project/${projectId}`);
         }
-      }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Failed to create survey:", error);
+      toast.error("Failed to create survey. Please try again.");
+    }
   };
 
   return (

@@ -84,11 +84,29 @@ axios.interceptors.request.use(async (config) => {
     url.includes("GenerateQuestionsFromQuery") ||
     url.includes("GenerateQuestionsFromBrand");
 
+  // Endpoints that require UserSession (authenticated) - MUST use user token, no fallback
+  const requiresUserToken =
+    url.includes("ChangeSurveySchedule") ||
+    url.includes("CreateSurvey") ||
+    url.includes("UpdateUser") ||
+    url.includes("DeleteMember") ||
+    url.includes("AddMember") ||
+    url.includes("UpdateMember") ||
+    url.includes("GetMembers") ||
+    url.includes("GetPendingInvitations") ||
+    url.includes("DeleteInvitation");
+
   // Select the appropriate token
   let authToken: string | null;
   if (isVisitorEndpoint) {
     // Visitor endpoints MUST use visitor token
     authToken = token.getVisitor();
+  } else if (requiresUserToken) {
+    // User-only endpoints: MUST use user token, don't fallback to visitor
+    authToken = token.getUser();
+    if (!authToken && import.meta.env.DEV) {
+      console.warn(`[API] User token required for ${url} but not found. User may need to log in.`);
+    }
   } else {
     // All other endpoints: prefer user token, fall back to visitor
     authToken = token.getUser() || token.getVisitor();
