@@ -207,9 +207,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
   const useActiveProjectId = () => {
     if (user && user.Projects && user.Projects.length > 0) {
-      const activeProject = user.Projects.find((p) => p.IsActive);
-
-      return activeProject?.Id || user.Projects[0].Id;
+      // Return the project with the highest ID (most recently created)
+      const sortedProjects = [...user.Projects].sort((a, b) => b.Id - a.Id);
+      return sortedProjects[0].Id;
     }
     return 0;
   };

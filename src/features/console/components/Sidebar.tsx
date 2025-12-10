@@ -226,38 +226,37 @@ const Sidebar = () => {
               </button>
             )}
             {user?.Projects && user.Projects.length > 0
-              ? user.Projects.map((project) => {
-                  if (project.Id === 1110) {
-                    return null;
-                  }
-                  const projectPath = `/console/project/${project.Id}`;
-                  const isActiveProject = location.pathname === projectPath;
-                  return (
-                    <button
-                      key={project.Id}
-                      onClick={() =>
-                        handleProjectClick(
-                          project.Id,
-                          project.Name || "Untitled Project",
-                          project.Name || "Untitled Project"
-                        )
-                      }
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors text-left ${
-                        isActiveProject
-                          ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                    >
-                      <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
-                        <p>{project.Name?.at(0) || "U"}</p>
-                      </div>
+              ? [...user.Projects]
+                  .sort((a, b) => b.Id - a.Id) // Sort by ID descending (highest ID first)
+                  .map((project) => {
+                    const projectPath = `/console/project/${project.Id}`;
+                    const isActiveProject = location.pathname === projectPath;
+                    return (
+                      <button
+                        key={project.Id}
+                        onClick={() =>
+                          handleProjectClick(
+                            project.Id,
+                            project.Name || "Untitled Project",
+                            project.Name || "Untitled Project"
+                          )
+                        }
+                        className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors text-left ${
+                          isActiveProject
+                            ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
+                          <p>{project.Name?.at(0) || "U"}</p>
+                        </div>
 
-                      <span className="flex-1 truncate">
-                        {project.Name || "Untitled Project"}
-                      </span>
-                    </button>
-                  );
-                })
+                        <span className="flex-1 truncate">
+                          {project.Name || "Untitled Project"}
+                        </span>
+                      </button>
+                    );
+                  })
               : !isDashboardRoute && (
                   <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
                     No projects
