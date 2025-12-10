@@ -19,11 +19,6 @@ interface ProjectMetrics {
     Delta: number;
     DeltaDirection: string;
   };
-  Competitors?: {
-    Count: number;
-    Delta: number;
-    DeltaDirection: string;
-  };
 }
 
 const ProjectDetails = () => {
@@ -179,13 +174,13 @@ const ProjectDetails = () => {
       <div className="p-4">
         {/* Status cards */}
         <div className="">
-          <div className="grid grid-cols-3 gap-4 mb-8 rounded-[20px] border border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4 mb-8 rounded-[20px] border border-gray-200 dark:border-gray-700 max-w-[50%]">
             {/* Spent card */}
-            <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
+            <div className="border-r border-gray-200 dark:border-gray-700 px-4 py-4">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 {projectMetrics?.SpendThisMonth?.Label || "Spent this month"}
               </div>
-              <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {loadingMetrics ? (
                   <span className="text-gray-400">Loading...</span>
                 ) : (
@@ -195,27 +190,14 @@ const ProjectDetails = () => {
             </div>
 
             {/* Active surveys card */}
-            <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
+            <div className="px-4 py-4">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 Active surveys
               </div>
-              <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 {project.Surveys?.length || 0}
-                <span className="text-xl text-gray-400 dark:text-gray-500">
+                <span className="text-lg text-gray-400 dark:text-gray-500">
                   + 0
-                </span>
-              </div>
-            </div>
-
-            {/* Competitors card - moved to right side */}
-            <div className="border-r border-gray-200 dark:border-gray-700 px-5 py-6">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-16">
-                Competitors
-              </div>
-              <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                12{" "}
-                <span className="text-xl text-gray-400 dark:text-gray-500">
-                  + 2
                 </span>
               </div>
             </div>
