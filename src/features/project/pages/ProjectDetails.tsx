@@ -307,7 +307,7 @@ const ProjectDetails = () => {
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
-                            {survey.Name ? survey.Name : "Untitled Survey"}
+                            {survey.Name ? survey.Name.substring(0, 50) + "..." : "Untitled Survey"}
                           </span>
                         </div>
                       </td>
