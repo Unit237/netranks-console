@@ -1,21 +1,34 @@
 import { Search, Smile } from "lucide-react";
 import React from "react";
 import type { VisibilityTableEntry } from "../@types";
+import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 interface VisibilityItemProps {
   mention: VisibilityTableEntry[];
+  surveyName?: string | null;
 }
 
-const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention }) => {
+const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention, surveyName }) => {
+  // Get the first letter of the survey name for the initial badge
+  const getInitial = (name: string | null | undefined): string => {
+    if (!name) return "B";
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Sanitize the survey name to remove unwanted patterns
+  const sanitizedName = sanitizeSurveyName(surveyName);
+  const displayName = sanitizedName || "Survey";
+  const initial = getInitial(sanitizedName);
+
   return (
     <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
-            B
+            {initial}
           </div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Baked Design mentions
+            {displayName} mentions
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -47,9 +60,6 @@ const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention }) => {
                 <div className="flex items-center space-x-4">
                   <p className="text-sm text-gray-900 dark:text-gray-100 mb-1">
                     {mention.Prompt}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    h ago
                   </p>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-100 mb-1"></p>

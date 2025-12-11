@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { BrandOption } from "../../brand-rank/@types";
 import AutocompleteBrand from "../../brand-rank/components/AutocompleteBrand";
 import { useBrand } from "../../brand-rank/context/BrandContext";
+import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
 const NewSurvey = () => {
@@ -9,6 +11,17 @@ const NewSurvey = () => {
   const navigate = useNavigate();
   const { setSelectedBrand, setQuery } = useBrand();
   const { activeTabId, replaceTab } = useTabs();
+  const { user } = useUser();
+  const [projectName, setProjectName] = useState<string>("");
+
+  useEffect(() => {
+    if (user && user.Projects && projectId) {
+      const project = user.Projects.find((p) => p.Id === Number(projectId));
+      if (project) {
+        setProjectName(project.Name || "");
+      }
+    }
+  }, [user, projectId]);
 
   const moveToTab = () => {
     replaceTab(activeTabId, {
@@ -37,7 +50,18 @@ const NewSurvey = () => {
       <div className="container flex flex-col items-start justify-center max-w-3xl mx-auto py-12 px-4">
         <div className="items-start px-20 mb-4 w-full">
           <h1 className="text-[13px] font-medium mb-2 text-gray-900 dark:text-gray-100">
-            <span className="bg-gray-200 rounded-sm px-1">B</span> baked.design
+            {projectName ? (
+              <>
+                <span className="bg-gray-200 rounded-sm px-1">
+                  {projectName.charAt(0).toUpperCase()}
+                </span>{" "}
+                {projectName}
+              </>
+            ) : (
+              <>
+                <span className="bg-gray-200 rounded-sm px-1">B</span> baked.design
+              </>
+            )}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             What topic do you want to explore?

@@ -64,7 +64,6 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
     {
       question: "How does our new pricing compare to agencies like MetaLab?",
       desc: "baked.design is positioned as more agile and founder friendly compared to the larger, established MetaLab",
-      timeAgo: "1h ago",
       status: "success",
       icons: ["B", "P", "A"],
     },
@@ -72,7 +71,6 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
       question:
         "Is the value proposition of the new 'Pro' tier clear in online discussions?",
       desc: "The Pro tier s value is clearly associated with direct access to senior design partners and strategic engagement.",
-      timeAgo: "2h ago",
       status: "success",
       icons: ["∞", "P", "A"],
     },
@@ -80,7 +78,6 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
       question:
         "How is the new pricing for baked.design perceived by startup founders?",
       desc: "Pricing is considered a fair investment for quality and speed, particularly among funded startups.",
-      timeAgo: "2h ago",
       status: "success",
       icons: ["∞", "A", "G"],
     },
@@ -88,7 +85,6 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
       question:
         "Are customers mentioning features they feel are missing from the tiers?",
       desc: "Pricing is considered a fair investment for quality and speed, particularly among funded startups.",
-      timeAgo: "3h ago",
       status: "error",
       icons: [],
     },
@@ -301,7 +297,7 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
         </div>
       </div>
 
-      {/* Baked Design Mentions */}
+      {/* Project Mentions */}
       <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
@@ -309,7 +305,7 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
               B
             </div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Baked Design mentions
+              Project mentions
             </h2>
           </div>
           <div className="flex items-center gap-2">
@@ -373,9 +369,6 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
                   <div className="flex items-center space-x-4">
                     <p className="text-sm text-gray-900 dark:text-gray-100 mb-1">
                       {mention.question}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {mention.timeAgo}
                     </p>
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-100 mb-1">
