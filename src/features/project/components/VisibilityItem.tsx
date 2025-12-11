@@ -29,9 +29,6 @@ const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention }) => {
           <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
             <option>Model</option>
           </select>
-          <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-            <option>Sentiment</option>
-          </select>
         </div>
       </div>
 
