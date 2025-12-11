@@ -27,7 +27,7 @@ const BrandRank = () => {
       <div className="container flex flex-col items-start justify-center max-w-3xl mx-auto py-12 px-4">
         <div className="text-center mb-4 w-full">
           <h1 className="text-xl font-medium mb-2 text-gray-900 dark:text-gray-100">
-            See your brand ranks in AI conversations
+            See how your brand ranks in AI conversations
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             See how leading AI models view your brand in different contexts
