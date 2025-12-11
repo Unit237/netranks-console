@@ -1,7 +1,6 @@
 import { Search, Smile } from "lucide-react";
 import React from "react";
 import type { VisibilityTableEntry } from "../@types";
-import BrandInitialsList from "./BrandInitialList";
 
 interface VisibilityItemProps {
   mention: VisibilityTableEntry[];
@@ -55,9 +54,6 @@ const VisibilityItem: React.FC<VisibilityItemProps> = ({ mention }) => {
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-100 mb-1"></p>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <BrandInitialsList items={mention.BrandsMentioned} />
             </div>
           </div>
         ))}
