@@ -11,17 +11,27 @@ const NewSurvey = () => {
   const navigate = useNavigate();
   const { setSelectedBrand, setQuery } = useBrand();
   const { activeTabId, replaceTab } = useTabs();
-  const { user } = useUser();
+  const { user, useActiveProjectId } = useUser();
   const [projectName, setProjectName] = useState<string>("");
 
   useEffect(() => {
     if (user && user.Projects && projectId) {
       const project = user.Projects.find((p) => p.Id === Number(projectId));
       if (project) {
-        setProjectName(project.Name || "");
+        setProjectName(project.Name || "Untitled Project");
+      } else {
+        // Fallback: try to get project name from active project
+        const activeProjectId = useActiveProjectId();
+        const activeProject = user.Projects.find((p) => p.Id === activeProjectId);
+        if (activeProject) {
+          setProjectName(activeProject.Name || "Untitled Project");
+        } else if (user.Projects.length > 0) {
+          // Use first available project as fallback
+          setProjectName(user.Projects[0].Name || "Untitled Project");
+        }
       }
     }
-  }, [user, projectId]);
+  }, [user, projectId, useActiveProjectId]);
 
   const moveToTab = () => {
     replaceTab(activeTabId, {
@@ -59,7 +69,7 @@ const NewSurvey = () => {
               </>
             ) : (
               <>
-                <span className="bg-gray-200 rounded-sm px-1">B</span> baked.design
+                <span className="bg-gray-200 rounded-sm px-1">P</span> Project
               </>
             )}
           </h1>
