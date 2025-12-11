@@ -67,26 +67,6 @@ export function BrandSurveyRunSummary({
         </>
       )}
 
-      {query && (
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            You have entered a sample question
-          </p>
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {query}
-          </p>
-
-          {survey?.DescriptionOfTheQuestionShort && (
-            <div className="border border-gray-300 dark:border-gray-700 p-2 mt-3 rounded-md">
-              <p className="italic text-sm text-gray-600 dark:text-gray-400">
-                {survey.DescriptionOfTheQuestionShort}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-2 mt-3">
         {/* Go Back Button */}
