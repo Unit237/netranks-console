@@ -4,6 +4,7 @@ import RankedBrandList from "../TopBrandsInAiAnswers";
 import TopCitationAnswer from "../TopCitationAnswer";
 import VisibilityItem from "../VisibilityItem";
 import VisibilityTable from "../VisibilityTable";
+import { sanitizeSurveyName } from "../../utils/sanitizeSurveyName";
 
 interface OverviewPageTabProps {
   surveyDetails: SurveyDetails;
@@ -21,6 +22,7 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
 
   const dashboard = surveyDetails.Dashboard;
   const statsOverview = dashboard.SurveyStatsOverview;
+  const surveyName = sanitizeSurveyName(surveyDetails.Name);
 
   return (
     <div className="space-y-6">
@@ -62,9 +64,9 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
           </div>
         )}
 
-      {/* Baked Design Mentions */}
+      {/* Survey Mentions */}
       {dashboard.VisibilityTable && dashboard.VisibilityTable.length > 0 && (
-        <VisibilityItem mention={dashboard.VisibilityTable} />
+        <VisibilityItem mention={dashboard.VisibilityTable} surveyName={surveyName} />
       )}
 
       {dashboard.SampleAiAnswerSnippets &&

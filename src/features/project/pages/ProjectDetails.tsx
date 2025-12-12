@@ -8,6 +8,7 @@ import { getPlanByPeriod } from "../hooks/utils";
 import { getProjectById } from "../services/projectService";
 import { formatLastRun } from "../utils/formatLastRun";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
+import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 interface ProjectMetrics {
   SpendThisMonth?: {
@@ -147,11 +148,12 @@ const ProjectDetails = () => {
   };
 
   const surveyDetails = (survey: Survey) => {
-    addTab({
-      name: survey.Name || "Survey Details",
-      path: `/console/survey/${survey.Id}`,
-      headerName: survey.Name || "Survey Details",
-    });
+      const sanitizedName = sanitizeSurveyName(survey.Name);
+      addTab({
+        name: sanitizedName || "Survey Details",
+        path: `/console/survey/${survey.Id}`,
+        headerName: sanitizedName || "Survey Details",
+      });
     navigate(`/console/survey/${survey.Id}`);
   };
 
@@ -304,7 +306,7 @@ const ProjectDetails = () => {
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
-                            {survey.Name ? survey.Name.substring(0, 50) + "..." : "Untitled Survey"}
+                            {survey.Name ? sanitizeSurveyName(survey.Name).substring(0, 50) + "..." : "Untitled Survey"}
                           </span>
                         </div>
                       </td>
