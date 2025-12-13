@@ -1,15 +1,13 @@
-import {
-  AlertCircle,
-  Menu,
-  TrendingUp,
-} from "lucide-react";
-import React, { useMemo, useState } from "react";
+import { AlertCircle, ChevronDown, Menu, TrendingUp } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
-import type { CreateSearchPayload } from "../../@types/optimization";
+import type { Brand, CreateSearchPayload } from "../../@types/optimization";
 import type { RankingAnalysisResponse } from "../../@types/prediction";
-import { getBatchPrediction } from "../../services/optimizeService";
-import BrandDropdownMenu from "../BrandDropdownMenu";
+import {
+  getBatchPrediction,
+  getDashboardFilterFields,
+} from "../../services/optimizeService";
 
 interface Task {
   id: string;
@@ -45,36 +43,98 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   onBrandSelect,
 }) => {
   // Use prop if provided, otherwise use local state
-  const [localSelectedPayload, setLocalSelectedPayload] = useState<CreateSearchPayload | null>(null);
-  const selectedPayload = selectedPayloadProp !== undefined ? selectedPayloadProp : localSelectedPayload;
+  const [localSelectedPayload, setLocalSelectedPayload] =
+    useState<CreateSearchPayload | null>(null);
+  const selectedPayload =
+    selectedPayloadProp !== undefined
+      ? selectedPayloadProp
+      : localSelectedPayload;
   const setSelectedPayload = onSelectedPayloadChange || setLocalSelectedPayload;
-  
+
   const [localBrandUrl, setLocalBrandUrl] = useState<string | null>(null);
   const brandUrl = brandUrlProp !== undefined ? brandUrlProp : localBrandUrl;
   const setBrandUrl = onBrandUrlChange || setLocalBrandUrl;
-  
+
   const [localManualUrl, setLocalManualUrl] = useState<string>("");
-  const manualUrl = manualUrlProp !== undefined ? manualUrlProp : localManualUrl;
+  const manualUrl =
+    manualUrlProp !== undefined ? manualUrlProp : localManualUrl;
   const setManualUrl = onManualUrlChange || setLocalManualUrl;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Use prop if provided, otherwise use local state
-  const [localBatchResponse, setLocalBatchResponse] = useState<RankingAnalysisResponse | null>(null);
-  const batchResponse = batchResponseProp !== undefined ? batchResponseProp : localBatchResponse;
+  const [localBatchResponse, setLocalBatchResponse] =
+    useState<RankingAnalysisResponse | null>(null);
+  const batchResponse =
+    batchResponseProp !== undefined ? batchResponseProp : localBatchResponse;
   const setBatchResponse = onBatchResponseChange || setLocalBatchResponse;
 
+  // Brand combobox state
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brandInput, setBrandInput] = useState<string>("");
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Question dropdown state
+  const [selectedQuestion, setSelectedQuestion] = useState<{
+    Id: number;
+    Text: string;
+  } | null>(null);
+  const [isQuestionDropdownOpen, setIsQuestionDropdownOpen] = useState(false);
+  const questionDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch brands for dropdown
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (!surveyDetails?.Id) return;
+      try {
+        const res = await getDashboardFilterFields(surveyDetails.Id);
+        setBrands(res.Brands);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      }
+    };
+    fetchBrands();
+  }, [surveyDetails?.Id]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        brandDropdownRef.current &&
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsBrandDropdownOpen(false);
+      }
+      if (
+        questionDropdownRef.current &&
+        !questionDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsQuestionDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Update brand input when selectedPayload changes
+  useEffect(() => {
+    if (selectedPayload?.BrandName) {
+      setBrandInput(selectedPayload.BrandName);
+    }
+  }, [selectedPayload?.BrandName]);
 
   // Helper function to normalize URL - ensure it has a protocol
   const normalizeUrl = (url: string): string => {
     if (!url || typeof url !== "string") return url;
     const trimmed = url.trim();
     if (!trimmed) return trimmed;
-    
+
     // If URL already has protocol, return as-is
     if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
       return trimmed;
     }
-    
+
     // Otherwise, add https://
     return `https://${trimmed}`;
   };
@@ -82,26 +142,31 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   const triggerPredictions = async (brandName: string, url: string) => {
     // Normalize URL to ensure it has a protocol
     const normalizedUrl = normalizeUrl(url);
-    
-    if (
-      !normalizedUrl ||
-      !surveyDetails?.Questions ||
-      surveyDetails.Questions.length === 0
-    ) {
-      console.warn("❌ triggerPredictions early return:", {
-        hasNormalizedUrl: !!normalizedUrl,
-        hasQuestions: !!surveyDetails?.Questions,
+
+    if (!normalizedUrl) {
+      console.warn("❌ triggerPredictions early return: No URL");
+      return;
+    }
+
+    // Use selected question if available, otherwise use all questions
+    const questionsToUse = selectedQuestion
+      ? [selectedQuestion]
+      : surveyDetails?.Questions || [];
+
+    if (questionsToUse.length === 0) {
+      console.warn("❌ triggerPredictions early return: No questions", {
+        hasSelectedQuestion: !!selectedQuestion,
         questionCount: surveyDetails?.Questions?.length || 0,
       });
       return;
     }
 
     try {
-      // Fetch batch predictions for all questions at once
+      // Fetch batch predictions for selected question(s)
       const response: RankingAnalysisResponse = await getBatchPrediction(
         brandName,
         normalizedUrl,
-        surveyDetails.Questions
+        questionsToUse
       );
 
       // Store the full response
@@ -112,16 +177,33 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }
   };
 
-  const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
+  const handleBrandInputChange = (value: string) => {
+    setBrandInput(value);
+    setIsBrandDropdownOpen(true);
+  };
+
+  const handleBrandSelect = async (brandName: string, brandId?: number) => {
+    setBrandInput(brandName);
+    setIsBrandDropdownOpen(false);
+
+    const searchPayload: CreateSearchPayload = {
+      StartDate: undefined,
+      EndDate: undefined,
+      QuestionIds: [],
+      BrandId: brandId,
+      BrandName: brandName,
+      ModelIds: [],
+    };
+
     setSelectedPayload(searchPayload);
     // Don't clear batchResponse - keep it so brand selection persists
     setManualUrl("");
     setBrandUrl(null);
 
     // Search for brand URL (but don't trigger predictions yet)
-    if (searchPayload.BrandName) {
+    if (brandName) {
       try {
-        const brands = await searchBrands(searchPayload.BrandName);
+        const brands = await searchBrands(brandName);
         const url = brands[0]?.domain || "";
         setBrandUrl(url);
       } catch (error) {
@@ -130,6 +212,19 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       }
     }
   };
+
+  const handleQuestionSelect = (question: { Id: number; Text: string }) => {
+    setSelectedQuestion(question);
+    setIsQuestionDropdownOpen(false);
+  };
+
+  const filteredBrands = useMemo(() => {
+    if (!brandInput.trim()) return brands;
+    const inputLower = brandInput.toLowerCase();
+    return brands.filter((brand) =>
+      brand.Name.toLowerCase().includes(inputLower)
+    );
+  }, [brandInput, brands]);
 
   const handleManualUrlChange = (url: string) => {
     setManualUrl(url);
@@ -157,14 +252,18 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
           const description = [
             priority.current_state,
             priority.target_state && `Target: ${priority.target_state}`,
-            priority.estimated_improvement && `Expected: ${priority.estimated_improvement}`,
+            priority.estimated_improvement &&
+              `Expected: ${priority.estimated_improvement}`,
           ]
             .filter(Boolean)
             .join(". ");
 
           allTasks.push({
             id: `task-${taskId++}`,
-            title: priority.action.replace(/^(CRITICAL|HIGH|MEDIUM|LOW):\s*/i, ""),
+            title: priority.action.replace(
+              /^(CRITICAL|HIGH|MEDIUM|LOW):\s*/i,
+              ""
+            ),
             description: description || priority.quick_tip || priority.action,
             impact,
             completed: false,
@@ -198,16 +297,25 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
   const averageContentQuality = useMemo(() => {
     if (!batchResponse?.results) return null;
     const scores = batchResponse.results
-      .filter((r) => r.success && r.enhanced?.content_quality?.overall_score !== undefined)
+      .filter(
+        (r) =>
+          r.success && r.enhanced?.content_quality?.overall_score !== undefined
+      )
       .map((r) => r.enhanced!.content_quality!.overall_score);
     return scores.length > 0
-      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+      ? Math.round(
+          scores.reduce((sum, score) => sum + score, 0) / scores.length
+        )
       : null;
   }, [batchResponse]);
 
   const handleSubmit = async () => {
-    if (!selectedPayload || !selectedPayload.BrandName) {
-      console.warn("❌ No selectedPayload or BrandName");
+    // Use brandInput if no selectedPayload exists
+    const brandName = selectedPayload?.BrandName || brandInput.trim();
+
+    if (!brandName || brandName.trim() === "") {
+      console.warn("❌ No brand name provided");
+      alert("Please enter or select a brand");
       return;
     }
 
@@ -220,18 +328,31 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       return;
     }
 
+    // If no selectedPayload exists, create one from brandInput
+    if (!selectedPayload && brandInput.trim()) {
+      const newPayload: CreateSearchPayload = {
+        StartDate: undefined,
+        EndDate: undefined,
+        QuestionIds: [],
+        BrandId: undefined,
+        BrandName: brandInput.trim(),
+        ModelIds: [],
+      };
+      setSelectedPayload(newPayload);
+    }
+
     // Normalize URL to ensure it has a protocol
     const finalUrl = normalizeUrl(rawUrl);
 
     setIsSubmitting(true);
 
     try {
-      // Fetch predictions for all questions FIRST, before calling onBrandSelect
+      // Fetch predictions for selected question(s) FIRST, before calling onBrandSelect
       // This prevents the parent from re-rendering and potentially resetting state
-      await triggerPredictions(selectedPayload.BrandName, finalUrl);
+      await triggerPredictions(brandName, finalUrl);
 
       // Call parent's onBrandSelect to update dashboard AFTER predictions are fetched
-      if (onBrandSelect) {
+      if (onBrandSelect && selectedPayload) {
         await onBrandSelect(selectedPayload);
       }
     } catch (error) {
@@ -241,18 +362,76 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     }
   };
 
-
   return (
     <div className="flex gap-6 p-6 bg-gray-50 min-h-screen">
       {/* Left Column - Rank Card */}
       <div className="w-[30vw] flex-shrink-0">
         <div className="mb-4">
           {surveyDetails?.Id ? (
-            <BrandDropdownMenu
-              surveyId={surveyDetails.Id}
-              selectedBrandName={selectedPayload?.BrandName || null}
-              onBrandSelect={handleBrandSelect}
-            />
+            <div className="relative" ref={brandDropdownRef}>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Brand <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={brandInput}
+                  onChange={(e) => handleBrandInputChange(e.target.value)}
+                  onFocus={() => setIsBrandDropdownOpen(true)}
+                  placeholder="Select or type a brand name"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-all pr-10"
+                />
+                <ChevronDown
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 transition-transform pointer-events-none ${
+                    isBrandDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+              {isBrandDropdownOpen && filteredBrands.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {filteredBrands.map((brand) => {
+                    const isSelected =
+                      selectedPayload?.BrandName === brand.Name;
+                    return (
+                      <button
+                        key={brand.Id}
+                        type="button"
+                        onClick={() => handleBrandSelect(brand.Name, brand.Id)}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-b-0 ${
+                          isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                        }`}
+                      >
+                        <div
+                          className={`text-sm font-medium ${
+                            isSelected
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-gray-900 dark:text-white"
+                          }`}
+                        >
+                          {brand.Name}
+                          {isSelected && (
+                            <span className="ml-2 text-xs">✓</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {isBrandDropdownOpen &&
+                brandInput.trim() &&
+                filteredBrands.length === 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => handleBrandSelect(brandInput.trim())}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm text-gray-900 dark:text-white"
+                    >
+                      Use "{brandInput.trim()}" as custom brand
+                    </button>
+                  </div>
+                )}
+            </div>
           ) : (
             <div className="px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-500">
               Loading survey...
@@ -260,7 +439,91 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
           )}
         </div>
 
-        {selectedPayload && (
+        {/* Question Dropdown */}
+        {surveyDetails?.Questions && surveyDetails.Questions.length > 0 && (
+          <div className="mb-4">
+            <div className="relative" ref={questionDropdownRef}>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Question{" "}
+                <span className="text-gray-400 text-xs">(optional)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setIsQuestionDropdownOpen(!isQuestionDropdownOpen)
+                }
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200 flex items-center justify-between"
+              >
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {selectedQuestion
+                    ? selectedQuestion.Text
+                    : "Select a question (or leave empty for all)"}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-500 transition-transform ${
+                    isQuestionDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isQuestionDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedQuestion(null);
+                      setIsQuestionDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 ${
+                      !selectedQuestion ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                    }`}
+                  >
+                    <div
+                      className={`text-sm font-medium ${
+                        !selectedQuestion
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-gray-900 dark:text-white"
+                      }`}
+                    >
+                      All questions
+                      {!selectedQuestion && (
+                        <span className="ml-2 text-xs">✓</span>
+                      )}
+                    </div>
+                  </button>
+                  {surveyDetails.Questions.map((question) => {
+                    const isSelected = selectedQuestion?.Id === question.Id;
+                    return (
+                      <button
+                        key={question.Id}
+                        type="button"
+                        onClick={() => handleQuestionSelect(question)}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-600 last:border-b-0 ${
+                          isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                        }`}
+                      >
+                        <div
+                          className={`text-sm font-medium ${
+                            isSelected
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-gray-900 dark:text-white"
+                          }`}
+                        >
+                          {question.Text}
+                          {isSelected && (
+                            <span className="ml-2 text-xs">✓</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {(selectedPayload || brandInput.trim()) && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Brand URL <span className="text-red-500">*</span>
@@ -304,6 +567,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
               }}
               disabled={
                 isSubmitting ||
+                !brandInput.trim() ||
                 (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === ""))
               }
               className="mt-3 w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
@@ -334,7 +598,9 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
             {averageContentQuality !== null && (
               <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-6">
-                <div className="text-sm text-gray-600 mb-4">Content quality</div>
+                <div className="text-sm text-gray-600 mb-4">
+                  Content quality
+                </div>
                 <div className="pt-24 flex items-center justify-between gap-2">
                   <div className="flex items-baseline gap-2 mb-2">
                     <Menu className="w-4 h-4 text-orange-600" />
@@ -347,7 +613,9 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
                   </div>
                   <div className="text-sm text-gray-800">
                     {tasks.length} tasks{" "}
-                    <span className="text-gray-300">to increase your score</span>
+                    <span className="text-gray-300">
+                      to increase your score
+                    </span>
                   </div>
                 </div>
               </div>
@@ -415,7 +683,8 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
           <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-12">
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                No optimization tasks found. The prediction response did not contain actionable tasks.
+                No optimization tasks found. The prediction response did not
+                contain actionable tasks.
               </p>
             </div>
           </div>
