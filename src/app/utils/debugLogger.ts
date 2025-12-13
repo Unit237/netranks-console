@@ -12,7 +12,6 @@ export const debugLog = (category: string, message: string, data?: any) => {
   if (!isDebugEnabled()) return;
   
   const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] [${category}] ${message}`;
   
   // Also log to a global array for inspection
   if (typeof window !== 'undefined') {

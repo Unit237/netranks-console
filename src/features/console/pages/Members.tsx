@@ -96,7 +96,6 @@ const Members = () => {
       setLoading(true);
       
       // Fetch members from all projects the user has access to
-      const allMembers: Member[] = [];
       const projectPromises = user.Projects.map(async (project) => {
         try {
           const membersData = await apiClient.get<Member[]>(`api/GetMembers/${project.Id}`);
@@ -499,7 +498,7 @@ const Members = () => {
                           {getRoleBadge(member)}
                         </td>
                         <td className="py-4 px-6 text-right">
-                          {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
+                          {member.Projects && member.Projects.length > 0 && member.Projects.some(() => !member.IsProjectOwner) && (
                             <button
                               onClick={() => {
                                 // Use the first project's member ID for deletion
@@ -546,7 +545,7 @@ const Members = () => {
                           )}
                         </div>
                       </div>
-                      {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
+                      {member.Projects && member.Projects.length > 0 && member.Projects.some(() => !member.IsProjectOwner) && (
                         <button
                           onClick={() => {
                             // Use the first project's member ID for deletion

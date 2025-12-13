@@ -23,6 +23,8 @@ const PricingAndQuestion: React.FC = () => {
   const [survey, setSurvey] = useState<BrandData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(0);
+  const [questions, setQuestions] = useState<string[]>([]);
 
   useEffect(() => {
     // Validate that we have data to fetch
@@ -106,8 +108,16 @@ const PricingAndQuestion: React.FC = () => {
 
   return (
     <div>
-      <ConsoleReviewAndRefine survey={survey} />
-      <ConsoleQuestionSection survey={survey} />
+      <ConsoleReviewAndRefine 
+        survey={survey} 
+        questionCount={questionCount}
+        questions={questions}
+      />
+      <ConsoleQuestionSection 
+        survey={survey}
+        onQuestionCountChange={setQuestionCount}
+        onQuestionsChange={setQuestions}
+      />
     </div>
   );
 };

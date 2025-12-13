@@ -3,12 +3,12 @@ import type { BrandData, BrandOption } from "../@types";
 import { useBrand } from "../context/BrandContext";
 
 export function BrandSurveyRunSummary({
-  query,
   brand,
   survey,
   handleSubmit,
   startingSurvey,
   deletedQuestions,
+  query: _query,
 }: {
   brand: BrandOption | null;
   query: string | null;

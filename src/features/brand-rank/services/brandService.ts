@@ -100,8 +100,6 @@ export const fetchBrandQuestions = async (
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       questionsArray = response.Questions;
-    } else if (response && Array.isArray(response.questions)) {
-      questionsArray = response.Questions;
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
       console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
@@ -201,8 +199,6 @@ export const fetchQueryQuestions = async (
     if (Array.isArray(response)) {
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
-      questionsArray = response.Questions;
-    } else if (response && Array.isArray(response.questions)) {
       questionsArray = response.Questions;
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
