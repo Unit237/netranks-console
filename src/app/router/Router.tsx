@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import MagicLinkHandler from "../../features/auth/components/MagicLinkHandler";
 import ProtectedRoute from "../../features/auth/components/ProtectedRoute";
+import CompleteProfile from "../../features/auth/pages/CompleteProfile";
 import MagicLinkSent from "../../features/auth/pages/MagicLinkSent";
 import Signin from "../../features/auth/pages/Signin";
 import Billing from "../../features/billing/pages/Billing";
@@ -37,6 +38,7 @@ const Router = () => {
         />
       </Route>
       <Route path="signin" element={<Signin />} />
+      <Route path="complete-profile" element={<CompleteProfile />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
       {/* Support both /login/:id/:p1/:p2 and /:id/:p1/:p2 patterns for magic links */}
       <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />

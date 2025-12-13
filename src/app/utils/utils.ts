@@ -10,3 +10,7 @@ export function truncate(str?: string, maxLength: number = 23): string {
   if (!str) return "";
   return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 }
+
+export function cleanDescription(text: string) {
+  return text.replace(/[\uE000-\uF8FF]/g, "").trim();
+}

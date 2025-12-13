@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { cleanDescription } from "../../../app/utils/utils";
 import type { BrandData, BrandOption } from "../@types";
 import { useBrand } from "../context/BrandContext";
 
@@ -56,7 +57,7 @@ export function BrandSurveyRunSummary({
             </h6>
             {survey?.DescriptionOfTheBrandShort && (
               <p className="text-[13px] text-gray-600 dark:text-gray-400">
-                {brand.description}
+                {cleanDescription(brand.description)}
               </p>
             )}
           </div>

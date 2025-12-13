@@ -22,14 +22,11 @@ export default function AppLogo() {
   }, []);
 
   return (
-    <Link
-      to="/"
-      className="flex items-center no-underline cursor-pointer"
-    >
+    <Link to="/" className="flex items-center no-underline cursor-pointer">
       <img
         src={isDark ? "/logo-dark.svg" : "/logo-light.svg"}
         alt="NetRanks Logo"
-        className="h-auto w-auto max-h-[32px] object-contain"
+        className="md:h-auto w-auto md:max-h-[32px] h-[25px] object-contain"
       />
     </Link>
   );

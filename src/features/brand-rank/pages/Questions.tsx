@@ -229,7 +229,7 @@ const Questions: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="flex flex-col items-center mx-2 mt-10 mb-[7.5rem] gap-4"
+      className="flex flex-col items-center py-12 px-3 sm:px-4 md:mx-2 mt-6 sm:mt-8 md:mt-10 mb-20 sm:mb-24 md:mb-[7.5rem] gap-3 sm:gap-4"
     >
       <BrandSurveyRunSummary
         query={effectiveQuery}
@@ -241,7 +241,7 @@ const Questions: React.FC = () => {
       />
       {loading && !survey && !error && (
         <>
-          <h4 className="text-xl font-light text-center">
+          <h4 className="text-lg sm:text-xl font-light text-center px-4">
             {selectedBrand
               ? "Now we're generating customer questions"
               : "Now we're generating similar questions"}
@@ -250,8 +250,8 @@ const Questions: React.FC = () => {
         </>
       )}
       {error && (
-        <div className="mt-4 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-[800px] w-full">
-          <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+        <div className="mt-4 p-3 sm:p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 max-w-[800px] w-full">
+          <div className="flex items-center gap-2 text-sm sm:text-base text-red-800 dark:text-red-200">
             <span className="font-medium">Error:</span>
             <span>{error}</span>
           </div>
@@ -268,16 +268,16 @@ const Questions: React.FC = () => {
                 setSurvey(null);
               }
             }}
-            className="mt-2 px-4 py-2 text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+            className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
           >
             Retry
           </button>
         </div>
       )}
       {survey && (
-        <div className="mt-3 w-full max-w-[800px] rounded-[1.25rem] border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="mt-2 sm:mt-3 w-full max-w-[800px] rounded-2xl sm:rounded-[1.25rem] border border-gray-200 dark:border-gray-700 overflow-hidden">
           {questions.length === 0 ? (
-            <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div className="p-4 sm:p-6 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               No questions were returned for this survey.
             </div>
           ) : (
@@ -288,7 +288,7 @@ const Questions: React.FC = () => {
                 return (
                   <li
                     key={i}
-                    className="p-2.5 w-full max-w-[800px] rounded-lg border-b border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="p-2 sm:p-2.5 w-full max-w-[800px] rounded-lg border-b border-gray-200 dark:border-gray-700 last:border-b-0 relative transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                     onMouseEnter={() => setHoveredQuestion(i)}
                     onMouseLeave={() => {
                       setHoveredQuestion(null);
@@ -297,36 +297,42 @@ const Questions: React.FC = () => {
                       }
                     }}
                   >
-                    <div className="flex items-center justify-between">
-                      {/* Number with fixed width */}
-                      <div className="flex items-center gap-6">
-                        <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5">
+                    <div className="flex items-start sm:items-center justify-between gap-2 sm:gap-4">
+                      {/* Number and question text container */}
+                      <div className="flex items-start sm:items-center gap-3 sm:gap-6 flex-1 min-w-0">
+                        {/* Number with responsive width */}
+                        <span className="font-normal min-w-[1.5rem] sm:min-w-[2rem] text-right text-xs sm:text-[13px] leading-5 flex-shrink-0 pt-0.5 sm:pt-0">
                           {String(i + 1).padStart(2, "0")}
                         </span>
 
-                        {/* Question text */}
-                        <p className="text-sm w-[500px] leading-5 m-0">{q}</p>
+                        {/* Question text - responsive width */}
+                        <p className="text-xs sm:text-sm leading-5 m-0 flex-1 break-words">
+                          {q}
+                        </p>
                       </div>
 
-                      {/* Trash icon or confirm button - fixed width container */}
-                      <div className="min-w-[40px] flex justify-end items-end pr-3">
+                      {/* Action buttons - fixed width container */}
+                      <div className="min-w-[36px] sm:min-w-[40px] flex justify-end items-start sm:items-center pr-1 sm:pr-3 flex-shrink-0 pt-0.5 sm:pt-0">
                         {hoveredQuestion === i && confirmingDelete !== i && (
                           <button
                             onClick={() => handleDeleteQuestion(i)}
-                            className="p-2 rounded-full text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all duration-200"
+                            className="p-1.5 sm:p-2 rounded-full text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all duration-200"
                             aria-label="Delete question"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={14} className="sm:hidden" />
+                            <Trash2 size={16} className="hidden sm:block" />
                           </button>
                         )}
 
                         {confirmingDelete === i && (
                           <button
                             onClick={() => handleConfirmDelete(i)}
-                            className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all duration-200 flex items-center gap-1"
+                            className="px-1.5 sm:px-2 py-1 bg-red-500 text-white rounded-lg text-[10px] sm:text-xs font-medium hover:bg-red-600 transition-all duration-200 flex items-center gap-0.5 sm:gap-1 whitespace-nowrap"
                           >
-                            <Trash2 size={14} />
-                            Confirm?
+                            <Trash2 size={12} className="sm:hidden" />
+                            <Trash2 size={14} className="hidden sm:block" />
+                            <span className="hidden xs:inline">Confirm?</span>
+                            <span className="xs:hidden">Del?</span>
                           </button>
                         )}
                       </div>
@@ -338,17 +344,24 @@ const Questions: React.FC = () => {
           )}
         </div>
       )}
-      {/* Toast notification for deleted question */}
+      {/* Toast notification for deleted question - fully responsive */}
       {showToast && (
         <div
-          className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300 px-3 sm:px-0 w-full sm:w-auto max-w-[calc(100%-1.5rem)] sm:max-w-none"
           role="alert"
         >
-          <div className="bg-[#1a1a1a] text-white rounded-[1.5rem] px-3 py-2 flex items-center gap-2 min-w-[320px] max-w-[400px] shadow-xl">
+          <div className="bg-[#1a1a1a] text-white rounded-2xl sm:rounded-[1.5rem] px-2.5 sm:px-3 py-2 flex items-center gap-1.5 sm:gap-2 min-w-0 sm:min-w-[320px] sm:max-w-[400px] shadow-xl">
             {/* Left side - Trash icon and text */}
-            <div className="flex items-center gap-1.5 flex-1">
-              <Trash2 size={16} className="text-red-500" />
-              <span className="text-white text-sm font-medium">
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0">
+              <Trash2
+                size={14}
+                className="text-red-500 flex-shrink-0 sm:hidden"
+              />
+              <Trash2
+                size={16}
+                className="text-red-500 flex-shrink-0 hidden sm:block"
+              />
+              <span className="text-white text-xs sm:text-sm font-medium truncate">
                 Question removed
               </span>
             </div>
@@ -356,10 +369,12 @@ const Questions: React.FC = () => {
             {/* Right side - Bring back button */}
             <button
               onClick={handleRestoreQuestion}
-              className="flex items-center gap-1 bg-[#2a2a2a] text-white rounded-2xl px-2 py-1 text-xs font-medium hover:bg-[#3a3a3a] transition-colors duration-200"
+              className="flex items-center gap-0.5 sm:gap-1 bg-[#2a2a2a] text-white rounded-xl sm:rounded-2xl px-2 py-1 text-[10px] sm:text-xs font-medium hover:bg-[#3a3a3a] transition-colors duration-200 flex-shrink-0 whitespace-nowrap"
             >
-              <Undo2 size={14} />
-              Bring back
+              <Undo2 size={12} className="sm:hidden" />
+              <Undo2 size={14} className="hidden sm:block" />
+              <span className="hidden xs:inline">Bring back</span>
+              <span className="xs:hidden">Undo</span>
             </button>
           </div>
         </div>
