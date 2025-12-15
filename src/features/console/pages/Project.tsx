@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ProjectDetails from "../../project/pages/ProjectDetails";
-import BillingTab from "../../settings-old/components/BillingTab";
+import BillingTab from "../../settings/components/BillingTab";
 
 const Project = () => {
   const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Billing">(
