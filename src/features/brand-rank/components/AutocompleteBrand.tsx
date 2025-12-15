@@ -238,34 +238,44 @@ export function RenderBrandItemWithIcon({
       </div>
 
       {/* Bottom section */}
-      <div className="p-6 border-t border-gray-200 dark:border-gray-600 rounded-[20px]">
-        <div className="flex items-center justify-between gap-4">
-          <span className="font-semibold text-base text-gray-900 dark:text-gray-100">
-            Visibility score
-          </span>
-
-          <div className="flex items-center gap-2">
+      {brand.brandId === "_custom" ? (
+        <div className="p-6 border-t border-gray-200 dark:border-gray-600 rounded-[20px]">
+          <div className="flex items-center justify-center">
+            <span className="text-sm text-gray-500 dark:text-gray-400 italic">
+              No brand matches found
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="p-6 border-t border-gray-200 dark:border-gray-600 rounded-[20px]">
+          <div className="flex items-center justify-between gap-4">
             <span className="font-semibold text-base text-gray-900 dark:text-gray-100">
-              {Math.round(brand._score)}%
+              Visibility score
             </span>
 
-            <div className="flex gap-1 w-[60px]">
-              {[1, 2, 3, 4].map((i) => {
-                const activeIndex = Math.ceil((brand._score / 100) * 4);
-                const isActive = i <= activeIndex;
-                return (
-                  <div
-                    key={i}
-                    className={`flex-1 h-2.5 rounded transition-all duration-200 ${
-                      isActive ? "bg-orange-500" : "bg-gray-500"
-                    }`}
-                  />
-                );
-              })}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-base text-gray-900 dark:text-gray-100">
+                {Math.round(brand._score)}%
+              </span>
+
+              <div className="flex gap-1 w-[60px]">
+                {[1, 2, 3, 4].map((i) => {
+                  const activeIndex = Math.ceil((brand._score / 100) * 4);
+                  const isActive = i <= activeIndex;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex-1 h-2.5 rounded transition-all duration-200 ${
+                        isActive ? "bg-orange-500" : "bg-gray-500"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
