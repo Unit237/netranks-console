@@ -32,19 +32,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
   const location = useLocation();
   const isConsoleRoute = location.pathname.startsWith("/console");
-  const isBrandRankRoute = location.pathname.startsWith("/brand-rank") || 
+  const isBrandRankRoute = location.pathname.startsWith("/brand-rank") ||
                            location.pathname.startsWith("/dashboard") ||
                            location.pathname.startsWith("/questions") ||
                            location.pathname === "/";
-  
+
   // Debug: Log pathname changes
   // Listen for token changes (e.g., after magic link authentication)
-  // Why: This context should only react to user token changes, not visitor token changes. 
-  // When a user logs in via magic link, UserTokenChanged is dispatched. 
+  // Why: This context should only react to user token changes, not visitor token changes.
+  // When a user logs in via magic link, UserTokenChanged is dispatched.
   // We don't want to trigger user data refresh when a visitor token changes.
   useHub(HubType.UserTokenChanged, (newToken: string | null) => {
     debugLog("UserContext", "Token changed", { hasToken: !!newToken });
-    
+
     // If token was just set and we're on console route, fetch user data
     if (newToken && isConsoleRoute && !user && !loading) {
       debugLog("UserContext", "Token set on console route - fetching user data");
@@ -69,26 +69,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       setError(null);
       const userData = await getUser();
-      debugLog("UserContext", "getUser() completed", { 
+      debugLog("UserContext", "getUser() completed", {
         hasData: !!userData,
         dataType: typeof userData,
         isObject: typeof userData === "object",
         hasProjects: !!(userData as any)?.Projects,
         projectsIsArray: Array.isArray((userData as any)?.Projects)
       });
-      
+
       if (userData && typeof userData === "object") {
         // Ensure Projects is always an array
         if (!userData.Projects || !Array.isArray(userData.Projects)) {
-          debugLog("UserContext", "Projects is not array, converting", { 
-            projects: userData.Projects 
+          debugLog("UserContext", "Projects is not array, converting", {
+            projects: userData.Projects
           });
           userData.Projects = [];
         }
         setUser(userData);
-        debugLog("UserContext", "User set successfully", { 
+        debugLog("UserContext", "User set successfully", {
           userId: userData.Id,
-          projectsCount: userData.Projects.length 
+          projectsCount: userData.Projects.length
         });
       } else {
         debugError("UserContext", "Invalid user data received", userData);
@@ -108,7 +108,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       // Don't throw error here - let components handle null user gracefully
     } finally {
       setLoading(false);
-      debugLog("UserContext", "refreshUser completed", { 
+      debugLog("UserContext", "refreshUser completed", {
         loading: false,
         hasUser: !!user,
         hasError: !!error
@@ -117,16 +117,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    debugLog("UserContext", "useEffect triggered", { 
+    debugLog("UserContext", "useEffect triggered", {
       pathname: location.pathname,
       isConsoleRoute,
       loading,
       hasUser: !!user,
       hasError: !!error
     });
-    
+
     const pathname = location.pathname;
-    
+
     // Routes that should NOT clear user data (auth routes, magic links, etc.)
     const authRoutes = [
       "/signin",
@@ -136,16 +136,18 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const isAuthRoute = authRoutes.some(route => pathname.startsWith(route));
     // Magic link pattern: /number/string/string (e.g., /593/JDy1Y1/Fx4jl1)
     // Also check for /login/number/string/string pattern
-    const isMagicLinkRoute = /^\/\d+\/[^/]+\/[^/]+$/.test(pathname) || 
+    const isMagicLinkRoute = /^\/\d+\/[^/]+\/[^/]+$/.test(pathname) ||
                             /^\/login\/\d+\/[^/]+\/[^/]+$/.test(pathname);
-    
+
     // Fetch user data when on console route OR when we have a token but user is null
     // This ensures we fetch user data after magic link authentication
     const hasToken = token.getUser();
-    
+
     // Don't call GetUser for brand-rank/initial flow routes - they don't need authentication
-    if (isConsoleRoute && !isBrandRankRoute) {
-      debugLog("UserContext", "On console route - calling refreshUser");
+    // Only fetch user data if we're on console route AND we don't already have user data
+    // This prevents re-fetching on every navigation within the console
+    if (isConsoleRoute && !isBrandRankRoute && !user && !loading) {
+      debugLog("UserContext", "On console route without user data - calling refreshUser");
       refreshUser().catch((err) => {
         debugError("UserContext", "refreshUser promise rejected", err);
         // Error is handled in refreshUser
@@ -178,14 +180,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
       // - Auth routes (signin, magic-link-sent, login routes)
       // - Magic link routes (pattern: /number/string/string)
       // - Brand-rank or dashboard routes
-      const shouldClear = pathname && 
-                         pathname !== "/" && 
+      const shouldClear = pathname &&
+                         pathname !== "/" &&
                          !pathname.startsWith("/console") &&
                          !isAuthRoute &&
                          !isMagicLinkRoute &&
                          !pathname.startsWith("/brand-rank") &&
                          !pathname.startsWith("/dashboard");
-      
+
       if (shouldClear) {
         debugLog("UserContext", "Clearing user data (navigated away from console/auth)", {
           pathname: pathname

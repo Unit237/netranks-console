@@ -1,5 +1,4 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
-import type { Project } from "../../auth/@types";
 import type { SurveyDetails } from "../@types";
 
 export const changeSurveySchedule = async (
@@ -64,32 +63,6 @@ export const createSurvey = async (
       error instanceof Error
         ? error.message
         : "Unable to schedule survey. Please try again."
-    );
-  }
-};
-
-export const getProjectById = async (projectId: number) => {
-  try {
-    const project: Project = await apiClient.get(`api/GetProject/${projectId}`);
-
-    return project;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to get project:", error);
-
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to get project. Please try again."
     );
   }
 };

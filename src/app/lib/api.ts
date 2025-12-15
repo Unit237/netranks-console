@@ -67,7 +67,11 @@ axios.interceptors.request.use(async (config) => {
   }
 
   // Set Content-Type for POST, PUT, PATCH requests
-  if (config.method === "post" || config.method === "put" || config.method === "patch") {
+  if (
+    config.method === "post" ||
+    config.method === "put" ||
+    config.method === "patch"
+  ) {
     config.headers["Content-Type"] = "application/json";
   }
 
@@ -105,13 +109,14 @@ axios.interceptors.request.use(async (config) => {
     // User-only endpoints: MUST use user token, don't fallback to visitor
     authToken = token.getUser();
     if (!authToken && import.meta.env.DEV) {
-      console.warn(`[API] User token required for ${url} but not found. User may need to log in.`);
+      console.warn(
+        `[API] User token required for ${url} but not found. User may need to log in.`
+      );
     }
   } else {
     // All other endpoints: prefer user token, fall back to visitor
     authToken = token.getUser() || token.getVisitor();
   }
-
 
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
@@ -120,22 +125,22 @@ axios.interceptors.request.use(async (config) => {
       console.error("Invalid token detected (HTML), skipping header");
       return config;
     }
-    
+
     // Backend-main expects token in the "token" header (not Authorization)
     // Set it directly on headers object - this works for all HTTP methods
     // Use lowercase header name to ensure compatibility
     config.headers["token"] = tokenStr;
     config.headers["Token"] = tokenStr; // Also set with capital T for compatibility
-    
+
     if (import.meta.env.DEV || import.meta.env.VITE_PROD === "true") {
-      console.log("[API] Adding token to request headers", {
-        endpoint: config.url,
-        method: config.method,
-        hasToken: !!authToken,
-        tokenLength: tokenStr.length,
-        tokenPreview: tokenStr.substring(0, 20) + "...",
-        headers: Object.keys(config.headers),
-      });
+      // console.log("[API] Adding token to request headers", {
+      //   endpoint: config.url,
+      //   method: config.method,
+      //   hasToken: !!authToken,
+      //   tokenLength: tokenStr.length,
+      //   tokenPreview: tokenStr.substring(0, 20) + "...",
+      //   headers: Object.keys(config.headers),
+      // });
     }
   } else {
     if (import.meta.env.DEV) {
@@ -157,7 +162,9 @@ axios.interceptors.response.use(
   (error) => {
     // Only log errors in development
     if (import.meta.env.DEV) {
-      const isCorsError = !error.response && (error.code === "ERR_NETWORK" || error.message?.includes("CORS"));
+      const isCorsError =
+        !error.response &&
+        (error.code === "ERR_NETWORK" || error.message?.includes("CORS"));
       if (isCorsError) {
         console.error("CORS Error:", error.message);
       }
@@ -247,33 +254,40 @@ async function myFetch<T>(
       // For visitor auth endpoints (like CreateSurveyFromQuery), try to recreate token
       if (response.status === 401) {
         const url = config?.url || "";
-        const isPublicEndpoint = url.includes("GenerateQuestionsFromQuery") || 
-                                url.includes("GenerateQuestionsFromBrand") ||
-                                url.includes("CreateVisitorSession");
-        
+        const isPublicEndpoint =
+          url.includes("GenerateQuestionsFromQuery") ||
+          url.includes("GenerateQuestionsFromBrand") ||
+          url.includes("CreateVisitorSession");
+
         if (isPublicEndpoint && import.meta.env.DEV) {
-          console.warn(`[API] Got 401 on public endpoint ${url}. This shouldn't happen. Response:`, response.data);
+          console.warn(
+            `[API] Got 401 on public endpoint ${url}. This shouldn't happen. Response:`,
+            response.data
+          );
         }
-        
+
         loading(setLoading, false);
-        
+
         // Check if this is a visitor auth endpoint that might need a fresh token
-        const isVisitorAuthEndpoint = 
-          url.includes("CreateSurveyFromQuery") || 
+        const isVisitorAuthEndpoint =
+          url.includes("CreateSurveyFromQuery") ||
           url.includes("CreateSurveyFromBrand") ||
           url.includes("CreateVisitorSession");
-        
+
         if (isVisitorAuthEndpoint && import.meta.env.VITE_PROD === "true") {
           // In production, try to recreate the token once
-          console.warn("[API] 401 Unauthorized on visitor auth endpoint, token may be invalid", {
-            url,
-            hasToken: !!token.get(),
-          });
-          
+          console.warn(
+            "[API] 401 Unauthorized on visitor auth endpoint, token may be invalid",
+            {
+              url,
+              hasToken: !!token.get(),
+            }
+          );
+
           // Don't auto-retry here - let the calling code handle it
           // But log the issue for debugging
         }
-        
+
         reject(new ApiError("Unauthorized", 401, response.data));
         return;
       }
@@ -310,21 +324,27 @@ async function myFetch<T>(
 
       // Check if response is HTML (error page) even with 200 status
       // This can happen with production backends that return error pages
-      const contentType = response.headers?.["content-type"] || response.headers?.["Content-Type"] || "";
-      const responseDataStr = typeof response.data === "string" ? response.data : String(response.data || "");
-      const isHtmlResponse = 
+      const contentType =
+        response.headers?.["content-type"] ||
+        response.headers?.["Content-Type"] ||
+        "";
+      const responseDataStr =
+        typeof response.data === "string"
+          ? response.data
+          : String(response.data || "");
+      const isHtmlResponse =
         contentType.includes("text/html") ||
-        (responseDataStr.trim().startsWith("<!DOCTYPE") || 
-         responseDataStr.trim().startsWith("<html"));
+        responseDataStr.trim().startsWith("<!DOCTYPE") ||
+        responseDataStr.trim().startsWith("<html");
 
       if (isHtmlResponse) {
         loading(setLoading, false);
         reject(
           new ApiError(
             "Server returned an HTML error page instead of JSON data. Check browser console for details. This may indicate:\n" +
-            "1. CORS issue - backend not allowing requests from this domain\n" +
-            "2. Server error - backend returned error page\n" +
-            "3. Wrong endpoint - URL might be incorrect",
+              "1. CORS issue - backend not allowing requests from this domain\n" +
+              "2. Server error - backend returned error page\n" +
+              "3. Wrong endpoint - URL might be incorrect",
             200, // Status is 200 but content is wrong
             response.data
           )
@@ -334,9 +354,16 @@ async function myFetch<T>(
 
       // If response.data is a string, try to parse as JSON
       // This handles cases where axios didn't auto-parse JSON
-      if (typeof response.data === "string" && responseDataStr.trim().length > 0) {
+      if (
+        typeof response.data === "string" &&
+        responseDataStr.trim().length > 0
+      ) {
         // Skip if it looks like HTML
-        if (!isHtmlResponse && (responseDataStr.trim().startsWith("{") || responseDataStr.trim().startsWith("["))) {
+        if (
+          !isHtmlResponse &&
+          (responseDataStr.trim().startsWith("{") ||
+            responseDataStr.trim().startsWith("["))
+        ) {
           try {
             const parsed = JSON.parse(responseDataStr);
             loading(setLoading, false);
@@ -521,7 +548,10 @@ class ApiClient {
     // Ensure we always have a valid baseURL
     if (!baseURL || typeof baseURL !== "string") {
       if (import.meta.env.DEV) {
-        console.error("Invalid baseURL provided to ApiClient, using default:", baseURL);
+        console.error(
+          "Invalid baseURL provided to ApiClient, using default:",
+          baseURL
+        );
       }
       this.baseURL = "http://localhost:4000";
     } else {
@@ -589,11 +619,13 @@ class ApiClient {
     options: ApiRequestConfig = {}
   ): Promise<T> {
     const { setLoading, skipErrorToast, ...config } = options;
-    
+
     // Ensure endpoint starts with / if baseURL is absolute
-    const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+    const normalizedEndpoint = endpoint.startsWith("/")
+      ? endpoint
+      : `/${endpoint}`;
     let url: string;
-    
+
     if (this.baseURL.startsWith("http")) {
       // Absolute URL - ensure proper joining
       url = `${this.baseURL}${normalizedEndpoint}`;
@@ -601,22 +633,29 @@ class ApiClient {
       // Relative URL for proxy - use normalized endpoint to ensure it starts with /
       url = `${this.baseURL}${normalizedEndpoint}`;
     }
-    
+
     // Validate URL is not invalid
     if (!url || url === "undefined" || url.includes("undefined")) {
       if (import.meta.env.DEV) {
-        console.error("Invalid URL constructed:", { baseURL: this.baseURL, endpoint, url });
+        console.error("Invalid URL constructed:", {
+          baseURL: this.baseURL,
+          endpoint,
+          url,
+        });
       }
-      throw new ApiError(`Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`);
+      throw new ApiError(
+        `Invalid API URL configuration. baseURL: ${this.baseURL}, endpoint: ${endpoint}`
+      );
     }
 
     // Mark public endpoints in config for the interceptor
-    const isPublicEndpoint = normalizedEndpoint.includes("GenerateQuestionsFromQuery") || 
-                            normalizedEndpoint.includes("GenerateQuestionsFromBrand") ||
-                            normalizedEndpoint.includes("CreateVisitorSession") ||
-                            normalizedEndpoint.includes("CreateMagicLink") ||
-                            normalizedEndpoint.includes("ConsumeMagicLink");
-    
+    const isPublicEndpoint =
+      normalizedEndpoint.includes("GenerateQuestionsFromQuery") ||
+      normalizedEndpoint.includes("GenerateQuestionsFromBrand") ||
+      normalizedEndpoint.includes("CreateVisitorSession") ||
+      normalizedEndpoint.includes("CreateMagicLink") ||
+      normalizedEndpoint.includes("ConsumeMagicLink");
+
     if (isPublicEndpoint) {
       // Add a flag to the config so the interceptor knows to skip auth
       (config as any).__skipAuth = true;
@@ -632,9 +671,9 @@ class ApiClient {
 // Export apiClient instance for the main API
 const serverUrl = prms.SERVER_URL;
 if (import.meta.env.DEV) {
-  console.log("[ApiClient] Backend URL:", serverUrl || "http://localhost:4000");
-  console.log("[ApiClient] VITE_PROD:", import.meta.env.VITE_PROD);
-  console.log("[ApiClient] VITE_BACKEND_API_URL:", import.meta.env.VITE_BACKEND_API_URL);
+  // console.log("[ApiClient] Backend URL:", serverUrl || "http://localhost:4000");
+  // console.log("[ApiClient] VITE_PROD:", import.meta.env.VITE_PROD);
+  // console.log("[ApiClient] VITE_BACKEND_API_URL:", import.meta.env.VITE_BACKEND_API_URL);
 }
 if (!serverUrl && import.meta.env.DEV) {
   console.error("SERVER_URL is undefined! Using fallback localhost:4000");

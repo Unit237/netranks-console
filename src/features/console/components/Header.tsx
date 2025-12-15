@@ -30,16 +30,16 @@ const Header = () => {
       navigate("/signin");
       return;
     }
-    
+
     // Get the active project ID (or first project if none active)
     const projectId = useActiveProjectId();
-    
+
     if (!projectId) {
       // No projects available, can't create survey
       console.warn("No projects available to create survey");
       return;
     }
-    
+
     addTab({
       name: "New Survey",
       path: `/console/new-survey/${projectId}`,
@@ -94,7 +94,7 @@ const Header = () => {
             {tabs.map((tab) => {
               const isActive = tab.id === activeTabId;
               return (
-                <button
+                <div
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id, tab.path)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap relative group ${
@@ -136,7 +136,7 @@ const Header = () => {
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
-                </button>
+                </div>
               );
             })}
             <button

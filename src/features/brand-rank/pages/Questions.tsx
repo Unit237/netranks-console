@@ -1,6 +1,7 @@
 import { Trash2, Undo2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import token from "../../../app/utils/token";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
 import { useBrand } from "../context/BrandContext";
@@ -164,13 +165,6 @@ const Questions: React.FC = () => {
           // Attempt to start survey with filtered question indices
           surveyRunId = await startSurvey(survey.Id, questionIndices);
         } catch (error) {
-          // Fallback: if POST doesn't work, try GET (backend might not support filtering yet)
-          if (import.meta.env.DEV) {
-            console.warn(
-              "POST with questionIndices failed, falling back to GET. Backend may need to support question filtering.",
-              error
-            );
-          }
           surveyRunId = await startSurvey(survey.Id);
         }
       } else {
@@ -181,13 +175,42 @@ const Questions: React.FC = () => {
       const p1 = filteredSurvey?.PasswordOne;
       const p2 = filteredSurvey?.PasswordTwo;
 
-      navigate(`/brand-rank/survey/${surveyRunId}/${p1}/${p2}`, {
-        state: {
+      // Check if user is first-time (no userToken)
+      const userToken = token.getUser();
+      const isFirstTimeUser = !userToken;
+
+      if (isFirstTimeUser) {
+        // Store survey details for redirect after signin
+        const redirectData = {
+          surveyRunId,
+          p1,
+          p2,
           query: effectiveQuery,
           selectedBrand: displayBrand,
           survey: filteredSurvey,
-        },
-      });
+        };
+        localStorage.setItem(
+          "pendingSurveyRedirect",
+          JSON.stringify(redirectData)
+        );
+        // Navigate to signin for first-time users
+        navigate("/signin", {
+          state: {
+            query: effectiveQuery,
+            selectedBrand: displayBrand,
+            survey: filteredSurvey,
+          },
+        });
+      } else {
+        // Existing user - navigate directly to survey
+        navigate(`/brand-rank/survey/${surveyRunId}/${p1}/${p2}`, {
+          state: {
+            query: effectiveQuery,
+            selectedBrand: displayBrand,
+            survey: filteredSurvey,
+          },
+        });
+      }
     } catch (error) {
       console.error("Failed to start survey:", error);
       const errorMessage =

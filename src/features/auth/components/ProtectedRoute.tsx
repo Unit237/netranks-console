@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       loading,
       hasUser: !!user,
       hasError: !!error,
-      errorMessage: error?.message
+      errorMessage: error?.message,
     });
 
     // Skip authentication check for dashboard route
@@ -58,7 +58,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       if (error || !user) {
         debugLog("ProtectedRoute", "User not authenticated, redirecting", {
           hasError: !!error,
-          hasUser: !!user
+          hasUser: !!user,
         });
         navigate("/signin", { replace: true });
       } else {
@@ -75,7 +75,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Show loading state while checking authentication
   if (loading || !user) {
-    debugLog("ProtectedRoute", "Showing loading state", { loading, hasUser: !!user });
+    debugLog("ProtectedRoute", "Showing loading state", {
+      loading,
+      hasUser: !!user,
+    });
+    console.log("ProtectedRoute", "Showing loading state", {
+      loading,
+      hasUser: !!user,
+    });
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Loading...</div>

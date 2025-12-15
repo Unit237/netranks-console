@@ -12,7 +12,7 @@ const Signin: React.FC = () => {
   const [email, setEmail] = useState("");
   const toast = useToast();
 
-  const visitorSessionToken = token.get();
+  const visitorSessionToken = token.getVisitor();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = React.useState(false);
 

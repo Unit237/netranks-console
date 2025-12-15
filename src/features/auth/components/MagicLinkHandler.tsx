@@ -24,7 +24,30 @@ const MagicLinkHandler = () => {
 
       await consumeMagicLink(magicLinkId, p1, p2);
 
-      // Redirect to console after successful authentication
+      // Check if there's a pending survey redirect (first-time user flow)
+      const pendingRedirect = localStorage.getItem("pendingSurveyRedirect");
+      if (pendingRedirect) {
+        try {
+          const redirectData = JSON.parse(pendingRedirect);
+          // Clear the stored redirect
+          localStorage.removeItem("pendingSurveyRedirect");
+          // Redirect to BrandRankSurveyRun
+          navigate(`/brand-rank/survey/${redirectData.surveyRunId}/${redirectData.p1}/${redirectData.p2}`, {
+            replace: true,
+            state: {
+              query: redirectData.query,
+              selectedBrand: redirectData.selectedBrand,
+              survey: redirectData.survey,
+            },
+          });
+          return;
+        } catch (error) {
+          console.error("Failed to parse pending redirect:", error);
+          // Fall through to default redirect
+        }
+      }
+
+      // Default redirect to console after successful authentication
       navigate("/console/project/1", { replace: true });
     } catch (err) {
       console.error("Magic link authentication failed", err);

@@ -5,30 +5,14 @@ import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
-import { getProjectById } from "../services/projectService";
-import { formatLastRun } from "../utils/formatLastRun";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
+import { formatLastRun } from "../utils/formatLastRun";
 
-interface ProjectMetrics {
-  SpendThisMonth?: {
-    Label: string;
-    Amount: number;
-    Currency: string;
-    Display: string;
-  };
-  ActiveSurveys?: {
-    Count: number;
-    Delta: number;
-    DeltaDirection: string;
-  };
-}
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [projectMetrics, setProjectMetrics] = useState<ProjectMetrics | null>(null);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
 
   const { user, useActiveProjectId } = useUser();
 
@@ -45,7 +29,7 @@ const ProjectDetails = () => {
     navigate(`/console/new-survey/${projectId}`);
   };
 
-  const fetchProduct = useCallback(async () => {
+  const fetchProject = useCallback(async () => {
     try {
       if (!user || !user.Projects || user.Projects.length === 0) {
         return;
@@ -71,35 +55,11 @@ const ProjectDetails = () => {
     }
   }, [projectId, user, useActiveProjectId]);
 
-  const fetchProjectMetrics = useCallback(async () => {
-    if (!projectId) return;
-    
-    try {
-      setLoadingMetrics(true);
-      const projectData = await getProjectById(Number(projectId));
-      
-      // The API returns project data with Metrics property
-      if (projectData && (projectData as any).Metrics) {
-        setProjectMetrics((projectData as any).Metrics);
-      }
-    } catch (error) {
-      console.error("Failed to fetch project metrics:", error);
-    } finally {
-      setLoadingMetrics(false);
-    }
-  }, [projectId]);
-
   useEffect(() => {
     if (user) {
-      fetchProduct();
+      fetchProject();
     }
-  }, [user, fetchProduct]);
-
-  useEffect(() => {
-    if (projectId && user) {
-      fetchProjectMetrics();
-    }
-  }, [projectId, user, fetchProjectMetrics]);
+  }, [user, fetchProject]);
 
   if (!project) {
     return <>Loading...</>;
@@ -180,14 +140,10 @@ const ProjectDetails = () => {
             {/* Spent card */}
             <div className="border-r border-gray-200 dark:border-gray-700 px-4 py-4">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                {projectMetrics?.SpendThisMonth?.Label || "Spent this month"}
+                Spent this month
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {loadingMetrics ? (
-                  <span className="text-gray-400">Loading...</span>
-                ) : (
-                  projectMetrics?.SpendThisMonth?.Display || "$0"
-                )}
+                $0
               </div>
             </div>
 
@@ -273,19 +229,20 @@ const ProjectDetails = () => {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {(project.Surveys || []).map((survey) => {
                   const plan = getPlanByPeriod(survey.SchedulePeriodHours || 0);
-                  
+
                   // Calculate Status from SchedulePeriodHours
-                  const status = (survey.SchedulePeriodHours || 0) > 0 ? "Active" : "Paused";
-                  
+                  const status =
+                    (survey.SchedulePeriodHours || 0) > 0 ? "Active" : "Paused";
+
                   // Calculate LastRunAt from NextRunAt - SchedulePeriodHours
                   const calculatedLastRunAt = calculateLastRunAt(
                     survey.NextRunAt,
                     survey.SchedulePeriodHours || 0
                   );
-                  
+
                   // Format LastRunAt for display
                   const lastRunDisplay = formatLastRun(calculatedLastRunAt);
-                  
+
                   return (
                     <tr
                       onClick={() => surveyDetails(survey)}
@@ -304,7 +261,9 @@ const ProjectDetails = () => {
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
-                            {survey.Name ? survey.Name.substring(0, 50) + "..." : "Untitled Survey"}
+                            {survey.Name
+                              ? survey.Name.substring(0, 50) + "..."
+                              : "Untitled Survey"}
                           </span>
                         </div>
                       </td>
