@@ -7,8 +7,8 @@ const BillingTab: React.FC = () => {
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
       <div className="max-w-[35vw] mx-auto p-4 space-y-4">
-        {/* Current Plan Section */}
-        <div className="bg-greyColor border border-gray-200 rounded-[20px]">
+        {/* Current Plan Section - Hidden for now */}
+        {/* <div className="bg-greyColor border border-gray-200 rounded-[20px]">
           <h2 className="text-[14px] font-medium text-gray-600 dark:text-white p-4">
             Current plan
           </h2>
@@ -78,7 +78,7 @@ const BillingTab: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Payment & Invoices Section */}
         <div className="bg-greyColor border border-gray-200 rounded-[20px]">
