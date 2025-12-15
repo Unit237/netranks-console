@@ -79,10 +79,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       loading,
       hasUser: !!user,
     });
-    console.log("ProtectedRoute", "Showing loading state", {
-      loading,
-      hasUser: !!user,
-    });
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-gray-600 dark:text-gray-400">Loading...</div>
