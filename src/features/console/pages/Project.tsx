@@ -1,11 +1,11 @@
 import { useState } from "react";
 import ProjectDetails from "../../project/pages/ProjectDetails";
-import BillingTab from "../../settings/components/BillingTab";
+import BillingTab from "../../settings-old/components/BillingTab";
 
 const Project = () => {
-  const [activeTab, setActiveTab] = useState<
-    "ProjectDetails" | "Billing"
-  >("ProjectDetails");
+  const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Billing">(
+    "ProjectDetails"
+  );
 
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
