@@ -1,7 +1,16 @@
-import { Plus, Trash2, Pencil, Eye, User, Mail, Send, Check } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { useUser } from "../../auth/context/UserContext";
+import {
+  Check,
+  Eye,
+  Mail,
+  Pencil,
+  Plus,
+  Send,
+  Trash2,
+  User,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { apiClient } from "../../../app/lib/api";
+import { useUser } from "../../auth/context/UserContext";
 
 interface ProjectMembership {
   ProjectId: number;
@@ -31,15 +40,21 @@ const Members = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"Owner" | "Editor" | "Viewer">("Viewer");
+  const [inviteRole, setInviteRole] = useState<"Owner" | "Editor" | "Viewer">(
+    "Viewer"
+  );
   const [selectedProjectIds, setSelectedProjectIds] = useState<number[]>([]);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<{ memberId: number; projectId: number } | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<{
+    memberId: number;
+    projectId: number;
+  } | null>(null);
   const [showNotification, setShowNotification] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get active project ID
-  const activeProjectId = user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id;
+  const activeProjectId =
+    user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id;
 
   // Initialize selected projects when modal opens - default to active project or first project
   useEffect(() => {
@@ -65,7 +80,7 @@ const Members = () => {
   // Handle ESC key to close delete confirmation modal
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && deleteConfirmId !== null) {
+      if (event.key === "Escape" && deleteConfirmId !== null) {
         setDeleteConfirmId(null);
       }
     };
@@ -91,17 +106,19 @@ const Members = () => {
       setMembers([]);
       return;
     }
-    
+
     try {
       setLoading(true);
-      
+
       // Fetch members from all projects the user has access to
-      const allMembers: Member[] = [];
+      // const allMembers: Member[] = [];
       const projectPromises = user.Projects.map(async (project) => {
         try {
-          const membersData = await apiClient.get<Member[]>(`api/GetMembers/${project.Id}`);
+          const membersData = await apiClient.get<Member[]>(
+            `api/GetMembers/${project.Id}`
+          );
           // Add project info to each member
-          const membersWithProject = (membersData || []).map(member => ({
+          const membersWithProject = (membersData || []).map((member) => ({
             ...member,
             ProjectId: project.Id,
             ProjectName: project.Name || "Untitled Project",
@@ -109,27 +126,36 @@ const Members = () => {
           return membersWithProject;
         } catch (error: any) {
           // If endpoint doesn't exist (404) or user doesn't have access, skip this project
-          if (error?.status === 404 || error?.status === 406 || error?.status === 403) {
-            console.warn(`Cannot fetch members for project ${project.Id} (${error?.status})`);
+          if (
+            error?.status === 404 ||
+            error?.status === 406 ||
+            error?.status === 403
+          ) {
+            console.warn(
+              `Cannot fetch members for project ${project.Id} (${error?.status})`
+            );
             return [];
           } else {
-            console.error(`Failed to fetch members for project ${project.Id}:`, error);
+            console.error(
+              `Failed to fetch members for project ${project.Id}:`,
+              error
+            );
             return [];
           }
         }
       });
-      
+
       const membersArrays = await Promise.all(projectPromises);
       // Flatten all members into a single array
       const flattenedMembers = membersArrays.flat();
-      
+
       // Group members by email and consolidate projects
       const membersByEmail = new Map<string, Member>();
-      
+
       flattenedMembers.forEach((member) => {
         const email = member.Email;
         const existingMember = membersByEmail.get(email);
-        
+
         if (existingMember) {
           // Add this project to the existing member's projects list
           if (member.ProjectId && member.ProjectName) {
@@ -146,7 +172,11 @@ const Members = () => {
           if (member.IsOwner) existingMember.IsOwner = true;
           if (member.IsEditor) existingMember.IsEditor = true;
           // Use earliest creation date
-          if (member.CreatedAt && (!existingMember.CreatedAt || member.CreatedAt < existingMember.CreatedAt)) {
+          if (
+            member.CreatedAt &&
+            (!existingMember.CreatedAt ||
+              member.CreatedAt < existingMember.CreatedAt)
+          ) {
             existingMember.CreatedAt = member.CreatedAt;
           }
         } else {
@@ -160,24 +190,31 @@ const Members = () => {
             IsEditor: member.IsEditor,
             CreatedAt: member.CreatedAt,
             IsProjectOwner: member.IsProjectOwner,
-            Projects: member.ProjectId && member.ProjectName ? [{
-              ProjectId: member.ProjectId,
-              ProjectName: member.ProjectName,
-              IsOwner: member.IsOwner,
-              IsEditor: member.IsEditor,
-              CreatedAt: member.CreatedAt,
-              MemberId: member.Id,
-            }] : [],
+            Projects:
+              member.ProjectId && member.ProjectName
+                ? [
+                    {
+                      ProjectId: member.ProjectId,
+                      ProjectName: member.ProjectName,
+                      IsOwner: member.IsOwner,
+                      IsEditor: member.IsEditor,
+                      CreatedAt: member.CreatedAt,
+                      MemberId: member.Id,
+                    },
+                  ]
+                : [],
           };
           membersByEmail.set(email, consolidatedMember);
         }
       });
-      
+
       const consolidatedMembers = Array.from(membersByEmail.values());
-      
-      console.log(`Fetched ${consolidatedMembers.length} unique members across ${user.Projects.length} projects`, consolidatedMembers);
+
+      console.log(
+        `Fetched ${consolidatedMembers.length} unique members across ${user.Projects.length} projects`,
+        consolidatedMembers
+      );
       setMembers(consolidatedMembers);
-      
     } catch (error) {
       console.error("Failed to fetch members:", error);
       setMembers([]);
@@ -191,83 +228,118 @@ const Members = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     // Just now (< 1 minute)
     if (diffInSeconds < 60) {
       return "Just now";
     }
-    
+
     // Minutes ago (< 1 hour)
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
-      return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
+      return `${diffInMinutes} ${
+        diffInMinutes === 1 ? "minute" : "minutes"
+      } ago`;
     }
-    
+
     // Hours ago (< 24 hours)
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
       return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
     }
-    
+
     // Days ago (< 7 days)
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) {
       return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
     }
-    
+
     // Weeks ago (< 4 weeks)
     const diffInWeeks = Math.floor(diffInDays / 7);
     if (diffInWeeks < 4) {
       return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} ago`;
     }
-    
+
     // Months ago (< 12 months)
     const diffInMonths = Math.floor(diffInDays / 30);
     if (diffInMonths < 12) {
       return `${diffInMonths} ${diffInMonths === 1 ? "month" : "months"} ago`;
     }
-    
+
     // Years ago
     const diffInYears = Math.floor(diffInDays / 365);
     if (diffInYears >= 1) {
       return `${diffInYears} ${diffInYears === 1 ? "year" : "years"} ago`;
     }
-    
+
     // Fallback to formatted date
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     const year = date.getFullYear();
     const month = months[date.getMonth()];
     const day = date.getDate();
     const currentYear = now.getFullYear();
-    
+
     // If same year, don't show year
     if (year === currentYear) {
       return `${day} ${month}`;
     }
-    
+
     return `${day} ${month} ${year}`;
   };
-  
+
   // Format full date for tooltip/hover
   const formatFullDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const dayName = days[date.getDay()];
     const month = months[date.getMonth()];
     const day = date.getDate();
     const year = date.getFullYear();
     const hours = date.getHours().toString().padStart(2, "0");
     const minutes = date.getMinutes().toString().padStart(2, "0");
-    
+
     return `${dayName}, ${day} ${month} ${year} at ${hours}:${minutes}`;
   };
 
-
   const handleDeleteMember = async (memberId: number) => {
     if (!deleteConfirmId) return;
-    
+
     try {
       await apiClient.delete(`api/DeleteMember/${memberId}`);
       // Refresh members to update the consolidated list
@@ -278,9 +350,12 @@ const Members = () => {
     }
   };
 
-
   const handleSendInvitation = async () => {
-    if (!inviteName.trim() || !inviteEmail.trim() || selectedProjectIds.length === 0) {
+    if (
+      !inviteName.trim() ||
+      !inviteEmail.trim() ||
+      selectedProjectIds.length === 0
+    ) {
       return;
     }
 
@@ -301,12 +376,18 @@ const Members = () => {
             IsOwner: inviteRole === "Owner",
             IsEditor: inviteRole === "Editor" || inviteRole === "Owner",
           });
-          console.log(`Successfully invited member, got invitation ID: ${invitationId}`);
+          console.log(
+            `Successfully invited member, got invitation ID: ${invitationId}`
+          );
           invitationIds.push(invitationId);
         } catch (error: any) {
           console.error(`Failed to invite to project ${projectId}:`, error);
-          const projectName = user?.Projects?.find(p => p.Id === projectId)?.Name || `Project ${projectId}`;
-          errors.push(`${projectName}: ${error?.message || "Failed to send invitation"}`);
+          const projectName =
+            user?.Projects?.find((p) => p.Id === projectId)?.Name ||
+            `Project ${projectId}`;
+          errors.push(
+            `${projectName}: ${error?.message || "Failed to send invitation"}`
+          );
         }
       }
 
@@ -349,7 +430,9 @@ const Members = () => {
       console.error("Failed to send invitation:", error);
       // Show user-friendly error message
       if (error?.status === 404 || error?.status === 406) {
-        alert("The invitation endpoint is not available. Please use the local mock backend for testing.");
+        alert(
+          "The invitation endpoint is not available. Please use the local mock backend for testing."
+        );
       } else {
         alert("Failed to send invitation. Please try again.");
       }
@@ -357,8 +440,6 @@ const Members = () => {
       setIsInviting(false);
     }
   };
-
-
 
   const handleCloseModal = () => {
     setShowInviteModal(false);
@@ -369,9 +450,9 @@ const Members = () => {
   };
 
   const handleProjectToggle = (projectId: number) => {
-    setSelectedProjectIds(prev => {
+    setSelectedProjectIds((prev) => {
       if (prev.includes(projectId)) {
-        return prev.filter(id => id !== projectId);
+        return prev.filter((id) => id !== projectId);
       } else {
         return [...prev, projectId];
       }
@@ -379,16 +460,22 @@ const Members = () => {
   };
 
   const getRoleBadge = (member: Member) => {
-    const currentRole = member.IsOwner ? "Owner" : member.IsEditor ? "Editor" : "Viewer";
-    
+    const currentRole = member.IsOwner
+      ? "Owner"
+      : member.IsEditor
+      ? "Editor"
+      : "Viewer";
+
     return (
-      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
-        member.IsOwner
-          ? "bg-blue-50 text-owner-blue"
-          : member.IsEditor
-          ? "bg-orange-50 text-editor-orange"
-          : "bg-gray-100 text-gray-700"
-      }`}>
+      <div
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
+          member.IsOwner
+            ? "bg-blue-50 text-owner-blue"
+            : member.IsEditor
+            ? "bg-orange-50 text-editor-orange"
+            : "bg-gray-100 text-gray-700"
+        }`}
+      >
         {member.IsOwner ? (
           <Send className="w-3.5 h-3.5 fill-current" />
         ) : member.IsEditor ? (
@@ -415,8 +502,8 @@ const Members = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
-        Members
-      </h1>
+            Members
+          </h1>
           <button
             onClick={() => setShowInviteModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-card-border rounded-lg text-sm font-medium text-gray-700 hover:bg-hover-bg transition-colors shadow-subtle w-full sm:w-auto justify-center"
@@ -454,13 +541,15 @@ const Members = () => {
                       <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="text-right py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
-                      </th>
+                      <th className="text-right py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-card-border">
                     {members.map((member) => (
-                      <tr key={member.Email} className="hover:bg-hover-bg transition-colors">
+                      <tr
+                        key={member.Email}
+                        className="hover:bg-hover-bg transition-colors"
+                      >
                         <td className="py-4 px-6">
                           <div className="text-base font-semibold text-gray-900">
                             {member.FullName}
@@ -481,25 +570,27 @@ const Members = () => {
                                 </span>
                               ))
                             ) : (
-                              <span className="text-sm text-muted-text">No projects</span>
+                              <span className="text-sm text-muted-text">
+                                No projects
+                              </span>
                             )}
                           </div>
                         </td>
                         <td className="py-4 px-6 text-sm text-muted-text">
                           {member.CreatedAt ? (
-                            <span 
+                            <span
                               title={formatFullDate(member.CreatedAt)}
                               className="cursor-help"
                             >
                               {formatDate(member.CreatedAt)}
                             </span>
-                          ) : "—"}
+                          ) : (
+                            "—"
+                          )}
                         </td>
-                        <td className="py-4 px-6">
-                          {getRoleBadge(member)}
-                        </td>
+                        <td className="py-4 px-6">{getRoleBadge(member)}</td>
                         <td className="py-4 px-6 text-right">
-                          {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
+                          {/* {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
                             <button
                               onClick={() => {
                                 // Use the first project's member ID for deletion
@@ -511,7 +602,7 @@ const Members = () => {
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
-                          )}
+                          )} */}
                         </td>
                       </tr>
                     ))}
@@ -522,7 +613,10 @@ const Members = () => {
               {/* Mobile Card View */}
               <div className="md:hidden divide-y divide-card-border">
                 {members.map((member) => (
-                  <div key={member.Email} className="p-4 hover:bg-hover-bg transition-colors">
+                  <div
+                    key={member.Email}
+                    className="p-4 hover:bg-hover-bg transition-colors"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="text-base font-semibold text-gray-900 mb-1">
@@ -542,11 +636,13 @@ const Members = () => {
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-muted-text">No projects</span>
+                            <span className="text-xs text-muted-text">
+                              No projects
+                            </span>
                           )}
                         </div>
                       </div>
-                      {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
+                      {/* {member.Projects && member.Projects.length > 0 && member.Projects.some(p => !member.IsProjectOwner) && (
                         <button
                           onClick={() => {
                             // Use the first project's member ID for deletion
@@ -558,22 +654,23 @@ const Members = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      )} */}
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-muted-text">
-                        Added: {member.CreatedAt ? (
-                          <span 
+                        Added:{" "}
+                        {member.CreatedAt ? (
+                          <span
                             title={formatFullDate(member.CreatedAt)}
                             className="cursor-help"
                           >
                             {formatDate(member.CreatedAt)}
                           </span>
-                        ) : "—"}
+                        ) : (
+                          "—"
+                        )}
                       </div>
-                      <div>
-                        {getRoleBadge(member)}
-                      </div>
+                      <div>{getRoleBadge(member)}</div>
                     </div>
                   </div>
                 ))}
@@ -584,22 +681,33 @@ const Members = () => {
 
         {/* Invite Team Member Modal */}
         {showInviteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
-            <div 
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invite-modal-title"
+          >
+            <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={handleCloseModal}
               aria-hidden="true"
             />
-            
+
             <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
               <div className="p-6">
-                <h2 id="invite-modal-title" className="text-lg font-semibold text-gray-900 mb-6">
+                <h2
+                  id="invite-modal-title"
+                  className="text-lg font-semibold text-gray-900 mb-6"
+                >
                   Invite team member
                 </h2>
 
                 {/* Name Input */}
                 <div className="mb-4">
-                  <label htmlFor="invite-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="invite-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Name
                   </label>
                   <div className="relative">
@@ -620,7 +728,10 @@ const Members = () => {
 
                 {/* Email Input */}
                 <div className="mb-6">
-                  <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="invite-email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email
                   </label>
                   <div className="relative">
@@ -646,9 +757,10 @@ const Members = () => {
                   <div className="space-y-2 max-h-48 overflow-y-auto border border-card-border rounded-md p-3">
                     {user?.Projects && user.Projects.length > 0 ? (
                       user.Projects.map((project) => {
-                        const projectName = project.Name && project.Name.trim() !== "" 
-                          ? project.Name 
-                          : "Untitled Project";
+                        const projectName =
+                          project.Name && project.Name.trim() !== ""
+                            ? project.Name
+                            : "Untitled Project";
                         return (
                           <label
                             key={project.Id}
@@ -691,9 +803,21 @@ const Members = () => {
                       }`}
                       aria-pressed={inviteRole === "Owner"}
                     >
-                      <Send className={`w-5 h-5 flex-shrink-0 ${inviteRole === "Owner" ? "text-owner-blue fill-owner-blue" : "text-gray-400"}`} />
+                      <Send
+                        className={`w-5 h-5 flex-shrink-0 ${
+                          inviteRole === "Owner"
+                            ? "text-owner-blue fill-owner-blue"
+                            : "text-gray-400"
+                        }`}
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className={`text-sm font-medium mb-0.5 ${inviteRole === "Owner" ? "text-owner-blue" : "text-gray-900"}`}>
+                        <div
+                          className={`text-sm font-medium mb-0.5 ${
+                            inviteRole === "Owner"
+                              ? "text-owner-blue"
+                              : "text-gray-900"
+                          }`}
+                        >
                           Owner
                         </div>
                         <div className="text-xs text-muted-text">
@@ -713,9 +837,21 @@ const Members = () => {
                       }`}
                       aria-pressed={inviteRole === "Editor"}
                     >
-                      <Pencil className={`w-5 h-5 flex-shrink-0 ${inviteRole === "Editor" ? "text-editor-orange" : "text-gray-400"}`} />
+                      <Pencil
+                        className={`w-5 h-5 flex-shrink-0 ${
+                          inviteRole === "Editor"
+                            ? "text-editor-orange"
+                            : "text-gray-400"
+                        }`}
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className={`text-sm font-medium mb-0.5 ${inviteRole === "Editor" ? "text-editor-orange" : "text-gray-900"}`}>
+                        <div
+                          className={`text-sm font-medium mb-0.5 ${
+                            inviteRole === "Editor"
+                              ? "text-editor-orange"
+                              : "text-gray-900"
+                          }`}
+                        >
                           Editor
                         </div>
                         <div className="text-xs text-muted-text">
@@ -735,7 +871,13 @@ const Members = () => {
                       }`}
                       aria-pressed={inviteRole === "Viewer"}
                     >
-                      <Eye className={`w-5 h-5 flex-shrink-0 ${inviteRole === "Viewer" ? "text-gray-600" : "text-gray-400"}`} />
+                      <Eye
+                        className={`w-5 h-5 flex-shrink-0 ${
+                          inviteRole === "Viewer"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                        }`}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium mb-0.5 text-gray-900">
                           Viewer
@@ -760,7 +902,12 @@ const Members = () => {
                   <button
                     type="button"
                     onClick={handleSendInvitation}
-                    disabled={!inviteName.trim() || !inviteEmail.trim() || selectedProjectIds.length === 0 || isInviting}
+                    disabled={
+                      !inviteName.trim() ||
+                      !inviteEmail.trim() ||
+                      selectedProjectIds.length === 0 ||
+                      isInviting
+                    }
                     className="px-0 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isInviting ? "Sending..." : "Send invitation"}
@@ -772,67 +919,93 @@ const Members = () => {
         )}
 
         {/* Delete Confirmation Modal */}
-        {deleteConfirmId && (() => {
-          const memberToDelete = members.find(m => 
-            m.Projects && m.Projects.some(p => p.MemberId === deleteConfirmId.memberId)
-          );
-          const projectToRemove = memberToDelete?.Projects?.find(p => p.MemberId === deleteConfirmId.memberId);
+        {deleteConfirmId &&
+          (() => {
+            const memberToDelete = members.find(
+              (m) =>
+                m.Projects &&
+                m.Projects.some((p) => p.MemberId === deleteConfirmId.memberId)
+            );
+            const projectToRemove = memberToDelete?.Projects?.find(
+              (p) => p.MemberId === deleteConfirmId.memberId
+            );
 
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
-              <div 
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onClick={() => setDeleteConfirmId(null)}
-                aria-hidden="true"
-              />
-              
-              <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md z-10">
-                {/* Header with trash icon and close button */}
-                <div className="flex items-center justify-between p-6 pb-4 border-b border-card-border">
-                  <div className="flex items-center">
-                    <Trash2 className="w-5 h-5 text-trash-red" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteConfirmId(null)}
-                    className="text-muted-text hover:text-gray-900 transition-colors text-sm"
-                    aria-label="Close"
-                  >
-                    x esc
-                  </button>
-                </div>
+            return (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-modal-title"
+              >
+                <div
+                  className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setDeleteConfirmId(null)}
+                  aria-hidden="true"
+                />
 
-                <div className="p-6 pt-4">
-                  <h2 id="delete-modal-title" className="text-lg font-semibold text-gray-900 mb-4">
-                    Remove team member?
-                  </h2>
-                  <p className="text-sm text-gray-700 mb-6">
-                    {memberToDelete
-                      ? `You're about to remove ${memberToDelete.FullName} (${memberToDelete.Email}) from ${projectToRemove?.ProjectName || "the project"}. ${memberToDelete.Projects && memberToDelete.Projects.length > 1 ? `They will still have access to ${memberToDelete.Projects.length - 1} other project(s).` : "They will lose access to this project."}`
-                      : "This action cannot be undone."}
-                  </p>
-                  <div className="flex justify-end gap-3">
+                <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md z-10">
+                  {/* Header with trash icon and close button */}
+                  <div className="flex items-center justify-between p-6 pb-4 border-b border-card-border">
+                    <div className="flex items-center">
+                      <Trash2 className="w-5 h-5 text-trash-red" />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setDeleteConfirmId(null)}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-card-border rounded-lg hover:bg-gray-50 transition-colors"
+                      className="text-muted-text hover:text-gray-900 transition-colors text-sm"
+                      aria-label="Close"
                     >
-                      Do not remove
+                      x esc
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteMember(deleteConfirmId.memberId)}
-                      className="px-4 py-2 text-sm font-medium text-white bg-trash-red rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+                  </div>
+
+                  <div className="p-6 pt-4">
+                    <h2
+                      id="delete-modal-title"
+                      className="text-lg font-semibold text-gray-900 mb-4"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      Yes, remove
-                    </button>
+                      Remove team member?
+                    </h2>
+                    <p className="text-sm text-gray-700 mb-6">
+                      {memberToDelete
+                        ? `You're about to remove ${memberToDelete.FullName} (${
+                            memberToDelete.Email
+                          }) from ${
+                            projectToRemove?.ProjectName || "the project"
+                          }. ${
+                            memberToDelete.Projects &&
+                            memberToDelete.Projects.length > 1
+                              ? `They will still have access to ${
+                                  memberToDelete.Projects.length - 1
+                                } other project(s).`
+                              : "They will lose access to this project."
+                          }`
+                        : "This action cannot be undone."}
+                    </p>
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-card-border rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Do not remove
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleDeleteMember(deleteConfirmId.memberId)
+                        }
+                        className="px-4 py-2 text-sm font-medium text-white bg-trash-red rounded-lg hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Yes, remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })()}
+            );
+          })()}
 
         {/* Invitation Sent Notification */}
         {showNotification && (
@@ -840,7 +1013,7 @@ const Members = () => {
             <div className="bg-gray-900 rounded-lg shadow-lg px-4 py-3 flex items-center gap-4 min-w-[320px] animate-[slideUp_0.3s_ease-out]">
               {/* Green Checkmark Icon */}
               <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-              
+
               {/* Invitation Sent Text */}
               <span className="text-white text-sm font-medium">
                 Invitation sent
