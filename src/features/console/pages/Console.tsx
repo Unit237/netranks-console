@@ -1,8 +1,7 @@
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ErrorBoundary from "../../../app/components/ErrorBoundary";
-import AppLogo from "../../../app/shared/ui/AppLogo";
 import { useUser } from "../../auth/context/UserContext";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
@@ -13,28 +12,6 @@ const Console = () => {
   const navigate = useNavigate();
   const { tabs, activeTabId, setActiveTab, addTab } = useTabs();
   const { useActiveProjectId } = useUser();
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile viewport
-  useEffect(() => {
-    const checkMobile = () => {
-      // Use 768px breakpoint - standard mobile breakpoint
-      // Also check for touch device to better detect actual mobile devices
-      const isMobileWidth = window.innerWidth < 768;
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      setIsMobile(isMobileWidth && isTouchDevice);
-    };
-
-    // Check on mount
-    checkMobile();
-
-    // Listen for resize events
-    window.addEventListener("resize", checkMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkMobile);
-    };
-  }, []);
 
   const handleCreateNewSurvey = () => {
     // Get the active project ID (or first project if none active)
@@ -80,24 +57,6 @@ const Console = () => {
     // Don't auto-create tabs here - let components handle tab creation explicitly
     // This prevents infinite loops when navigating programmatically
   }, [location.pathname, tabs, activeTabId, setActiveTab]);
-
-  // Show mobile message if on mobile device
-  if (isMobile) {
-    return (
-      <div className="relative flex h-screen items-center justify-center bg-white dark:bg-gray-900 p-4">
-        {/* Logo in upper left */}
-        <div className="absolute top-4 left-4">
-          <AppLogo />
-        </div>
-        
-        <div className="text-center max-w-md px-4 sm:px-6">
-          <p className="text-sm sm:text-base md:text-lg text-gray-900 dark:text-gray-100">
-            This console is designed for desktop use. Please visit from a computer browser.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <ErrorBoundary>
