@@ -73,14 +73,10 @@ export const fetchBrandQuestions = async (
   try {
     // Ensure we have a token before making the request
     const tokenModule = await import("../../../app/utils/token");
-    const onboardingModule = await import(
-      "../../../app/services/onboardingService"
-    );
-
+    const onboardingModule = await import("../../../app/services/onboardingService");
+    
     if (!tokenModule.default.getVisitor()) {
-      console.log(
-        "[fetchBrandQuestions] No token found, creating visitor session..."
-      );
+      console.log("[fetchBrandQuestions] No token found, creating visitor session...");
       await onboardingModule.createOnboardingSession();
     }
 
@@ -104,17 +100,12 @@ export const fetchBrandQuestions = async (
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       questionsArray = response.Questions;
-    } else if (response && Array.isArray(response.Questions)) {
-      questionsArray = response.Questions;
-    } else if (typeof response === "object" && response !== null) {
+    } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
-      console.warn(
-        "Unexpected response format from GenerateQuestionsFromQuery:",
-        response
-      );
+      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
       questionsArray = [];
     }
-
+    
     if (questionsArray.length === 0) throw new Error("No questions found");
 
     // Transform response to match BrandData format, using API response values when available
@@ -123,13 +114,10 @@ export const fetchBrandQuestions = async (
       PasswordOne: response?.PasswordOne ?? null,
       PasswordTwo: response?.PasswordTwo ?? null,
       BrandName: response?.BrandName ?? brand.name ?? null,
-      DescriptionOfTheBrand:
-        response?.DescriptionOfTheBrand ?? brand.description ?? null,
-      DescriptionOfTheBrandShort:
-        response?.DescriptionOfTheBrandShort ?? brand.description ?? null,
+      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? brand.description ?? null,
+      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? brand.description ?? null,
       DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-      DescriptionOfTheQuestionShort:
-        response?.DescriptionOfTheQuestionShort ?? null,
+      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
       QueryType: response?.QueryType ?? "brand",
       Questions: questionsArray,
       WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? brand.domain ?? null,
@@ -144,15 +132,11 @@ export const fetchBrandQuestions = async (
 
     // If 401 Unauthorized, try to recreate token and retry once
     if (error instanceof ApiError && error.status === 401) {
-      console.warn(
-        "[fetchBrandQuestions] 401 Unauthorized, attempting to recreate token and retry..."
-      );
+      console.warn("[fetchBrandQuestions] 401 Unauthorized, attempting to recreate token and retry...");
       try {
-        const onboardingModule = await import(
-          "../../../app/services/onboardingService"
-        );
+        const onboardingModule = await import("../../../app/services/onboardingService");
         await onboardingModule.createOnboardingSession();
-
+        
         // Retry the request once
         const brandDto = {
           brandId: brand.brandId,
@@ -160,20 +144,17 @@ export const fetchBrandQuestions = async (
           name: brand.name,
           icon: brand.icon,
         };
-
+        
         const questions = await apiClient.post<BrandData>(
           `api/CreateSurveyFromBrand`,
           brandDto,
           options
         );
-
+        
         if (!questions) throw new Error("No questions found");
         return questions;
       } catch (retryError) {
-        console.error(
-          "[fetchBrandQuestions] Retry after token recreation failed:",
-          retryError
-        );
+        console.error("[fetchBrandQuestions] Retry after token recreation failed:", retryError);
         throw error; // Throw original error
       }
     }
@@ -200,14 +181,10 @@ export const fetchQueryQuestions = async (
     // Ensure we have a token before making the request
     // Import token and createOnboardingSession dynamically to avoid circular dependencies
     const tokenModule = await import("../../../app/utils/token");
-    const onboardingModule = await import(
-      "../../../app/services/onboardingService"
-    );
-
+    const onboardingModule = await import("../../../app/services/onboardingService");
+    
     if (!tokenModule.default.getVisitor()) {
-      console.log(
-        "[fetchQueryQuestions] No token found, creating visitor session..."
-      );
+      console.log("[fetchQueryQuestions] No token found, creating visitor session...");
       await onboardingModule.createOnboardingSession();
     }
 
@@ -223,17 +200,12 @@ export const fetchQueryQuestions = async (
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       questionsArray = response.Questions;
-    } else if (response && Array.isArray(response.Questions)) {
-      questionsArray = response.Questions;
-    } else if (typeof response === "object" && response !== null) {
+    } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
-      console.warn(
-        "Unexpected response format from GenerateQuestionsFromQuery:",
-        response
-      );
+      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
       questionsArray = [];
     }
-
+    
     if (questionsArray.length === 0) throw new Error("No questions found");
 
     // Transform response to match BrandData format, using API response values when available
@@ -242,13 +214,10 @@ export const fetchQueryQuestions = async (
       PasswordOne: response?.PasswordOne ?? null,
       PasswordTwo: response?.PasswordTwo ?? null,
       BrandName: response?.BrandName ?? null,
-      DescriptionOfTheBrand:
-        response?.DescriptionOfTheBrand ?? `Survey about: ${query}`,
-      DescriptionOfTheBrandShort:
-        response?.DescriptionOfTheBrandShort ?? query.substring(0, 100),
+      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? `Survey about: ${query}`,
+      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? query.substring(0, 100),
       DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-      DescriptionOfTheQuestionShort:
-        response?.DescriptionOfTheQuestionShort ?? null,
+      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
       QueryType: response?.QueryType ?? "query",
       Questions: questionsArray,
       WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
@@ -263,29 +232,22 @@ export const fetchQueryQuestions = async (
 
     // If 401 Unauthorized, try to recreate token and retry once
     if (error instanceof ApiError && error.status === 401) {
-      console.warn(
-        "[fetchQueryQuestions] 401 Unauthorized, attempting to recreate token and retry..."
-      );
+      console.warn("[fetchQueryQuestions] 401 Unauthorized, attempting to recreate token and retry...");
       try {
-        const onboardingModule = await import(
-          "../../../app/services/onboardingService"
-        );
+        const onboardingModule = await import("../../../app/services/onboardingService");
         await onboardingModule.createOnboardingSession();
-
+        
         // Retry the request once
         const questions = await apiClient.post<BrandData>(
           `api/CreateSurveyFromQuery`,
           query,
           options
         );
-
+        
         if (!questions) throw new Error("No questions found");
         return questions;
       } catch (retryError) {
-        console.error(
-          "[fetchQueryQuestions] Retry after token recreation failed:",
-          retryError
-        );
+        console.error("[fetchQueryQuestions] Retry after token recreation failed:", retryError);
         throw error; // Throw original error
       }
     }

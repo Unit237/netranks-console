@@ -10,7 +10,7 @@ import BrandRank from "../../features/brand-rank/pages";
 import Brand from "../../features/brand-rank/pages/Brand";
 import BrandRankSurveyRun from "../../features/brand-rank/pages/BrandRankRunSurvey";
 import Questions from "../../features/brand-rank/pages/Questions";
-import ReviewAndQuestion from "../../features/brand-rank/pages/ReviewAndQuestion";
+import PricingAndQuestion from "../../features/brand-rank/pages/ReviewAndQuestion";
 import Alerts from "../../features/console/pages/Alerts";
 import Console from "../../features/console/pages/Console";
 import Members from "../../features/console/pages/Members";
@@ -20,7 +20,7 @@ import Project from "../../features/console/pages/Project";
 import Support from "../../features/console/pages/Support";
 import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
 import SurveyDetails from "../../features/project/pages/SurveyDetails";
-import Settings from "../../features/settings/pages/SettingsOld";
+import Settings from "../../features/settings/pages/Settings";
 
 const Router = () => {
   return (
@@ -63,7 +63,7 @@ const Router = () => {
         <Route path="new-project" element={<NewProject />} />
         <Route
           path="review-questions/:projectId"
-          element={<ReviewAndQuestion />}
+          element={<PricingAndQuestion />}
         />
         <Route path="survey/:surveyId" element={<SurveyDetails />} />
         <Route
