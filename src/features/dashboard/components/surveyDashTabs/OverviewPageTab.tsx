@@ -4,9 +4,10 @@ import type { SurveyStatsResponse } from "../../@types";
 
 interface OverviewPageTabProps {
   surveyStats: SurveyStatsResponse;
+  surveyName?: string | null;
 }
 
-const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
+const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats, surveyName }) => {
   // Sentiment data
   const sentimentData = {
     overall: "Positive",
@@ -301,15 +302,15 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyStats }) => {
         </div>
       </div>
 
-      {/* Baked Design Mentions */}
+      {/* Survey Mentions */}
       <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
-              B
+              {surveyName ? surveyName.charAt(0).toUpperCase() : "S"}
             </div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Baked Design mentions
+              {surveyName || "Survey"} mentions
             </h2>
           </div>
           <div className="flex items-center gap-2">

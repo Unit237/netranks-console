@@ -7,6 +7,7 @@ import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
 import { formatLastRun } from "../utils/formatLastRun";
+import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 
 const ProjectDetails = () => {
@@ -107,10 +108,11 @@ const ProjectDetails = () => {
   };
 
   const surveyDetails = (survey: Survey) => {
+    const cleanedName = sanitizeSurveyName(survey.Name) || "Survey Details";
     addTab({
-      name: survey.Name || "Survey Details",
+      name: cleanedName,
       path: `/console/survey/${survey.Id}`,
-      headerName: survey.Name || "Survey Details",
+      headerName: cleanedName,
     });
     navigate(`/console/survey/${survey.Id}`);
   };
@@ -261,9 +263,12 @@ const ProjectDetails = () => {
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
-                            {survey.Name
-                              ? survey.Name.substring(0, 50) + "..."
-                              : "Untitled Survey"}
+                            {(() => {
+                              const cleanedName = sanitizeSurveyName(survey.Name);
+                              return cleanedName
+                                ? cleanedName.substring(0, 50) + (cleanedName.length > 50 ? "..." : "")
+                                : "Untitled Survey";
+                            })()}
                           </span>
                         </div>
                       </td>

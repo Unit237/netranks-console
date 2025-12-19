@@ -9,6 +9,7 @@ import QuestionPageTab from "../components/tabs/NewQuestionTab";
 import OverviewPageTab from "../components/tabs/OverviewPageTab";
 import { getSurveyMainDashboard } from "../services/optimizeService";
 import { getSurveyById } from "../services/projectService";
+import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 const SurveyDetails = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
@@ -44,10 +45,11 @@ const SurveyDetails = () => {
       } else {
         setSurveyDetails(res);
         // Add tab to header when survey details are successfully fetched
+        const cleanedName = sanitizeSurveyName(res.Name) || "Survey Details";
         addTab({
-          name: res.Name || "Survey Details",
+          name: cleanedName,
           path: `/console/survey/${surveyId}`,
-          headerName: res.Name || "Survey Details",
+          headerName: cleanedName,
         });
       }
     } catch (err) {
