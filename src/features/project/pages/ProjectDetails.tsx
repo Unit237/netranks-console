@@ -351,7 +351,7 @@ const ProjectDetails = () => {
                     <tr
                       onClick={() => surveyDetails(survey)}
                       key={survey.Id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
                       <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
                         <input
