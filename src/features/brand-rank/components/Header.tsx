@@ -110,7 +110,7 @@ const Header = () => {
 
               <button
                 className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/signin")}
               >
                 Sign up
               </button>
@@ -155,7 +155,7 @@ const Header = () => {
                 <button
                   className="w-full rounded-md border px-4 py-2 text-sm bg-gray-100 dark:hover:bg-white/10"
                   onClick={() => {
-                    navigate("/signup");
+                    navigate("/signin");
                     setIsOpen(false);
                   }}
                 >

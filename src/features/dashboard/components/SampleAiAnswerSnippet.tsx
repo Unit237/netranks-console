@@ -123,7 +123,7 @@ export default function SampleAiAnswerSnippet({
                 <div className="h-full flex items-center justify-center">
                   <button
                     className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded"
-                    onClick={() => navigate("/signup")}
+                    onClick={() => navigate("/signin")}
                   >
                     Sign Up
                   </button>

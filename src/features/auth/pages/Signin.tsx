@@ -83,18 +83,6 @@ const Signin: React.FC = () => {
               >
                 {submitting ? "Sending Magic Link..." : "Send Magic Link"}
               </button>
-
-              <div className="flex items-center justify-center">
-                <div className="flex items-center justify-end text-sm text-gray-600 dark:text-gray-400 mt-4">
-                  Don't have an account?{" "}
-                  <a
-                    href="/signup"
-                    className="text-primary hover:underline dark:text-primary-hover ml-1"
-                  >
-                    Sign up
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </div>
