@@ -62,9 +62,9 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
           </div>
         )}
 
-      {/* Baked Design Mentions */}
+      {/* Survey Mentions */}
       {dashboard.VisibilityTable && dashboard.VisibilityTable.length > 0 && (
-        <VisibilityItem mention={dashboard.VisibilityTable} />
+        <VisibilityItem mention={dashboard.VisibilityTable} surveyName={surveyDetails.Name} />
       )}
 
       {dashboard.SampleAiAnswerSnippets &&
