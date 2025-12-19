@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
 import type { BrandData } from "../@types";
 import { useBrand } from "../context/BrandContext";
+import ConsoleQuestionSection from "../refactor/ConsoleQuestionSection";
+import ConsoleReviewAndRefine from "../refactor/ConsoleReviewAndRefine";
 import {
   fetchBrandQuestions,
   fetchQueryQuestions,
@@ -88,9 +90,7 @@ const PricingAndQuestion: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Loading questions...
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Loading questions...</p>
         </div>
       </div>
     );
@@ -106,8 +106,12 @@ const PricingAndQuestion: React.FC = () => {
 
   return (
     <div>
-      {/* <ConsoleReviewAndRefine survey={survey} />
-      <ConsoleQuestionSection survey={survey} /> */}
+      <ConsoleReviewAndRefine 
+        survey={survey} 
+        questionCount={survey.Questions?.length || 0}
+        questions={survey.Questions || []}
+      />
+      <ConsoleQuestionSection survey={survey} />
     </div>
   );
 };
