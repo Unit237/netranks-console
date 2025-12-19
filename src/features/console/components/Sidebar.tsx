@@ -47,18 +47,6 @@ const Sidebar = () => {
     //   path: "/console/alerts",
     //   headerName: "Alert",
     // },
-    {
-      icon: Users,
-      label: "Members",
-      path: "/console/members",
-      headerName: "Members",
-    },
-    {
-      icon: Settings,
-      label: "Settings",
-      path: "/console/settings",
-      headerName: "Settings",
-    },
   ];
 
   const handleSidebarLinkClick = (path: string) => {
@@ -267,7 +255,7 @@ const Sidebar = () => {
       )}
 
       {/* Navigation Links */}
-      <nav className="flex-1 flex-col py-4 px-2 space-y-1">
+      <nav className="flex-1 flex flex-col py-4 px-2 space-y-1">
         {sidebarLinks.map((link) => {
           const Icon = link.icon;
           const isActiveLink = location.pathname === link.path;
@@ -293,23 +281,37 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Support Link */}
-      {/* <div className="border-t border-gray-200 dark:border-gray-800 p-2">
+      {/* Operational Items - Bottom Section */}
+      <div className="border-t border-gray-200 dark:border-gray-800 p-2 mt-auto space-y-1">
         <button
-          onClick={handleSupportClick}
+          onClick={() => handleSidebarLinkClick("/console/members")}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             isCollapsed ? "justify-center" : "justify-start"
           } ${
-            isCurrentPageInTabs && location.pathname === "/console/support"
+            location.pathname === "/console/members"
               ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
               : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
-          title={isCollapsed ? "Support" : undefined}
+          title={isCollapsed ? "Members" : undefined}
         >
-          <HelpCircle className="w-5 h-5 flex-shrink-0" />
-          {!isCollapsed && <span>Support</span>}
+          <Users className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span>Members</span>}
         </button>
-      </div> */}
+        <button
+          onClick={() => handleSidebarLinkClick("/console/settings")}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            isCollapsed ? "justify-center" : "justify-start"
+          } ${
+            location.pathname === "/console/settings"
+              ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
+              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`}
+          title={isCollapsed ? "Settings" : undefined}
+        >
+          <Settings className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span>Settings</span>}
+        </button>
+      </div>
     </div>
   );
 };
