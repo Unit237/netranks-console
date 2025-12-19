@@ -96,13 +96,23 @@ export const fetchBrandQuestions = async (
 
     // Handle different response formats - API might return array directly or wrapped
     let questionsArray: string[] = [];
+    let questionIds: number[] = [];
+    
     if (Array.isArray(response)) {
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
-      questionsArray = response.Questions;
+      // Check if Questions is array of objects with Id and Text, or just strings
+      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
+        // Questions are objects with Id and Text
+        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
+        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
+      } else {
+        // Questions are just strings
+        questionsArray = response.Questions;
+      }
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
-      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
+      console.warn("Unexpected response format from CreateSurveyFromBrand:", response);
       questionsArray = [];
     }
     
@@ -120,6 +130,7 @@ export const fetchBrandQuestions = async (
       DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
       QueryType: response?.QueryType ?? "brand",
       Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
       WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? brand.domain ?? null,
     };
 
@@ -196,13 +207,23 @@ export const fetchQueryQuestions = async (
 
     // Handle different response formats - API might return array directly or wrapped
     let questionsArray: string[] = [];
+    let questionIds: number[] = [];
+    
     if (Array.isArray(response)) {
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
-      questionsArray = response.Questions;
+      // Check if Questions is array of objects with Id and Text, or just strings
+      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
+        // Questions are objects with Id and Text
+        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
+        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
+      } else {
+        // Questions are just strings
+        questionsArray = response.Questions;
+      }
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
-      console.warn("Unexpected response format from GenerateQuestionsFromQuery:", response);
+      console.warn("Unexpected response format from CreateSurveyFromQuery:", response);
       questionsArray = [];
     }
     
@@ -220,6 +241,7 @@ export const fetchQueryQuestions = async (
       DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
       QueryType: response?.QueryType ?? "query",
       Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
       WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
     };
 

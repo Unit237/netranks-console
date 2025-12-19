@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import Markdown from "../../../app/shared/ui/Markdown";
 import type { AiAnswerSnippet } from "../@types";
 
@@ -70,10 +71,7 @@ export default function SampleAiAnswerSnippet({
             Actual AI answers for aiAnswer
           </h2>
           <div className="h-[300px] flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-orange-500 rounded-full animate-spin"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Loading</p>
-            </div>
+            <LoadingSpinner message="Loading" />
           </div>
         </div>
       </div>

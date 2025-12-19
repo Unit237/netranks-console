@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoadingProgressBar from "../../../app/components/LoadingProgressBar";
 import { useTabs } from "../../console/context/TabContext";
 import type { BrandData } from "../@types";
 import { useBrand } from "../context/BrandContext";
@@ -182,23 +183,7 @@ const ReviewAndQuestion: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-        <div className="flex flex-col items-center gap-4 w-full max-w-md px-4">
-          {/* Spinner */}
-          <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-orange-500 rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Loading questions...</p>
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-            <div
-              className="bg-orange-500 h-2.5 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}%</p>
-        </div>
-      </div>
-    );
+    return <LoadingProgressBar progress={progress} message="Loading questions..." />;
   }
 
   if (error) {

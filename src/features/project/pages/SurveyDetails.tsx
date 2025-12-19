@@ -149,7 +149,11 @@ const SurveyDetails = () => {
         </div>
 
         <div className={activeTab === "Questions" ? "" : "hidden"}>
-          <QuestionPageTab questions={surveyDetails.Questions || []} />
+          <QuestionPageTab 
+            questions={surveyDetails.Questions || []} 
+            surveyId={surveyDetails.Id}
+            onQuestionsUpdate={fetchProjectDetails}
+          />
         </div>
 
         <div className={activeTab === "Optimize" ? "" : "hidden"}>

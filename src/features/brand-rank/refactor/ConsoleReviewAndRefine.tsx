@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import LoadingButton from "../../../app/components/LoadingButton";
+import { useUser } from "../../auth/context/UserContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
 import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
@@ -45,6 +47,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
   const navigate = useNavigate();
   const { activeTabId, replaceTab, navigateToTab, addTab } = useTabs();
+  const { refreshUser } = useUser();
 
   const [models, setModels] = useState<Model[]>([
     {
@@ -214,6 +217,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       );
 
       if (surveyId) {
+          // Refresh user data to get the updated project with new survey
+          await refreshUser();
+
           const surveyPath = `/console/survey/${surveyId}`;
 
           // Show toast notification with View button at the bottom
@@ -539,20 +545,14 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           >
             ← Go back
           </button>
-          <button
+          <LoadingButton
             onClick={handleSubmit}
-            disabled={isCreatingSurvey}
+            loading={isCreatingSurvey}
+            loadingText="Creating..."
             className="px-6 py-1 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isCreatingSurvey ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Creating...
-              </>
-            ) : (
-              "Finish & save →"
-            )}
-          </button>
+            Finish & save →
+          </LoadingButton>
         </div>
       </div>
     </div>

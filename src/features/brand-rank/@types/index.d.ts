@@ -21,6 +21,8 @@ export type BrandData = {
   PasswordTwo: string | null;
   QueryType: string | null;
   Questions: string[];
+  QuestionIds?: number[]; // Maps Questions array index to question ID for edit/delete operations
+  ProjectId?: number | null; // Project ID if survey belongs to a project, null/undefined for visitor surveys
   WebsiteOfTheBrand: string | null;
   iterations?: number;
   runsPerMonth?: number;
