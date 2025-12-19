@@ -1,5 +1,6 @@
 import { Plus, Trash2, Pencil, Eye, User, Mail, Send, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import { useUser } from "../../auth/context/UserContext";
 import { apiClient } from "../../../app/lib/api";
 
@@ -403,7 +404,7 @@ const Members = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-muted-text">Loading members...</div>
+        <LoadingSpinner message="Loading" />
       </div>
     );
   }

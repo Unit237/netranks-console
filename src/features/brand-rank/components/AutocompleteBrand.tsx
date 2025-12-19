@@ -131,7 +131,7 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
           </div>
 
           {/* Dropdown - Multiple brands detected */}
-          {showDropdown && options.length > 0 ? (
+          {showDropdown && options.length > 0 && (
             <div className="absolute w-full left-0 sm:left-auto sm:w-[calc(100%-4rem)] sm:ml-8 border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-b-[20px] sm:rounded-b-[25px] z-10">
               <div className="flex items-start space-x-2 p-3 sm:p-4">
                 <div className="text-orange-500 flex items-center flex-shrink-0">
@@ -159,12 +159,6 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
                     Not seeing your brand? Try adding website
                   </p>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className="absolute w-full left-0 sm:left-auto sm:w-[calc(100%-1.9rem)] sm:ml-4 border bg-gray-100 dark:bg-gray-700 rounded-b-[20px] z-10">
-              <div className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-[13px] text-gray-400 dark:text-gray-400">
-                Try 'compare us' or 'sentiment on our pricing'
               </div>
             </div>
           )}

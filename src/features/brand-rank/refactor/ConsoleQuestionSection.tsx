@@ -18,22 +18,30 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   onQuestionCountChange,
   onQuestionsChange,
 }) => {
+  // Check if survey has ProjectId - if not, manage questions locally only
+  const isLocalMode = !survey.ProjectId;
+  
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestionInput, setEditQuestionInput] = useState("");
   const [questions, setQuestions] = useState<string[]>(
     Array.isArray(survey.Questions) ? survey.Questions : []
   );
+  const [questionIds, setQuestionIds] = useState<number[]>(
+    Array.isArray(survey.QuestionIds) ? survey.QuestionIds : []
+  );
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
 
-  // Update questions when survey changes
+  // Update questions and question IDs when survey changes
   useEffect(() => {
     if (survey && Array.isArray(survey.Questions)) {
       setQuestions(survey.Questions);
+      setQuestionIds(Array.isArray(survey.QuestionIds) ? survey.QuestionIds : []);
     } else {
       setQuestions([]);
+      setQuestionIds([]);
     }
   }, [survey]);
   const [showToast, setShowToast] = useState(false);
@@ -114,18 +122,28 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
 
   const handleConfirmDelete = async (index: number) => {
     const question = questions[index];
-    if (question) {
-      try {
-        await deleteQuestion(index.toString());
+    const questionId = questionIds[index];
+    
+    if (!question) return;
 
-        setLastDeletedQuestion({ index, question: question });
-        setDeletedQuestions((prev) => new Set([...prev, index]));
-        setToastType("delete");
-        setShowToast(true);
-        setConfirmingDelete(null);
-      } catch (error) {
-        console.error("Failed to delete question:", error);
+    setIsSubmitting(true);
+
+    try {
+      // Only call API if survey has ProjectId (not in local mode)
+      if (!isLocalMode && questionId) {
+        await deleteQuestion(questionId.toString());
       }
+
+      // Update local state regardless of mode
+      setLastDeletedQuestion({ index, question: question });
+      setDeletedQuestions((prev) => new Set([...prev, index]));
+      setToastType("delete");
+      setShowToast(true);
+      setConfirmingDelete(null);
+    } catch (error) {
+      console.error("Failed to delete question:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,18 +167,26 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      const newQuestionId: number = await addQuestion(
-        survey.Id,
-        trimmedQuestion
-      );
+      let newQuestionId: number | null = null;
 
-      if (newQuestionId) {
-        setQuestions((prev) => [...prev, trimmedQuestion]);
-        setNewQuestionInput("");
-        setShowAddQuestion(false);
-        setToastType("add");
-        setShowToast(true);
+      // Only call API if survey has ProjectId (not in local mode)
+      if (!isLocalMode) {
+        newQuestionId = await addQuestion(survey.Id, trimmedQuestion);
       }
+
+      // Update local state regardless of mode
+      // Add question at the top (beginning) of the list
+      setQuestions((prev) => [trimmedQuestion, ...prev]);
+      
+      // Only update questionIds if we got a real ID from API
+      if (newQuestionId) {
+        setQuestionIds((prev) => [newQuestionId!, ...prev]);
+      }
+      
+      setNewQuestionInput("");
+      setShowAddQuestion(false);
+      setToastType("add");
+      setShowToast(true);
     } catch (error) {
       console.error("Failed to add question:", error);
     } finally {
@@ -173,11 +199,23 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
 
     if (!trimmedQuestion) return;
 
+    const questionId = questionIds[index];
+    
+    // Only require questionId if not in local mode
+    if (!isLocalMode && !questionId) {
+      console.error("Question ID not found for index:", index);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await editQuestion(index, trimmedQuestion);
+      // Only call API if survey has ProjectId (not in local mode)
+      if (!isLocalMode && questionId) {
+        await editQuestion(questionId, trimmedQuestion);
+      }
 
+      // Update local state regardless of mode
       setQuestions((prev) => {
         const updated = [...prev];
         updated[index] = trimmedQuestion;
@@ -232,9 +270,16 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   return (
     <div className="border border-gray-200 bg-gray-100 rounded-[20px]">
       <div className="flex flex-col w-[35vw] h-full mx-auto">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 p-6">
-          <MousePointerClick className="h-4 w-4" />
-          <h1>Click on a question to edit it</h1>
+        <div className="flex flex-col gap-2 p-6">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <MousePointerClick className="h-4 w-4" />
+            <h1>Click on a question to edit it</h1>
+          </div>
+          {isLocalMode && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 italic">
+              Questions will be saved when you click 'Finish & save'
+            </div>
+          )}
         </div>
         {survey && (
           <div className="overflow-x-hidden">
@@ -354,7 +399,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
               <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-[20px] bg-white dark:bg-gray-800/50">
                 <div className="flex items-start gap-3">
                   <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 mt-2">
-                    {String(questions.length + 1).padStart(2, "0")}
+                    01
                   </span>
                   <div className="flex-1 flex flex-col gap-2">
                     <input

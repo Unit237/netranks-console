@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import Markdown from "../../../app/shared/ui/Markdown";
 import type { AiAnswerSnippet } from "../@types";
 
@@ -70,7 +71,7 @@ export default function SampleAiAnswerSnippet({
             Actual AI answers for aiAnswer
           </h2>
           <div className="h-[300px] flex items-center justify-center">
-            <div className="animate-pulse text-gray-500">Loading...</div>
+            <LoadingSpinner message="Loading" />
           </div>
         </div>
       </div>
@@ -123,7 +124,7 @@ export default function SampleAiAnswerSnippet({
                 <div className="h-full flex items-center justify-center">
                   <button
                     className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded"
-                    onClick={() => navigate("/signup")}
+                    onClick={() => navigate("/signin")}
                   >
                     Sign Up
                   </button>

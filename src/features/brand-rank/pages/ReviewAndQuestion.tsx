@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoadingProgressBar from "../../../app/components/LoadingProgressBar";
 import { useTabs } from "../../console/context/TabContext";
 import type { BrandData } from "../@types";
 import { useBrand } from "../context/BrandContext";
@@ -20,8 +21,10 @@ const ReviewAndQuestion: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [questionCount, setQuestionCount] = useState<number>(0);
   const [currentQuestions, setCurrentQuestions] = useState<string[]>([]);
+  const [progress, setProgress] = useState<number>(0);
   const lastFetchedBrandIdRef = useRef<string | null>(null);
   const lastFetchedQueryRef = useRef<string | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleUpdateTabName = useCallback(
     (tabName: string) => {
@@ -62,12 +65,42 @@ const ReviewAndQuestion: React.FC = () => {
     }
 
     (async () => {
+      let processingInterval: NodeJS.Timeout | null = null;
+      
       try {
         setLoading(true);
         setError(null);
+        setProgress(0);
 
+        // Track request lifecycle stages
+        const updateProgress = (stage: number) => {
+          setProgress(stage);
+        };
+
+        // Stage 1: Initializing request (0-10%)
+        updateProgress(5);
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Stage 2: Sending request (10-20%)
+        updateProgress(15);
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Stage 3: Server processing - progress based on elapsed time
+        const startTime = Date.now();
+        const estimatedDuration = 5000; // Estimate 5 seconds for API call
+        let processingProgress = 20;
+        
+        processingInterval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          // Calculate progress based on elapsed time, capping at 95% until response
+          const timeBasedProgress = Math.min(20 + (elapsed / estimatedDuration) * 75, 95);
+          // Use the higher of time-based or current progress to prevent going backwards
+          processingProgress = Math.max(processingProgress, timeBasedProgress);
+          updateProgress(Math.min(processingProgress, 95));
+        }, 100);
+
+        // Stage 4: Receiving response - this is the actual API call
         let surveyData: BrandData;
-
         if (selectedBrand) {
           surveyData = await fetchBrandQuestions(selectedBrand);
           lastFetchedBrandIdRef.current = selectedBrand.brandId;
@@ -79,6 +112,13 @@ const ReviewAndQuestion: React.FC = () => {
         } else {
           throw new Error("No data available to fetch survey");
         }
+
+        // Clear processing interval
+        if (processingInterval) {
+          clearInterval(processingInterval);
+          processingInterval = null;
+        }
+        updateProgress(95);
 
         setSurvey(surveyData);
         setQuestionCount(surveyData.Questions?.length || 0);
@@ -110,7 +150,19 @@ const ReviewAndQuestion: React.FC = () => {
         setError(errorMessage);
         setSurvey(null);
       } finally {
-        setLoading(false);
+        // Clear any intervals
+        if (processingInterval) {
+          clearInterval(processingInterval);
+        }
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+        // Complete progress to 100% before hiding
+        setProgress(100);
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
       }
     })();
   }, [
@@ -121,15 +173,17 @@ const ReviewAndQuestion: React.FC = () => {
     handleUpdateTabName,
   ]);
 
+  // Cleanup progress interval on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Loading questions...</p>
-        </div>
-      </div>
-    );
+    return <LoadingProgressBar progress={progress} message="Loading questions..." />;
   }
 
   if (error) {

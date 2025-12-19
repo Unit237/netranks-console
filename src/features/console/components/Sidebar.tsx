@@ -1,5 +1,5 @@
-import { ChevronDown, Plus, Search, Settings, Users } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Plus, Search, Settings, Users, X } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
 import { truncate } from "../../../app/utils/utils";
@@ -12,6 +12,8 @@ const Sidebar = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Check if we're on the dashboard route
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
@@ -81,6 +83,30 @@ const Sidebar = () => {
     }
     navigate("/console/new-project");
   };
+
+  const handleSearchClick = () => {
+    setShowSearchInput(!showSearchInput);
+    if (showSearchInput) {
+      setSearchQuery(""); // Clear search when closing
+    }
+  };
+
+  // Filter projects based on search query
+  const filteredProjects = useMemo(() => {
+    if (!user?.Projects) return [];
+    
+    if (!searchQuery.trim()) {
+      return [...user.Projects].sort((a, b) => b.Id - a.Id);
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return [...user.Projects]
+      .filter((project) => {
+        const projectName = (project.Name || "Untitled Project").toLowerCase();
+        return projectName.includes(query);
+      })
+      .sort((a, b) => b.Id - a.Id);
+  }, [user?.Projects, searchQuery]);
 
   // const handleSupportClick = () => {
   //   if (!isAuthenticated()) {
@@ -167,7 +193,10 @@ const Sidebar = () => {
             </span>
             <div className="flex items-center gap-1">
               <button
-                className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+                onClick={handleSearchClick}
+                className={`p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors ${
+                  showSearchInput ? "bg-gray-200 dark:bg-gray-700" : ""
+                }`}
                 title="Search projects"
               >
                 <Search className="w-4 h-4 text-gray-600 dark:text-gray-300" />
@@ -175,12 +204,38 @@ const Sidebar = () => {
               <button
                 onClick={handleNewProject}
                 className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-                title="Add new tab"
+                title="Add new project"
               >
                 <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
           </div>
+          
+          {/* Search Input */}
+          {showSearchInput && (
+            <div className="mb-3 px-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search projects..."
+                  className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-1 max-h-64 overflow-y-auto">
             {/* Show "Full demo project" when on dashboard route */}
             {isDashboardRoute && (
@@ -213,10 +268,8 @@ const Sidebar = () => {
                 <span className="flex-1 truncate">Full Demo Project</span>
               </button>
             )}
-            {user?.Projects && user.Projects.length > 0
-              ? [...user.Projects]
-                  .sort((a, b) => b.Id - a.Id) // Sort by ID descending (highest ID first)
-                  .map((project) => {
+            {filteredProjects && filteredProjects.length > 0
+              ? filteredProjects.map((project) => {
                     const projectPath = `/console/project/${project.Id}`;
                     const isActiveProject = location.pathname === projectPath;
                     return (
@@ -247,7 +300,7 @@ const Sidebar = () => {
                   })
               : !isDashboardRoute && (
                   <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-                    No projects
+                    {searchQuery.trim() ? "No projects found" : "No projects"}
                   </p>
                 )}
           </div>

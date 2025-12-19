@@ -98,7 +98,10 @@ axios.interceptors.request.use(async (config) => {
     url.includes("UpdateMember") ||
     url.includes("GetMembers") ||
     url.includes("GetPendingInvitations") ||
-    url.includes("DeleteInvitation");
+    url.includes("DeleteInvitation") ||
+    url.includes("AddQuestion") ||
+    url.includes("EditQuestion") ||
+    url.includes("DeleteQuestion");
 
   // Select the appropriate token
   let authToken: string | null;
