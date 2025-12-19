@@ -36,7 +36,12 @@ const Sidebar = () => {
     }
   };
 
-  const sidebarLinks = [
+  const sidebarLinks: Array<{
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    path: string;
+    headerName: string;
+  }> = [
     // {
     //   icon: LayoutDashboard,
     //   label: "Dashboard",

@@ -72,6 +72,9 @@ export const fetchBrandQuestions = async (
 ): Promise<BrandData> => {
   try {
     // Ensure we have a token before making the request
+    // Note: Using dynamic imports here to avoid circular dependencies.
+    // These modules are also statically imported elsewhere, which prevents code-splitting
+    // but is necessary to avoid circular dependency issues.
     const tokenModule = await import("../../../app/utils/token");
     const onboardingModule = await import("../../../app/services/onboardingService");
     
@@ -102,13 +105,15 @@ export const fetchBrandQuestions = async (
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       // Check if Questions is array of objects with Id and Text, or just strings
-      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
-        // Questions are objects with Id and Text
-        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
-        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
+      const firstQuestion = response.Questions[0];
+      if (response.Questions.length > 0 && typeof firstQuestion === 'object' && firstQuestion !== null && 'Id' in firstQuestion && 'Text' in firstQuestion) {
+        // Questions are objects with Id and Text - use type assertion since we've verified the structure
+        const questionsAsObjects = response.Questions as unknown as Array<{ Id: number; Text: string }>;
+        questionsArray = questionsAsObjects.map((q) => q.Text);
+        questionIds = questionsAsObjects.map((q) => q.Id);
       } else {
         // Questions are just strings
-        questionsArray = response.Questions;
+        questionsArray = response.Questions as string[];
       }
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
@@ -190,7 +195,9 @@ export const fetchQueryQuestions = async (
 ): Promise<BrandData> => {
   try {
     // Ensure we have a token before making the request
-    // Import token and createOnboardingSession dynamically to avoid circular dependencies
+    // Note: Using dynamic imports here to avoid circular dependencies.
+    // These modules are also statically imported elsewhere, which prevents code-splitting
+    // but is necessary to avoid circular dependency issues.
     const tokenModule = await import("../../../app/utils/token");
     const onboardingModule = await import("../../../app/services/onboardingService");
     
@@ -213,13 +220,15 @@ export const fetchQueryQuestions = async (
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       // Check if Questions is array of objects with Id and Text, or just strings
-      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
-        // Questions are objects with Id and Text
-        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
-        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
+      const firstQuestion = response.Questions[0];
+      if (response.Questions.length > 0 && typeof firstQuestion === 'object' && firstQuestion !== null && 'Id' in firstQuestion && 'Text' in firstQuestion) {
+        // Questions are objects with Id and Text - use type assertion since we've verified the structure
+        const questionsAsObjects = response.Questions as unknown as Array<{ Id: number; Text: string }>;
+        questionsArray = questionsAsObjects.map((q) => q.Text);
+        questionIds = questionsAsObjects.map((q) => q.Id);
       } else {
         // Questions are just strings
-        questionsArray = response.Questions;
+        questionsArray = response.Questions as string[];
       }
     } else if (typeof response === 'object' && response !== null) {
       // Try to extract questions from object
