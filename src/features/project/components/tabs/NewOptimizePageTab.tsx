@@ -1,4 +1,4 @@
-import { AlertCircle, ChevronDown, Menu, TrendingUp } from "lucide-react";
+import { AlertCircle, ChevronDown, Loader2, Menu, TrendingUp } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
@@ -570,9 +570,16 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
                 !brandInput.trim() ||
                 (!manualUrl.trim() && (!brandUrl || brandUrl.trim() === ""))
               }
-              className="mt-3 w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+              className="mt-3 w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         )}
