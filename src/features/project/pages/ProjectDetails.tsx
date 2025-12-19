@@ -1,10 +1,11 @@
-import { Check, Pause, Plus, Settings2 } from "lucide-react";
+import { Check, Edit2, Pause, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
+import { renameProject } from "../services/projectService";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
 import { formatLastRun } from "../utils/formatLastRun";
 import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
@@ -14,8 +15,11 @@ const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
 
   const [project, setProject] = useState<Project | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const { user, useActiveProjectId } = useUser();
+  const { user, useActiveProjectId, setUser } = useUser();
 
   const navigate = useNavigate();
 
@@ -61,6 +65,62 @@ const ProjectDetails = () => {
       fetchProject();
     }
   }, [user, fetchProject]);
+
+  useEffect(() => {
+    if (project) {
+      setEditedName(project.Name || "");
+    }
+  }, [project]);
+
+  const handleStartEdit = () => {
+    setIsEditingName(true);
+    setEditedName(project?.Name || "");
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditedName(project?.Name || "");
+  };
+
+  const handleSaveName = async () => {
+    if (!project || !projectId || !user) return;
+    
+    const trimmedName = editedName.trim();
+    if (!trimmedName) {
+      alert("Project name cannot be empty");
+      return;
+    }
+
+    if (trimmedName === project.Name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await renameProject(Number(projectId), trimmedName);
+      
+      // Update local project state immediately
+      const updatedProject = { ...project, Name: trimmedName };
+      setProject(updatedProject);
+      
+      // Update user context without full refresh
+      if (user.Projects) {
+        const updatedProjects = user.Projects.map((p) =>
+          p.Id === project.Id ? { ...p, Name: trimmedName } : p
+        );
+        setUser({ ...user, Projects: updatedProjects });
+      }
+      
+      setIsEditingName(false);
+    } catch (error) {
+      console.error("Failed to rename project:", error);
+      alert("Failed to rename project. Please try again.");
+      setEditedName(project.Name || "");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!project) {
     return <>Loading...</>;
@@ -124,12 +184,54 @@ const ProjectDetails = () => {
         <div className="px-6 pt-4">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {project?.Name || "Untitled project"}
-              </span>
-              <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <Settings2 size={18} />
-              </button>
+              {isEditingName ? (
+                <>
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSaveName();
+                      } else if (e.key === "Escape") {
+                        handleCancelEdit();
+                      }
+                    }}
+                    className="text-xl font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-orange-500 focus:outline-none focus:border-orange-600 px-1"
+                    autoFocus
+                    disabled={isSaving}
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    disabled={isSaving}
+                    className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50"
+                    title="Save"
+                  >
+                    <Check size={18} />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                    title="Cancel"
+                  >
+                    <X size={18} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {project?.Name || "Untitled project"}
+                  </span>
+                  <button
+                    onClick={handleStartEdit}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    title="Rename project"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

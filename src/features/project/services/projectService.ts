@@ -94,3 +94,31 @@ export const getSurveyById = async (surveyId: number) => {
     );
   }
 };
+
+export const renameProject = async (projectId: number, newName: string) => {
+  try {
+    const result = await apiClient.patch<boolean>(
+      `api/RenameProject/${projectId}`,
+      newName
+    );
+
+    return result;
+  } catch (error) {
+    // Re-throw canceled requests
+    if (error instanceof ApiError && error.isCanceled) {
+      throw error;
+    }
+
+    // Re-throw ApiError as-is
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    console.error("Failed to rename project:", error);
+    throw new ApiError(
+      error instanceof Error
+        ? error.message
+        : "Unable to rename project. Please try again."
+    );
+  }
+};
