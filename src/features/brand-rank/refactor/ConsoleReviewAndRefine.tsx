@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
+import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import { createSurvey } from "../../project/services/projectService";
 import type { BrandData } from "../@types";
 
@@ -35,7 +36,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [surveyName, setSurveyName] = useState(
-    survey.DescriptionOfTheBrandShort || "New Pricing Plan – Sentiment Analysis"
+    sanitizeSurveyName(survey.DescriptionOfTheBrandShort) || "New Pricing Plan – Sentiment Analysis"
   );
   const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
@@ -314,7 +315,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
             <input
               type="text"
               value={surveyName}
-              onChange={(e) => setSurveyName(e.target.value)}
+              onChange={(e) => setSurveyName(sanitizeSurveyName(e.target.value))}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
