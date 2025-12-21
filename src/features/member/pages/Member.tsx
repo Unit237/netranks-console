@@ -300,19 +300,19 @@ const MembersPage = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-card-border">
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
+                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider border-r">
                         Name
                       </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
+                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider border-r">
                         Email
                       </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
+                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider border-r">
                         Project
                       </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
+                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider border-r">
                         Added
                       </th>
-                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider">
+                      <th className="text-left py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider border-r">
                         Role
                       </th>
                       <th className="text-right py-4 px-6 text-xs font-medium text-muted-text uppercase tracking-wider"></th>
@@ -324,15 +324,15 @@ const MembersPage = () => {
                         key={member.Email}
                         className="hover:bg-hover-bg transition-colors"
                       >
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-6 border-r">
                           <div className="text-base font-semibold text-gray-900">
                             {member.FullName}
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm text-muted-text">
+                        <td className="py-4 px-6 text-sm text-muted-text border-r">
                           {member.Email}
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-6 border-r">
                           <div className="flex flex-wrap gap-2">
                             {member.Projects && member.Projects.length > 0 ? (
                               member.Projects.map((project, idx) => (
@@ -350,7 +350,7 @@ const MembersPage = () => {
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-6 text-sm text-muted-text">
+                        <td className="py-4 px-6 text-sm text-muted-text border-r">
                           {member.CreatedAt ? (
                             <span
                               title={formatFullDate(member.CreatedAt)}
@@ -362,10 +362,10 @@ const MembersPage = () => {
                             "—"
                           )}
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-6 border-r">
                           <RoleBadge member={member} />
                         </td>
-                        <td className="py-4 px-6 text-right">
+                        <td className="py-4 px-4 text-right border-r">
                           {member.Projects &&
                             member.Projects.length > 0 &&
                             member.Projects.some(
