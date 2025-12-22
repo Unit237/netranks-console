@@ -97,7 +97,7 @@ const Header = () => {
                 <div
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id, tab.path)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap relative group ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap relative group cursor-pointer ${
                     isActive
                       ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm border-t-2 border-blue-500"
                       : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
