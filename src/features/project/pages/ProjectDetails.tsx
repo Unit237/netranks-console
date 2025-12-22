@@ -1,9 +1,10 @@
 import { Check, Edit2, Pause, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
+import { useParams } from "../../console/context/TabRouteParamsContext";
 import { useTabs } from "../../console/context/TabContext";
 import { getPlanByPeriod } from "../hooks/utils";
 import { renameProject } from "../services/projectService";
@@ -32,7 +33,7 @@ const ProjectDetails = () => {
       path: `/console/new-survey/${projectId}`,
       headerName: "New Survey",
     });
-    navigate(`/console/new-survey/${projectId}`);
+    // Note: No navigation needed - tab switching is instant
   };
 
   const fetchProject = useCallback(async () => {
@@ -85,7 +86,7 @@ const ProjectDetails = () => {
 
   const handleSaveName = async () => {
     if (!project || !projectId || !user) return;
-    
+
     const trimmedName = editedName.trim();
     if (!trimmedName) {
       alert("Project name cannot be empty");
@@ -100,11 +101,11 @@ const ProjectDetails = () => {
     setIsSaving(true);
     try {
       await renameProject(Number(projectId), trimmedName);
-      
+
       // Update local project state immediately
       const updatedProject = { ...project, Name: trimmedName };
       setProject(updatedProject);
-      
+
       // Update user context without full refresh
       if (user.Projects) {
         const updatedProjects = user.Projects.map((p) =>
@@ -112,7 +113,7 @@ const ProjectDetails = () => {
         );
         setUser({ ...user, Projects: updatedProjects });
       }
-      
+
       setIsEditingName(false);
     } catch (error) {
       console.error("Failed to rename project:", error);
@@ -175,7 +176,7 @@ const ProjectDetails = () => {
       path: `/console/survey/${survey.Id}`,
       headerName: cleanedName,
     });
-    navigate(`/console/survey/${survey.Id}`);
+    // Note: No navigation needed - tab switching is instant
   };
 
   return (

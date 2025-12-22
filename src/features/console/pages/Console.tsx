@@ -1,62 +1,65 @@
 import { Plus } from "lucide-react";
-import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import ErrorBoundary from "../../../app/components/ErrorBoundary";
 import { useUser } from "../../auth/context/UserContext";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
+import { TabRouteParamsProvider } from "../context/TabRouteParamsContext";
 import { useTabs } from "../context/TabContext";
+import { getComponentForPath } from "../utils/tabComponentRegistry";
 
 const Console = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { tabs, activeTabId, setActiveTab, addTab } = useTabs();
+  const { tabs, activeTabId, addTab } = useTabs();
   const { useActiveProjectId } = useUser();
 
   const handleCreateNewSurvey = () => {
     // Get the active project ID (or first project if none active)
     const projectId = useActiveProjectId();
-    
+
     if (!projectId) {
       // No projects available, can't create survey
       console.warn("No projects available to create survey");
       return;
     }
-    
+
     addTab({
       name: "New Survey",
       path: `/console/new-survey/${projectId}`,
       headerName: "New Survey",
     });
-    navigate(`/console/new-survey/${projectId}`);
+    // Note: We don't navigate anymore - tab switching is instant
   };
 
-  // Sync active tab with current route
-  useEffect(() => {
-    // Only sync if there are tabs
-    if (tabs.length === 0) {
-      // Clear active tab if no tabs exist
-      if (activeTabId !== null) {
-        setActiveTab(null);
+  // Render all tabs but only show the active one
+  const renderedTabs = useMemo(() => {
+    return tabs.map((tab) => {
+      const componentData = getComponentForPath(tab.path);
+      if (!componentData) {
+        return null;
       }
-      return;
-    }
 
-    const currentTab = tabs.find((tab) => tab.path === location.pathname);
-    if (currentTab) {
-      // Only update if the active tab is different to prevent infinite loops
-      if (currentTab.id !== activeTabId) {
-        setActiveTab(currentTab.id);
-      }
-    } else {
-      // Clear active tab if current route doesn't match any tab
-      if (activeTabId !== null) {
-        setActiveTab(null);
-      }
-    }
-    // Don't auto-create tabs here - let components handle tab creation explicitly
-    // This prevents infinite loops when navigating programmatically
-  }, [location.pathname, tabs, activeTabId, setActiveTab]);
+      const { component: Component, params = {} } = componentData;
+      const isActive = tab.id === activeTabId;
+
+      return (
+        <div
+          key={tab.id}
+          style={{
+            display: isActive ? "block" : "none",
+            height: "100%",
+            width: "100%",
+          }}
+          className="tab-content"
+        >
+          <TabRouteParamsProvider params={params}>
+            <ErrorBoundary>
+              <Component path={tab.path} params={params} />
+            </ErrorBoundary>
+          </TabRouteParamsProvider>
+        </div>
+      );
+    });
+  }, [tabs, activeTabId]);
 
   return (
     <ErrorBoundary>
@@ -64,7 +67,7 @@ const Console = () => {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          {tabs.length === 0 && location.pathname.endsWith("/console") ? (
+          {tabs.length === 0 ? (
             <main className="flex-1 overflow-auto flex items-center justify-center">
               <button
                 onClick={handleCreateNewSurvey}
@@ -75,10 +78,8 @@ const Console = () => {
               </button>
             </main>
           ) : (
-            <main className="flex-1 overflow-auto bg-white dark:bg-gray-900">
-              <ErrorBoundary>
-                <Outlet />
-              </ErrorBoundary>
+            <main className="flex-1 overflow-auto bg-white dark:bg-gray-900 relative">
+              {renderedTabs}
             </main>
           )}
         </div>

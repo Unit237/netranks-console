@@ -1,0 +1,257 @@
+{
+  "errors": [],
+  "failed_predictions": 0,
+  "results": [
+    {
+      "detail_level": "standard",
+      "enhanced": {
+        "action_priorities": [
+          {
+            "action": "CRITICAL: Improve Title-Question Match",
+            "current_state": "Title similarity: 0% (Missing: cross, building, devices)",
+            "effort": "Low",
+            "estimated_improvement": "2-5 rank positions",
+            "feature_rank": 23,
+            "feature_score": 3.63,
+            "impact": "CRITICAL",
+            "priority": 1,
+            "quick_tip": "Rewrite title to directly answer: 'What is the best cross‑platform engine for building 2D and 3...' Include: cross, building",
+            "target_state": "Target: 70-85% similarity. Add: cross, building, devices"
+          },
+          {
+            "action": "LOW: Add Action-Oriented Language",
+            "current_state": "No clear action verbs (passive tone)",
+            "effort": "Low",
+            "estimated_improvement": "0.2-0.5 rank positions",
+            "feature_rank": "88+",
+            "feature_score": "1.45",
+            "impact": "LOW",
+            "priority": 5,
+            "quick_tip": "Start sentences with: 'helps', 'provides', 'offers'",
+            "target_state": "Add action verbs: helps, provides, offers"
+          }
+        ],
+        "content_quality": {
+          "components": {
+            "engagement": {
+              "action": "Add: action verbs (helps, provides, enables), quality indicators (advanced, comprehensive), specific metrics (300% faster, 10,000+ users)",
+              "assessment": "Needs Work",
+              "current": "0/3 factors present (action: False, quality: False, numbers: False)",
+              "feature_rank": "N/A",
+              "feature_score": "N/A",
+              "score": 0.0,
+              "target": "All 3 factors for maximum engagement"
+            },
+            "keyword_density": {
+              "action": "Good keyword balance",
+              "assessment": "Optimal",
+              "current": "69% content words (22/32)",
+              "feature_rank": "24+",
+              "feature_score": 3.63,
+              "score": 100,
+              "target": "50-70% for optimal keyword richness"
+            },
+            "readability": {
+              "action": "Replace complex words with simpler alternatives (e.g., 'use' instead of 'utilize')",
+              "assessment": "Too Complex",
+              "current": "Grade 23.9 (16.0 words/sentence, 44% complex words)",
+              "feature_rank": 185,
+              "feature_score": 1.09,
+              "score": 0.9999999999999716,
+              "target": "Grade 8-12 (clear professional writing)"
+            },
+            "sentiment": {
+              "action": "Tone is balanced - informative yet engaging",
+              "assessment": "Slightly Subjective",
+              "current": "Subjectivity 0.50 (0 opinion words, 0 factual indicators)",
+              "feature_rank": 54,
+              "feature_score": 1.82,
+              "score": 80,
+              "target": "0.2-0.4 (neutral-positive tone)"
+            },
+            "structure": {
+              "action": "Add more detail. Expand to 4 sentences for completeness.",
+              "assessment": "Good",
+              "current": "2 sentences (avg 16.0 words/sentence)",
+              "feature_rank": 130,
+              "feature_score": 1.09,
+              "score": 80,
+              "target": "4 sentences for this length"
+            }
+          },
+          "grade": "D (Needs Improvement)",
+          "overall_score": 61.199999999999996,
+          "quick_wins": [],
+          "strengths": [
+            {
+              "assessment": "Optimal",
+              "component": "Keyword Density",
+              "score": 100
+            }
+          ],
+          "top_priorities": [
+            {
+              "action": "Replace complex words with simpler alternatives (e.g., 'use' instead of 'utilize')",
+              "component": "Readability",
+              "current": "Grade 23.9 (16.0 words/sentence, 44% complex words)",
+              "feature_rank": 185,
+              "score": 0.9999999999999716,
+              "target": "Grade 8-12 (clear professional writing)"
+            },
+            {
+              "action": "Add: action verbs (helps, provides, enables), quality indicators (advanced, comprehensive), specific metrics (300% faster, 10,000+ users)",
+              "component": "Engagement",
+              "current": "0/3 factors present (action: False, quality: False, numbers: False)",
+              "feature_rank": "N/A",
+              "score": 0.0,
+              "target": "All 3 factors for maximum engagement"
+            }
+          ]
+        },
+        "performance_benchmark": {},
+        "statistical_insights": {}
+      },
+      "formatted_suggestions": "\n======================================================================\nRANKING IMPROVEMENT SUGGESTIONS - STANDARD\n======================================================================\n\n📊 RANK PREDICTION:\n   Predicted Rank: 1.02\n\n📈 CONTENT QUALITY: 61/100 (D (Needs Improvement))\n\n🎯 PRIORITY ACTIONS (by Feature Importance):\n\n   #1: CRITICAL: Improve Title-Question Match [Feature Rank: 23, Score: 3.63]\n      Current: Title similarity: 0% (Missing: cross, building, devices)\n      Target: Target: 70-85% similarity. Add: cross, building, devices\n      Impact: CRITICAL | Effort: Low | Expected: 2-5 rank positions\n      💡 Quick Tip: Rewrite title to directly answer: 'What is the best cross‑platform engine for building 2D and 3...' Include: cross, building\n\n   #5: LOW: Add Action-Oriented Language [Feature Rank: 88+, Score: 1.45]\n      Current: No clear action verbs (passive tone)\n      Target: Add action verbs: helps, provides, offers\n      Impact: LOW | Effort: Low | Expected: 0.2-0.5 rank positions\n      💡 Quick Tip: Start sentences with: 'helps', 'provides', 'offers'\n\n📝 DESCRIPTION SUGGESTIONS:\n\n   READABILITY:\n      • Simplify language. Currently Grade 23.9 - reduce to Grade 8-12 range. [Rank 185]\n        Impact: Expected improvement: 0.5-1.0 rank positions | Effort: Medium\n\n   CONTENT:\n      🟠 📖 Readability Improvements [Rank 185]\n        2 sentence(s) need simplification for 8-12th grade reading level\n        💡 Action: Simplify identified sentences to improve readability\n        📈 Impact: Expected improvement: 0.5-1.0 rank positions\n      🔴 💎 Value Proposition\n        Opening lacks clear value statement - critical for first impression\n        💡 Action: Start with a clear statement of what you offer and main benefit\n        📈 Impact: Expected improvement: 0.5-1.5 rank positions\n\n   STRUCTURE:\n      🔴 🏗️ Recommended Structure Pattern\n        Optimal structure for 3-sentence descriptions: [What] + [Features] + [Benefit]\n        💡 Action: Reorganize description following the proven pattern used by top performers\n        📈 Impact: Expected improvement: 0.3-0.8 rank positions\n\n   MARKDOWN:\n      • 📊 Consider adding tables to structure data (highly correlated with better ranking)\n      • 📑 Add more header sections (H2, H3) to improve structure\n      • 🔗 Include more links for better navigation and credibility\n      • 📝 Use bullet lists to organize information\n\n   EXAMPLES:\n      🟢 📋 Fill-in-the-Blank Templates\n        Proven templates based on top-performing descriptions (3 templates)\n        💡 Action: Template 1: \"[Product] is a/an [category] that [main benefit]. Features include [feature 1], [feature 2], and [feature 3]. Trusted by...\"\n        📈 Impact: Copy, fill in your details, and use immediately\n        Templates (3):\n          1. [Product] is a/an [category] that [main benefit]. Features include [feature 1], [feature 2], and [feature 3]. Trusted by...\n          2. [Main benefit] with [Product]. Our [category] provides [feature 1], [feature 2], and [feature 3] for [target audience]....\n\n🏷️  BRAND/NAME SUGGESTIONS:\n   • ⚠️  Question not in training data\n\n🌐 DOMAIN/URL SUGGESTIONS:\n   • ⚠️  Question not in training data\n\n======================================================================",
+      "item_index": 0,
+      "prediction": {
+        "current_rank": null,
+        "improvement": null,
+        "predicted_rank": 1.020640392879434,
+        "uncertainty": 0.021219244481168752
+      },
+      "success": true,
+      "suggestions": {
+        "description": {
+          "content": [
+            {
+              "action": "Simplify identified sentences to improve readability",
+              "complex_sentences": [
+                {
+                  "original": "OpenAI **Source:** https://openai.com?utm_source=netranks **Description:** We believe our research will eventually lead to artificial general intelligence, a system that can solve human-level problems.",
+                  "reason": "Too many complex words",
+                  "sentence_num": 1,
+                  "simplified": "[Suggestion: Replace complex words like '**Source:**', 'https://openai.com?utm_source=netranks', '**Description:**' with simpler alternatives. Target 8th-grade reading level.]"
+                },
+                {
+                  "original": "Building safe and beneficial AGI is our mission.",
+                  "reason": "Too many complex words",
+                  "sentence_num": 2,
+                  "simplified": "[Suggestion: Replace complex words like 'Building', 'beneficial', 'mission.' with simpler alternatives. Target 8th-grade reading level.]"
+                }
+              ],
+              "current_state": "2 sentence(s) need simplification for 8-12th grade reading level",
+              "effort": "Medium",
+              "feature_rank": 185,
+              "feature_score": 1.09,
+              "impact": "Expected improvement: 0.5-1.0 rank positions",
+              "priority": "MEDIUM",
+              "quick_tip": "Simplify identified sentences to improve readability",
+              "suggestion": "📖 Readability Improvements",
+              "summary": "2 sentence(s) need simplification for 8-12th grade reading level",
+              "target_state": "Simplify identified sentences to improve readability",
+              "title": "📖 Readability Improvements",
+              "type": "readability"
+            },
+            {
+              "action": "Start with a clear statement of what you offer and main benefit",
+              "current_opening": "OpenAI **Source:** https://openai.com?utm_source=netranks **Description:** We believe our research will eventually lead to artificial general intelligence, a system that can solve human-level problems.",
+              "current_state": "Opening lacks clear value statement - critical for first impression",
+              "effort": "Low",
+              "feature_rank": "N/A",
+              "feature_score": "Critical",
+              "impact": "Expected improvement: 0.5-1.5 rank positions",
+              "priority": "HIGH",
+              "quick_tip": "Start with a clear statement of what you offer and main benefit",
+              "suggested_opening": "[Suggestion: Start with '[Your Product] is a comprehensive cross solution. Features include [key feature 1], [key feature 2], and [key feature 3]. Trusted by [number]+ [audience type].']",
+              "suggestion": "💎 Value Proposition",
+              "summary": "Opening lacks clear value statement - critical for first impression",
+              "target_state": "Start with a clear statement of what you offer and main benefit",
+              "title": "💎 Value Proposition",
+              "type": "value_proposition"
+            }
+          ],
+          "examples": [
+            {
+              "action": "Template 1: \"[Product] is a/an [category] that [main benefit]. Features include [feature 1], [feature 2], and [feature 3]. Trusted by...\"",
+              "current_state": "Proven templates based on top-performing descriptions (3 templates)",
+              "impact": "Copy, fill in your details, and use immediately",
+              "quick_tip": "Template 1: \"[Product] is a/an [category] that [main benefit]. Features include [feature 1], [featur",
+              "suggestion": "📋 Fill-in-the-Blank Templates",
+              "summary": "Proven templates based on top-performing descriptions (3 templates)",
+              "target_state": "Template 1: \"[Product] is a/an [category] that [main benefit]. Features include [feature 1], [feature 2], and [feature 3]. Trusted by...\"",
+              "templates": [
+                {
+                  "filled_example": "NetRanks is an AI-powered platform that increases organic traffic. Features include keyword tracking, analysis, reporting. Trusted by 10,000+ businesses.",
+                  "name": "Template 1: Feature-Benefit Format",
+                  "template": "[Product] is a/an [category] that [main benefit]. Features include [feature 1], [feature 2], and [feature 3]. Trusted by [social proof].",
+                  "usage": "Best for B2B SaaS, platforms, and professional tools"
+                },
+                {
+                  "filled_example": "Increase your rankings by 300% with NetRanks. Our SEO platform provides automated analysis, tracking, reporting for marketing teams.",
+                  "name": "Template 2: Benefit-First Format",
+                  "template": "[Main benefit] with [Product]. Our [category] provides [feature 1], [feature 2], and [feature 3] for [target audience].",
+                  "usage": "Best for results-focused audiences and competitive markets"
+                },
+                {
+                  "filled_example": "Professional SEO solution for content optimization. NetRanks offers advanced analytics and insights, helping 50,000+ marketers achieve top rankings.",
+                  "name": "Template 3: Authority Format",
+                  "template": "Professional [category] for [use case]. [Product] offers [feature 1] and [feature 2], helping [number]+ [audience] achieve [outcome].",
+                  "usage": "Best for established brands and professional services"
+                }
+              ],
+              "title": "📋 Fill-in-the-Blank Templates",
+              "type": "templates"
+            }
+          ],
+          "keywords": [],
+          "length": [],
+          "readability": [
+            {
+              "category": "readability",
+              "current_state": "Reading level: Grade 23.9 (too complex)",
+              "effort": "Medium",
+              "feature_rank": 185,
+              "feature_score": 1.09,
+              "gap": "11.9 grade levels above optimal",
+              "impact": "Expected improvement: 0.5-1.0 rank positions",
+              "priority": "MEDIUM",
+              "quick_tip": "Break long sentences (16 words/sentence → target 12-18) or replace complex words.",
+              "suggestion": "Simplify language. Currently Grade 23.9 - reduce to Grade 8-12 range.",
+              "target_state": "Target: Grade 8-12 (clear professional writing)"
+            }
+          ],
+          "structure": [
+            {
+              "action": "Reorganize description following the proven pattern used by top performers",
+              "current_pattern": "Sentence 1: Opening statement | Sentence 2: Additional info",
+              "current_state": "Optimal structure for 3-sentence descriptions: [What] + [Features] + [Benefit]",
+              "effort": "Low",
+              "impact": "Expected improvement: 0.3-0.8 rank positions",
+              "priority": "HIGH",
+              "quick_tip": "Reorganize description following the proven pattern used by top performers",
+              "recommended_pattern": {
+                "example": {
+                  "sentence_1": "State what it is and main category (e.g., \"AI-powered SEO platform...\")",
+                  "sentence_2": "List 2-3 key features (e.g., \"Features include keyword tracking, analysis...\")",
+                  "sentence_3": "State main benefit with metric (e.g., \"Increases traffic by 300%\")"
+                },
+                "num_sentences": 3,
+                "pattern": "[What] + [Features] + [Benefit]"
+              },
+              "suggestion": "🏗️ Recommended Structure Pattern",
+              "summary": "Optimal structure for 3-sentence descriptions: [What] + [Features] + [Benefit]",
+              "target_state": "Reorganize description following the proven pattern used by top performers",
+              "template": "Sentence 1: What it is | Sentence 2: Key features | Sentence 3: Main benefit",
+              "title": "🏗️ Recommended Structure Pattern",
+              "type": "sentence_pattern"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "success": true,
+  "successful_predictions": 1,
+  "timestamp": "2025-12-22T10:19:10.178698",
+  "total_items": 1
+}

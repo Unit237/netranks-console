@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { BrandOption } from "../../brand-rank/@types";
 import type { Project } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import AutocompleteBrand from "../../brand-rank/components/AutocompleteBrand";
 import { useBrand } from "../../brand-rank/context/BrandContext";
+import { useParams } from "../context/TabRouteParamsContext";
 import { useTabs } from "../context/TabContext";
 
 const NewSurvey = () => {
@@ -21,8 +22,7 @@ const NewSurvey = () => {
       path: `/console/review-questions/${projectId}`,
       headerName: "Review Questions",
     });
-
-    navigate(`/console/review-questions/${projectId}`);
+    // Note: No navigation needed - tab switching is instant
   };
 
   const fetchProject = useCallback(async () => {

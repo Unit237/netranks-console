@@ -1,16 +1,16 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
 import { useUser } from "../../auth/context/UserContext";
+import { useTabs } from "../context/TabContext";
 import { createProject } from "../../brand-rank/services/brandService";
 
 const NewProject = () => {
   const [projectName, setProjectName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
   const toast = useToast();
   const { refreshUser } = useUser();
+  const { addTab } = useTabs();
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -30,7 +30,13 @@ const NewProject = () => {
         message: "Project created successfully",
       });
       refreshUser();
-      navigate(`/console/project/${projectId}`);
+      // Add tab for the new project
+      addTab({
+        name: projectName,
+        path: `/console/project/${projectId}`,
+        headerName: projectName,
+      });
+      // Note: No navigation needed - tab switching is instant
     } catch (error) {
       console.error("Failed to create project:", error);
       toast.error({

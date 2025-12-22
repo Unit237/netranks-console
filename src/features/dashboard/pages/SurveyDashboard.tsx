@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toPercentage } from "../../../app/utils/utils";
+import { useParams } from "../../console/context/TabRouteParamsContext";
 import type { SurveyStatsResponse } from "../@types";
 import SampleAiAnswerSnippet from "../components/SampleAiAnswerSnippet";
 import OptimizePageTab from "../components/surveyDashTabs/OptimizePageTab";

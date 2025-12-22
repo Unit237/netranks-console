@@ -10,7 +10,8 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import LoadingButton from "../../../app/components/LoadingButton";
 import { useUser } from "../../auth/context/UserContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useParams } from "../../console/context/TabRouteParamsContext";
 import { useTabs } from "../../console/context/TabContext";
 import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import { createSurvey } from "../../project/services/projectService";
@@ -172,8 +173,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       path: `/console/new-survey/${projectId}`,
       headerName: "New Survey",
     });
-    navigateToTab(`/console/new-survey/${projectId}`);
-    navigate(`/console/new-survey/${projectId}`);
+    // Note: No navigation needed - tab switching is instant
   };
 
   const handleSubmit = async () => {
@@ -203,7 +203,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
     try {
       setIsCreatingSurvey(true);
-      
+
       // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
       const questionsToSend =
         questions.length > 0 ? questions : survey.Questions;
@@ -270,8 +270,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                           path: surveyPath,
                           headerName: surveyName,
                         });
-                        // Navigate to the survey page
-                        navigate(surveyPath);
+                        // Note: No navigation needed - tab switching is instant
                       }}
                       className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
                     >
@@ -287,9 +286,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
             }
           );
 
-          // Navigate to project page and ensure tab is set
+          // Switch to project tab
           navigateToTab(`/console/project/${projectId}`);
-          navigate(`/console/project/${projectId}`);
+          // Note: No navigation needed - tab switching is instant
         }
     } catch (error) {
       console.error("Failed to create survey:", error);

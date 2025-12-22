@@ -45,32 +45,32 @@ const Header = () => {
       path: `/console/new-survey/${projectId}`,
       headerName: "New Survey",
     });
-    navigate(`/console/new-survey/${projectId}`);
+    // Note: No navigation needed - tab switching is instant
   };
 
-  const handleTabClick = (tabId: string, path: string) => {
+  const handleTabClick = (tabId: string) => {
     if (!isAuthenticated()) {
       navigate("/signin");
       return;
     }
+    // Just switch tabs - no navigation needed for instant switching
     setActiveTab(tabId);
-    navigate(path);
   };
 
   const handleCloseTab = (e: React.MouseEvent, tabId: string) => {
     e.stopPropagation();
 
-    // If closing active tab, navigate to the new active tab or dashboard
+    // If closing active tab, switch to another tab
     if (activeTabId === tabId) {
       const remainingTabs = tabs.filter((t) => t.id !== tabId);
       if (remainingTabs.length > 0) {
         const currentIndex = tabs.findIndex((t) => t.id === tabId);
         const newActiveIndex = Math.min(currentIndex, remainingTabs.length - 1);
         const newActiveTab = remainingTabs[newActiveIndex];
-        navigate(newActiveTab.path);
-      } else {
-        navigate("/console");
+        // Just switch tabs - no navigation needed
+        setActiveTab(newActiveTab.id);
       }
+      // If no tabs remain, activeTabId will be set to null by closeTab
     }
 
     closeTab(tabId);
@@ -96,7 +96,7 @@ const Header = () => {
               return (
                 <div
                   key={tab.id}
-                  onClick={() => handleTabClick(tab.id, tab.path)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-t-lg text-sm font-medium transition-all whitespace-nowrap relative group ${
                     isActive
                       ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm border-t-2 border-blue-500"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "../../console/context/TabRouteParamsContext";
 import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails as SurveyDetailsType } from "../@types";
 import type { CreateSearchPayload } from "../@types/optimization";
@@ -63,7 +63,7 @@ const SurveyDetails = () => {
   const handleBrandSelect = async (searchPayload: CreateSearchPayload) => {
     // Store the selected payload so it persists across remounts
     setSelectedPayload(searchPayload);
-    
+
     if (!surveyId || !surveyDetails) return;
 
     try {
@@ -149,8 +149,8 @@ const SurveyDetails = () => {
         </div>
 
         <div className={activeTab === "Questions" ? "" : "hidden"}>
-          <QuestionPageTab 
-            questions={surveyDetails.Questions || []} 
+          <QuestionPageTab
+            questions={surveyDetails.Questions || []}
             surveyId={surveyDetails.Id}
             onQuestionsUpdate={fetchProjectDetails}
           />
