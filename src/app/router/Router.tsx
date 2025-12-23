@@ -40,7 +40,6 @@ const Router = () => {
       <Route path="signin" element={<Signin />} />
       <Route path="complete-profile" element={<CompleteProfile />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
-      {/* Support both /login/:id/:p1/:p2 and /:id/:p1/:p2 patterns for magic links */}
       <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route path=":magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route

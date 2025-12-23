@@ -2,12 +2,18 @@ import { Check, Eye, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IoShareSocial } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
+import type { Survey } from "../../auth/@types";
+import { useUser } from "../../auth/context/UserContext";
+import { getUser } from "../../auth/services/authService";
+import { useTabs } from "../../console/context/TabContext";
+import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import { getSurveyRun } from "../services/brandService";
 
 export default function BrandRankSurveyRun() {
   const navigate = useNavigate();
   const params = useParams();
   const { surveyRunId, p1, p2 } = params;
+  const { user } = useUser();
   const timeoutId = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
@@ -16,7 +22,7 @@ export default function BrandRankSurveyRun() {
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
   const [copied, setCopied] = useState(false);
-  // const { addTab } = useTabs();
+  const { addTab } = useTabs();
 
   useEffect(() => {
     tick();
@@ -42,15 +48,47 @@ export default function BrandRankSurveyRun() {
       if (p.Finished < total) {
         timeoutId.current = setTimeout(tick, 1500);
       } else {
-        // const path = `/console/dashboard/${surveyRunId}/${p1}/${p2}`;
-        // Survey is complete, navigate to console dashboard
-        navigate("/console");
+        // Survey is complete, navigate to first survey in user's project
+        const navigateToFirstSurvey = async () => {
+          try {
+            // Get user data (use existing user or fetch fresh)
+            const currentUser = user || (await getUser());
 
-        // addTab({
-        //   name: "My First Report",
-        //   path: path,
-        //   headerName: "My First Report",
-        // });
+            // Find the first survey from user's projects
+            let survey: Survey | null = null;
+
+            if (currentUser?.Projects && currentUser.Projects.length > 0) {
+              // Look through all projects to find the first survey
+              for (const project of currentUser.Projects) {
+                if (project.Surveys && project.Surveys.length > 0) {
+                  survey = project.Surveys[0];
+                  break;
+                }
+              }
+            }
+
+            // Navigate to first survey if found, otherwise navigate to console
+            if (survey) {
+              const cleanedName =
+                sanitizeSurveyName(survey.Name) || "First Survey";
+              addTab({
+                name: cleanedName,
+                path: `/console/survey/${survey.Id}`,
+                headerName: cleanedName,
+              });
+              navigate(`/console/survey/${survey.Id}`);
+            } else {
+              // Fallback: navigate to console home if no surveys found
+              navigate("/console");
+            }
+          } catch (error) {
+            console.error("Failed to get user data for navigation:", error);
+            // Fallback: navigate to console home on error
+            navigate("/console");
+          }
+        };
+
+        navigateToFirstSurvey();
       }
     } catch (error) {
       console.error("Failed to get survey run progress", error);
