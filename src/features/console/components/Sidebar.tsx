@@ -1,71 +1,53 @@
 import { ChevronDown, Plus, Search, Settings, Users, X } from "lucide-react";
-import { useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import token from "../../../app/utils/token";
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { truncate } from "../../../app/utils/utils";
 import { useUser } from "../../auth/context/UserContext";
 
 const Sidebar = () => {
   const { user } = useUser();
-  // const { tabs } = useTabs(); // tabs not currently used
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { projectId, surveyId } = useParams<{
+    projectId?: string;
+    surveyId?: string;
+  }>();
 
   // Check if we're on the dashboard route
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
 
-  // Check if current location has a tab (is available in tabs)
-  // const currentTab = tabs.find((tab) => tab.path === location.pathname);
+  function getProjectIdBySurveyId(surveyId?: string): number | null {
+    if (!surveyId) return null;
 
-  // Check if user is authenticated
-  const isAuthenticated = () => {
-    const authToken = token.get();
-    return !!authToken && !!user;
-  };
+    for (const project of user?.Projects || []) {
+      const found = project.Surveys.some(
+        (survey) => survey.Id === Number(surveyId)
+      );
 
-  // Handle click to redirect to signin if not authenticated
-  const handleClick = (e: React.MouseEvent) => {
-    if (!isAuthenticated()) {
-      e.preventDefault();
-      e.stopPropagation();
-      navigate("/signin");
+      if (found) {
+        return project.Id;
+      }
     }
-  };
+
+    return null;
+  }
+
+  const activeProjectId = projectId
+    ? Number(projectId)
+    : getProjectIdBySurveyId(surveyId);
 
   const sidebarLinks: Array<{
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     path: string;
     headerName: string;
-  }> = [
-    // {
-    //   icon: LayoutDashboard,
-    //   label: "Dashboard",
-    //   path: "/console",
-    //   headerName: "Q3 Overview",
-    // },
-    // {
-    //   icon: Bell,
-    //   label: "Alerts",
-    //   path: "/console/alerts",
-    //   headerName: "Alert",
-    // },
-  ];
+  }> = [];
 
   const handleSidebarLinkClick = (path: string) => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
-    // addTab({
-    //   name: label,
-    //   path: path,
-    //   headerName: headerName,
-    // });
     navigate(path);
   };
 
@@ -74,25 +56,17 @@ const Sidebar = () => {
     _projectName: string,
     _headerName: string
   ) => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
     navigate(`/console/project/${projectId}`);
   };
 
   const handleNewProject = () => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
     navigate("/console/new-project");
   };
 
   const handleSearchClick = () => {
     setShowSearchInput(!showSearchInput);
     if (showSearchInput) {
-      setSearchQuery(""); // Clear search when closing
+      setSearchQuery("");
     }
   };
 
@@ -113,25 +87,11 @@ const Sidebar = () => {
       .sort((a, b) => b.Id - a.Id);
   }, [user?.Projects, searchQuery]);
 
-  // const handleSupportClick = () => {
-  //   if (!isAuthenticated()) {
-  //     navigate("/signin");
-  //     return;
-  //   }
-  //   addTab({
-  //     name: "Support",
-  //     path: "/console/support",
-  //     headerName: "Support",
-  //   });
-  //   navigate("/console/support");
-  // };
-
   return (
     <div
-      onClick={handleClick}
       className={`bg-gray-200 dark:bg-gray-900 flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
-      } ${!isAuthenticated() ? "cursor-pointer" : ""}`}
+      }`}
     >
       {/* User Section */}
       <div className="px-4 py-2">
@@ -244,77 +204,52 @@ const Sidebar = () => {
           </>
         )}
 
-        <div className={`space-y-1 ${isCollapsed ? "max-h-96" : "max-h-64"} overflow-y-auto`}>
-          {/* Show "Full demo project" when on dashboard route */}
-          {isDashboardRoute && (
-            <button
-              onClick={() => {
-                if (!isAuthenticated()) {
-                  navigate("/signin");
-                  return;
-                }
-                handleProjectClick(
-                  9999,
-                  "Full Demo Project",
-                  "Full Demo Project"
-                );
-              }}
-              className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${
-                isCollapsed ? "justify-center" : "text-left bg-white"
-              }`}
-              title={isCollapsed ? "Full Demo Project" : undefined}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                className="w-4 h-4 bg-primary rounded-md p-[2px] text-white"
-              >
-                <path
-                  fill="currentColor"
-                  d="M12.865 2.996a1 1 0 0 0-1.73 0L8.421 7.674a1.25 1.25 0 0 1-.894.608L2.44 9.05c-.854.13-1.154 1.208-.488 1.76l3.789 3.138c.35.291.515.75.43 1.197L5.18 20.35a1 1 0 0 0 1.448 1.072l4.79-2.522a1.25 1.25 0 0 1 1.164 0l4.79 2.522a1 1 0 0 0 1.448-1.072l-.991-5.205a1.25 1.25 0 0 1 .43-1.197l3.79-3.139c.665-.55.365-1.63-.49-1.759l-5.085-.768a1.25 1.25 0 0 1-.895-.608z"
-                />
-              </svg>
-              {!isCollapsed && <span className="flex-1 truncate">Full Demo Project</span>}
-            </button>
-          )}
+        <div
+          className={`space-y-1 ${
+            isCollapsed ? "max-h-96" : "max-h-64"
+          } overflow-y-auto`}
+        >
           {filteredProjects && filteredProjects.length > 0
             ? filteredProjects.map((project) => {
-                  const projectPath = `/console/project/${project.Id}`;
-                  const isActiveProject = location.pathname === projectPath;
-                  return (
-                    <button
-                      key={project.Id}
-                      onClick={() =>
-                        handleProjectClick(
-                          project.Id,
-                          project.Name || "Untitled Project",
-                          project.Name || "Untitled Project"
-                        )
-                      }
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors ${
-                        isCollapsed ? "justify-center" : "text-left"
-                      } ${
-                        isActiveProject
-                          ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                      title={isCollapsed ? project.Name || "Untitled Project" : undefined}
-                    >
-                      <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
-                        <p>{project.Name?.at(0) || "U"}</p>
-                      </div>
+                const isActiveProject = activeProjectId === project.Id;
 
-                      {!isCollapsed && (
-                        <span className="flex-1 truncate">
-                          {project.Name || "Untitled Project"}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-            : !isCollapsed && !isDashboardRoute && (
+                return (
+                  <button
+                    key={project.Id}
+                    onClick={() =>
+                      handleProjectClick(
+                        project.Id,
+                        project.Name || "Untitled Project",
+                        project.Name || "Untitled Project"
+                      )
+                    }
+                    className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors ${
+                      isCollapsed ? "justify-center" : "text-left"
+                    } ${
+                      isActiveProject
+                        ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                    title={
+                      isCollapsed
+                        ? project.Name || "Untitled Project"
+                        : undefined
+                    }
+                  >
+                    <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
+                      <p>{project.Name?.at(0) || "U"}</p>
+                    </div>
+
+                    {!isCollapsed && (
+                      <span className="flex-1 truncate">
+                        {project.Name || "Untitled Project"}
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            : !isCollapsed &&
+              !isDashboardRoute && (
                 <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
                   {searchQuery.trim() ? "No projects found" : "No projects"}
                 </p>

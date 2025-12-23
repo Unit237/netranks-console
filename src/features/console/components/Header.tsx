@@ -1,6 +1,5 @@
 import { Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import token from "../../../app/utils/token";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
@@ -8,29 +7,9 @@ const Header = () => {
   const { tabs, activeTabId, closeTab, closeAllTabs, setActiveTab, addTab } =
     useTabs();
   const navigate = useNavigate();
-  const { user, useActiveProjectId } = useUser();
-
-  // Check if user is authenticated
-  const isAuthenticated = () => {
-    const authToken = token.get();
-    return !!authToken && !!user;
-  };
-
-  // Handle click to redirect to signin if not authenticated
-  const handleClick = (e: React.MouseEvent) => {
-    if (!isAuthenticated()) {
-      e.preventDefault();
-      e.stopPropagation();
-      navigate("/signin");
-    }
-  };
+  const { useActiveProjectId } = useUser();
 
   const handleAddTab = () => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
-
     // Get the active project ID (or first project if none active)
     const projectId = useActiveProjectId();
 
@@ -49,10 +28,6 @@ const Header = () => {
   };
 
   const handleTabClick = (tabId: string, path: string) => {
-    if (!isAuthenticated()) {
-      navigate("/signin");
-      return;
-    }
     setActiveTab(tabId);
     navigate(path);
   };
@@ -83,10 +58,7 @@ const Header = () => {
 
   return (
     <div
-      onClick={handleClick}
-      className={`bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto border-b border-gray-300 dark:border-gray-700 ${
-        !isAuthenticated() ? "cursor-pointer" : ""
-      }`}
+      className={`bg-gray-200 dark:bg-gray-900 flex items-center gap-2 pr-4 pt-2 overflow-x-auto border-b border-gray-300 dark:border-gray-700`}
     >
       {tabs.length > 0 && (
         <>
