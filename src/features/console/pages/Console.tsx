@@ -4,6 +4,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ErrorBoundary from "../../../app/components/ErrorBoundary";
 import { useUser } from "../../auth/context/UserContext";
 import Header from "../components/Header";
+import MobileBanner from "../components/MobileBanner";
 import Sidebar from "../components/Sidebar";
 import { useTabs } from "../context/TabContext";
 
@@ -16,13 +17,13 @@ const Console = () => {
   const handleCreateNewSurvey = () => {
     // Get the active project ID (or first project if none active)
     const projectId = useActiveProjectId();
-    
+
     if (!projectId) {
       // No projects available, can't create survey
       console.warn("No projects available to create survey");
       return;
     }
-    
+
     addTab({
       name: "New Survey",
       path: `/console/new-survey/${projectId}`,
@@ -64,6 +65,7 @@ const Console = () => {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <Header />
+          <MobileBanner />
           {tabs.length === 0 && location.pathname.endsWith("/console") ? (
             <main className="flex-1 overflow-auto flex items-center justify-center">
               <button

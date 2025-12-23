@@ -1,11 +1,12 @@
 import { useState } from "react";
+import Prediction from "../../prediction/pages/Prdiction";
 import ProjectDetails from "../../project/pages/ProjectDetails";
 import BillingTab from "../../settings/components/BillingTab";
 
 const Project = () => {
-  const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Billing">(
-    "ProjectDetails"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "ProjectDetails" | "Billing" | "Prediction"
+  >("ProjectDetails");
 
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
@@ -33,12 +34,24 @@ const Project = () => {
             >
               Billing
             </button>
+            <button
+              onClick={() => setActiveTab("Prediction")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "Prediction"
+                  ? "text-gray-900 dark:text-gray-100"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              Prediction
+            </button>
           </div>
         </div>
 
         {activeTab === "ProjectDetails" && <ProjectDetails />}
 
         {activeTab === "Billing" && <BillingTab />}
+
+        {activeTab === "Prediction" && <Prediction />}
       </div>
     </div>
   );
