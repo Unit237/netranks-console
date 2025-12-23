@@ -2,6 +2,7 @@ import { Check, Edit2, Pause, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
+import { canCreateSurveys } from "../../../app/utils/userRole";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
@@ -271,13 +272,15 @@ const ProjectDetails = () => {
 
         {/* Header */}
         <div className="py-4 flex items-center justify-between">
-          <button
-            onClick={handleCreateNewSurvey}
-            className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            <Plus size={16} />
-            New survey
-          </button>
+          {canCreateSurveys(user, projectId ? parseInt(projectId, 10) : null) && (
+            <button
+              onClick={handleCreateNewSurvey}
+              className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              <Plus size={16} />
+              New survey
+            </button>
+          )}
           <div className="flex items-center gap-3">
             {/* <button className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
               <List size={18} />
