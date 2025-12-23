@@ -44,7 +44,7 @@ export default function BrandRankSurveyRun() {
       } else {
         // const path = `/console/dashboard/${surveyRunId}/${p1}/${p2}`;
         // Survey is complete, navigate to console dashboard
-        navigate("/console");
+        navigate(`/console/survey/${surveyRunId}`);
 
         // addTab({
         //   name: "My First Report",

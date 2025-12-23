@@ -28,6 +28,7 @@ interface TabContextType {
   updateTabName: (tabId: string, name: string) => void;
   replaceTab: (currentTabId: string | null, newTab: Omit<Tab, "id">) => string;
   navigateToTab: (path: string, tabName?: string) => void;
+  ensureTabForPath: (path: string, metadata?: { name?: string; headerName?: string }) => string | null;
 }
 
 const TabContext = createContext<TabContextType | undefined>(undefined);
@@ -188,6 +189,41 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
+  const ensureTabForPath = useCallback(
+    (path: string, metadata?: { name?: string; headerName?: string }): string | null => {
+      let tabId: string | null = null;
+
+      setTabs((prev) => {
+        // Check if tab with same path already exists
+        const existingTab = prev.find((t) => t.path === path);
+        if (existingTab) {
+          tabId = existingTab.id;
+          setActiveTabIdState(existingTab.id);
+          return prev;
+        }
+
+        // Create new tab with provided metadata
+        if (metadata?.name && metadata?.headerName) {
+          const newTab: Tab = {
+            name: metadata.name,
+            headerName: metadata.headerName,
+            path,
+            id: `tab-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          };
+          tabId = newTab.id;
+          setActiveTabIdState(newTab.id);
+          return [...prev, newTab];
+        }
+
+        // No metadata provided, don't create tab
+        return prev;
+      });
+
+      return tabId;
+    },
+    []
+  );
+
   return (
     <TabContext.Provider
       value={{
@@ -200,6 +236,7 @@ export const TabProvider: React.FC<{ children: ReactNode }> = ({
         updateTabName,
         replaceTab,
         navigateToTab,
+        ensureTabForPath,
       }}
     >
       {children}

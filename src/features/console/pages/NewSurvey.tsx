@@ -17,12 +17,14 @@ const NewSurvey = () => {
   const [project, setProject] = useState<Project | null>(null);
 
   const moveToTab = () => {
+    const newPath = `/console/review-questions/${projectId}`;
     replaceTab(activeTabId, {
       name: "Review Questions",
-      path: `/console/review-questions/${projectId}`,
+      path: newPath,
       headerName: "Review Questions",
     });
-    // Note: No navigation needed - tab switching is instant
+    // Update URL without causing reload - use replace to stay in same tab
+    navigate(newPath, { replace: true });
   };
 
   const fetchProject = useCallback(async () => {

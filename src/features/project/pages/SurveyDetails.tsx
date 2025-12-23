@@ -13,7 +13,7 @@ import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 const SurveyDetails = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
-  const { addTab } = useTabs();
+  const { updateTabName, tabs } = useTabs();
 
   const [activeTab, setActiveTab] = useState<
     "Overview" | "Questions" | "Optimize"
@@ -44,13 +44,6 @@ const SurveyDetails = () => {
         setError("Survey not found.");
       } else {
         setSurveyDetails(res);
-        // Add tab to header when survey details are successfully fetched
-        const cleanedName = sanitizeSurveyName(res.Name) || "Survey Details";
-        addTab({
-          name: cleanedName,
-          path: `/console/survey/${surveyId}`,
-          headerName: cleanedName,
-        });
       }
     } catch (err) {
       console.error("Error fetching survey details:", err);
@@ -94,6 +87,18 @@ const SurveyDetails = () => {
   useEffect(() => {
     fetchProjectDetails();
   }, [surveyId]);
+
+  // Update tab name when survey details are loaded
+  useEffect(() => {
+    if (surveyDetails && surveyId) {
+      const currentPath = `/console/survey/${surveyId}`;
+      const currentTab = tabs.find((t) => t.path === currentPath);
+      if (currentTab) {
+        const cleanedName = sanitizeSurveyName(surveyDetails.Name) || "Survey Details";
+        updateTabName(currentTab.id, cleanedName);
+      }
+    }
+  }, [surveyDetails, surveyId, tabs, updateTabName]);
 
   // Loading state
   if (loading) {

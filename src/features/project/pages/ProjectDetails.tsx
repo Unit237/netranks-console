@@ -25,7 +25,7 @@ const ProjectDetails = () => {
 
   const navigate = useNavigate();
 
-  const { addTab } = useTabs();
+  const { addTab, updateTabName, tabs } = useTabs();
 
   const handleCreateNewSurvey = () => {
     addTab({
@@ -71,8 +71,15 @@ const ProjectDetails = () => {
   useEffect(() => {
     if (project) {
       setEditedName(project.Name || "");
+
+      // Update tab name when project loads
+      const currentPath = `/console/project/${projectId}`;
+      const currentTab = tabs.find((t) => t.path === currentPath);
+      if (currentTab && project.Name) {
+        updateTabName(currentTab.id, project.Name);
+      }
     }
-  }, [project]);
+  }, [project, projectId, tabs, updateTabName]);
 
   const handleStartEdit = () => {
     setIsEditingName(true);

@@ -168,12 +168,14 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   };
 
   const handleGoBack = () => {
+    const newPath = `/console/new-survey/${projectId}`;
     addTab({
       name: "New Survey",
-      path: `/console/new-survey/${projectId}`,
+      path: newPath,
       headerName: "New Survey",
     });
-    // Note: No navigation needed - tab switching is instant
+    // Update URL to match the new tab
+    navigate(newPath, { replace: true });
   };
 
   const handleSubmit = async () => {
@@ -270,7 +272,8 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
                           path: surveyPath,
                           headerName: surveyName,
                         });
-                        // Note: No navigation needed - tab switching is instant
+                        // Update URL to match the new tab
+                        navigate(surveyPath, { replace: true });
                       }}
                       className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
                     >
@@ -286,9 +289,10 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
             }
           );
 
-          // Switch to project tab
+          // Switch to project tab if it exists
           navigateToTab(`/console/project/${projectId}`);
-          // Note: No navigation needed - tab switching is instant
+          // Update URL to match the project tab
+          navigate(`/console/project/${projectId}`, { replace: true });
         }
     } catch (error) {
       console.error("Failed to create survey:", error);
