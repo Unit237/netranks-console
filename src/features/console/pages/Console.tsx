@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ErrorBoundary from "../../../app/components/ErrorBoundary";
+import { canCreateSurveys } from "../../../app/utils/userRole";
 import { useUser } from "../../auth/context/UserContext";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
@@ -11,7 +12,7 @@ const Console = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { tabs, activeTabId, setActiveTab, addTab } = useTabs();
-  const { useActiveProjectId } = useUser();
+  const { user, useActiveProjectId } = useUser();
 
   const handleCreateNewSurvey = () => {
     // Get the active project ID (or first project if none active)
@@ -66,13 +67,21 @@ const Console = () => {
           <Header />
           {tabs.length === 0 && location.pathname.endsWith("/console") ? (
             <main className="flex-1 overflow-auto flex items-center justify-center">
-              <button
-                onClick={handleCreateNewSurvey}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Create new survey</span>
-              </button>
+              {canCreateSurveys(user, useActiveProjectId()) ? (
+                <button
+                  onClick={handleCreateNewSurvey}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Create new survey</span>
+                </button>
+              ) : (
+                <div className="text-center">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    You don't have permission to create surveys.
+                  </p>
+                </div>
+              )}
             </main>
           ) : (
             <main className="flex-1 overflow-auto bg-white dark:bg-gray-900">

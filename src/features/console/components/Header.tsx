@@ -1,6 +1,7 @@
 import { Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import token from "../../../app/utils/token";
+import { canCreateSurveys } from "../../../app/utils/userRole";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
@@ -139,14 +140,16 @@ const Header = () => {
                 </div>
               );
             })}
-            <button
-              onClick={handleAddTab}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0 ml-1"
-              aria-label="Add new survey"
-              title="Add new survey"
-            >
-              <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
+            {canCreateSurveys(user, useActiveProjectId()) && (
+              <button
+                onClick={handleAddTab}
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors flex-shrink-0 ml-1"
+                aria-label="Add new survey"
+                title="Add new survey"
+              >
+                <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+            )}
           </div>
 
           {tabs.length > 1 && (

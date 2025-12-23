@@ -1,6 +1,7 @@
 import { Plus, Trash2, Pencil, Eye, User, Mail, Send, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
+import { getUserRoleForProject, canManageMembers } from "../../../app/utils/userRole";
 import { useUser } from "../../auth/context/UserContext";
 import { apiClient } from "../../../app/lib/api";
 
@@ -173,7 +174,16 @@ const Members = () => {
         }
       });
       
-      const consolidatedMembers = Array.from(membersByEmail.values());
+      let consolidatedMembers = Array.from(membersByEmail.values());
+      
+      // If user is a Viewer, only show themselves
+      const userRole = getUserRoleForProject(user, activeProjectId);
+      if (userRole === "Viewer") {
+        // Filter to only show the current user
+        consolidatedMembers = consolidatedMembers.filter(
+          (member) => member.Email.toLowerCase() === user.EMail.toLowerCase()
+        );
+      }
       
       console.log(`Fetched ${consolidatedMembers.length} unique members across ${user.Projects.length} projects`, consolidatedMembers);
       setMembers(consolidatedMembers);
@@ -417,14 +427,16 @@ const Members = () => {
           <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
         Members
       </h1>
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-card-border rounded-lg text-sm font-medium text-gray-700 hover:bg-hover-bg transition-colors shadow-subtle w-full sm:w-auto justify-center"
-            aria-label="Invite team member"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Invite team member</span>
-          </button>
+          {canManageMembers(user, activeProjectId) && (
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-card-border rounded-lg text-sm font-medium text-gray-700 hover:bg-hover-bg transition-colors shadow-subtle w-full sm:w-auto justify-center"
+              aria-label="Invite team member"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Invite team member</span>
+            </button>
+          )}
         </div>
 
         {/* Team Members Card */}
