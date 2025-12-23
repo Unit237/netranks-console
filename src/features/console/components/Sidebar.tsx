@@ -36,7 +36,12 @@ const Sidebar = () => {
     }
   };
 
-  const sidebarLinks = [
+  const sidebarLinks: Array<{
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    path: string;
+    headerName: string;
+  }> = [
     // {
     //   icon: LayoutDashboard,
     //   label: "Dashboard",
@@ -94,7 +99,7 @@ const Sidebar = () => {
   // Filter projects based on search query
   const filteredProjects = useMemo(() => {
     if (!user?.Projects) return [];
-    
+
     if (!searchQuery.trim()) {
       return [...user.Projects].sort((a, b) => b.Id - a.Id);
     }
@@ -185,127 +190,137 @@ const Sidebar = () => {
       </div>
 
       {/* Projects Section */}
-      {!isCollapsed && (
-        <div className="flex flex-col px-2 py-4">
-          <div className="flex items-center justify-between mb-3 px-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Projects
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleSearchClick}
-                className={`p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors ${
-                  showSearchInput ? "bg-gray-200 dark:bg-gray-700" : ""
-                }`}
-                title="Search projects"
-              >
-                <Search className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-              </button>
-              <button
-                onClick={handleNewProject}
-                className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-                title="Add new project"
-              >
-                <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-              </button>
-            </div>
-          </div>
-          
-          {/* Search Input */}
-          {showSearchInput && (
-            <div className="mb-3 px-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search projects..."
-                  className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+      <div className="flex flex-col px-2 py-4">
+        {!isCollapsed && (
+          <>
+            <div className="flex items-center justify-between mb-3 px-2">
+              <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Projects
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleSearchClick}
+                  className={`p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors ${
+                    showSearchInput ? "bg-gray-200 dark:bg-gray-700" : ""
+                  }`}
+                  title="Search projects"
+                >
+                  <Search className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                </button>
+                <button
+                  onClick={handleNewProject}
+                  className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  title="Add new project"
+                >
+                  <Plus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                </button>
               </div>
             </div>
-          )}
-          
-          <div className="space-y-1 max-h-64 overflow-y-auto">
-            {/* Show "Full demo project" when on dashboard route */}
-            {isDashboardRoute && (
-              <button
-                onClick={() => {
-                  if (!isAuthenticated()) {
-                    navigate("/signin");
-                    return;
-                  }
-                  handleProjectClick(
-                    9999,
-                    "Full Demo Project",
-                    "Full Demo Project"
-                  );
-                }}
-                className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors text-left bg-white`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  className="w-4 h-4 bg-primary rounded-md p-[2px] text-white"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M12.865 2.996a1 1 0 0 0-1.73 0L8.421 7.674a1.25 1.25 0 0 1-.894.608L2.44 9.05c-.854.13-1.154 1.208-.488 1.76l3.789 3.138c.35.291.515.75.43 1.197L5.18 20.35a1 1 0 0 0 1.448 1.072l4.79-2.522a1.25 1.25 0 0 1 1.164 0l4.79 2.522a1 1 0 0 0 1.448-1.072l-.991-5.205a1.25 1.25 0 0 1 .43-1.197l3.79-3.139c.665-.55.365-1.63-.49-1.759l-5.085-.768a1.25 1.25 0 0 1-.895-.608z"
-                  />
-                </svg>
-                <span className="flex-1 truncate">Full Demo Project</span>
-              </button>
-            )}
-            {filteredProjects && filteredProjects.length > 0
-              ? filteredProjects.map((project) => {
-                    const projectPath = `/console/project/${project.Id}`;
-                    const isActiveProject = location.pathname === projectPath;
-                    return (
-                      <button
-                        key={project.Id}
-                        onClick={() =>
-                          handleProjectClick(
-                            project.Id,
-                            project.Name || "Untitled Project",
-                            project.Name || "Untitled Project"
-                          )
-                        }
-                        className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors text-left ${
-                          isActiveProject
-                            ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
-                          <p>{project.Name?.at(0) || "U"}</p>
-                        </div>
 
+            {/* Search Input */}
+            {showSearchInput && (
+              <div className="mb-3 px-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search projects..."
+                    className="w-full pl-9 pr-8 py-1.5 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <div className={`space-y-1 ${isCollapsed ? "max-h-96" : "max-h-64"} overflow-y-auto`}>
+          {/* Show "Full demo project" when on dashboard route */}
+          {isDashboardRoute && (
+            <button
+              onClick={() => {
+                if (!isAuthenticated()) {
+                  navigate("/signin");
+                  return;
+                }
+                handleProjectClick(
+                  9999,
+                  "Full Demo Project",
+                  "Full Demo Project"
+                );
+              }}
+              className={`w-full flex items-center gap-2 px-2 py-1 rounded-md text-sm transition-colors ${
+                isCollapsed ? "justify-center" : "text-left bg-white"
+              }`}
+              title={isCollapsed ? "Full Demo Project" : undefined}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                className="w-4 h-4 bg-primary rounded-md p-[2px] text-white"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12.865 2.996a1 1 0 0 0-1.73 0L8.421 7.674a1.25 1.25 0 0 1-.894.608L2.44 9.05c-.854.13-1.154 1.208-.488 1.76l3.789 3.138c.35.291.515.75.43 1.197L5.18 20.35a1 1 0 0 0 1.448 1.072l4.79-2.522a1.25 1.25 0 0 1 1.164 0l4.79 2.522a1 1 0 0 0 1.448-1.072l-.991-5.205a1.25 1.25 0 0 1 .43-1.197l3.79-3.139c.665-.55.365-1.63-.49-1.759l-5.085-.768a1.25 1.25 0 0 1-.895-.608z"
+                />
+              </svg>
+              {!isCollapsed && <span className="flex-1 truncate">Full Demo Project</span>}
+            </button>
+          )}
+          {filteredProjects && filteredProjects.length > 0
+            ? filteredProjects.map((project) => {
+                  const projectPath = `/console/project/${project.Id}`;
+                  const isActiveProject = location.pathname === projectPath;
+                  return (
+                    <button
+                      key={project.Id}
+                      onClick={() =>
+                        handleProjectClick(
+                          project.Id,
+                          project.Name || "Untitled Project",
+                          project.Name || "Untitled Project"
+                        )
+                      }
+                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm transition-colors ${
+                        isCollapsed ? "justify-center" : "text-left"
+                      } ${
+                        isActiveProject
+                          ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                      title={isCollapsed ? project.Name || "Untitled Project" : undefined}
+                    >
+                      <div className="h-4 w-4 flex items-center justify-center bg-gray-400 rounded-md p-[2px] text-black text-[11px]">
+                        <p>{project.Name?.at(0) || "U"}</p>
+                      </div>
+
+                      {!isCollapsed && (
                         <span className="flex-1 truncate">
                           {project.Name || "Untitled Project"}
                         </span>
-                      </button>
-                    );
-                  })
-              : !isDashboardRoute && (
-                  <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-                    {searchQuery.trim() ? "No projects found" : "No projects"}
-                  </p>
-                )}
-          </div>
+                      )}
+                    </button>
+                  );
+                })
+            : !isCollapsed && !isDashboardRoute && (
+                <p className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                  {searchQuery.trim() ? "No projects found" : "No projects"}
+                </p>
+              )}
         </div>
-      )}
+      </div>
 
       {/* Navigation Links */}
       <nav className="flex-1 flex flex-col py-4 px-2 space-y-1">

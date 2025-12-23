@@ -66,73 +66,129 @@ export const searchBrands = async (
   }
 };
 
-export const fetchBrandQuestions = async (
-  brand: BrandOption,
+export const fetchQuestions = async (
+  input: BrandOption | string,
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
   try {
     // Ensure we have a token before making the request
+    // Note: Using dynamic imports here to avoid circular dependencies.
+    // These modules are also statically imported elsewhere, which prevents code-splitting
+    // but is necessary to avoid circular dependency issues.
     const tokenModule = await import("../../../app/utils/token");
-    const onboardingModule = await import("../../../app/services/onboardingService");
-    
+    const onboardingModule = await import(
+      "../../../app/services/onboardingService"
+    );
+
+    const isBrand = typeof input !== "string";
+    const logPrefix = isBrand
+      ? "[fetchQuestions - Brand]"
+      : "[fetchQuestions - Query]";
+
     if (!tokenModule.default.getVisitor()) {
-      console.log("[fetchBrandQuestions] No token found, creating visitor session...");
+      console.log(`${logPrefix} No token found, creating visitor session...`);
       await onboardingModule.createOnboardingSession();
     }
 
-    // Backend-main expects BrandDto with lowercase properties: brandId, domain, name, icon
-    const brandDto = {
-      brandId: brand.brandId,
-      domain: brand.domain,
-      name: brand.name,
-      icon: brand.icon,
-    };
+    // Determine endpoint and payload based on input type
+    const endpoint = isBrand
+      ? `api/CreateSurveyFromBrand`
+      : `api/CreateSurveyFromQuery`;
+    const payload = isBrand
+      ? {
+          brandId: (input as BrandOption).brandId,
+          domain: (input as BrandOption).domain,
+          name: (input as BrandOption).name,
+          icon: (input as BrandOption).icon,
+        }
+      : (input as string);
 
     const response = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromBrand`,
-      brandDto,
+      endpoint,
+      payload,
       options
     );
 
     // Handle different response formats - API might return array directly or wrapped
     let questionsArray: string[] = [];
     let questionIds: number[] = [];
-    
+
     if (Array.isArray(response)) {
       questionsArray = response;
     } else if (response && Array.isArray(response.Questions)) {
       // Check if Questions is array of objects with Id and Text, or just strings
-      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
-        // Questions are objects with Id and Text
-        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
-        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
+      const firstQuestion = response.Questions[0];
+      if (
+        response.Questions.length > 0 &&
+        typeof firstQuestion === "object" &&
+        firstQuestion !== null &&
+        "Id" in firstQuestion &&
+        "Text" in firstQuestion
+      ) {
+        // Questions are objects with Id and Text - use type assertion since we've verified the structure
+        const questionsAsObjects = response.Questions as unknown as Array<{
+          Id: number;
+          Text: string;
+        }>;
+        questionsArray = questionsAsObjects.map((q) => q.Text);
+        questionIds = questionsAsObjects.map((q) => q.Id);
       } else {
         // Questions are just strings
-        questionsArray = response.Questions;
+        questionsArray = response.Questions as string[];
       }
-    } else if (typeof response === 'object' && response !== null) {
+    } else if (typeof response === "object" && response !== null) {
       // Try to extract questions from object
-      console.warn("Unexpected response format from CreateSurveyFromBrand:", response);
+      console.warn(`Unexpected response format from ${endpoint}:`, response);
       questionsArray = [];
     }
-    
+
     if (questionsArray.length === 0) throw new Error("No questions found");
 
     // Transform response to match BrandData format, using API response values when available
-    const brandData: BrandData = {
-      Id: response?.Id ?? 0,
-      PasswordOne: response?.PasswordOne ?? null,
-      PasswordTwo: response?.PasswordTwo ?? null,
-      BrandName: response?.BrandName ?? brand.name ?? null,
-      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? brand.description ?? null,
-      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? brand.description ?? null,
-      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
-      QueryType: response?.QueryType ?? "brand",
-      Questions: questionsArray,
-      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? brand.domain ?? null,
-    };
+    const brandData: BrandData = isBrand
+      ? {
+          Id: response?.Id ?? 0,
+          PasswordOne: response?.PasswordOne ?? null,
+          PasswordTwo: response?.PasswordTwo ?? null,
+          BrandName: response?.BrandName ?? (input as BrandOption).name ?? null,
+          DescriptionOfTheBrand:
+            response?.DescriptionOfTheBrand ??
+            (input as BrandOption).description ??
+            null,
+          DescriptionOfTheBrandShort:
+            response?.DescriptionOfTheBrandShort ??
+            (input as BrandOption).description ??
+            null,
+          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+          DescriptionOfTheQuestionShort:
+            response?.DescriptionOfTheQuestionShort ?? null,
+          QueryType: response?.QueryType ?? "brand",
+          Questions: questionsArray,
+          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+          WebsiteOfTheBrand:
+            response?.WebsiteOfTheBrand ??
+            (input as BrandOption).domain ??
+            null,
+        }
+      : {
+          Id: response?.Id ?? 0,
+          PasswordOne: response?.PasswordOne ?? null,
+          PasswordTwo: response?.PasswordTwo ?? null,
+          BrandName: response?.BrandName ?? null,
+          DescriptionOfTheBrand:
+            response?.DescriptionOfTheBrand ??
+            `Survey about: ${input as string}`,
+          DescriptionOfTheBrandShort:
+            response?.DescriptionOfTheBrandShort ??
+            (input as string).substring(0, 100),
+          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+          DescriptionOfTheQuestionShort:
+            response?.DescriptionOfTheQuestionShort ?? null,
+          QueryType: response?.QueryType ?? "query",
+          Questions: questionsArray,
+          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+          WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
+        };
 
     return brandData;
   } catch (error) {
@@ -143,29 +199,45 @@ export const fetchBrandQuestions = async (
 
     // If 401 Unauthorized, try to recreate token and retry once
     if (error instanceof ApiError && error.status === 401) {
-      console.warn("[fetchBrandQuestions] 401 Unauthorized, attempting to recreate token and retry...");
+      const isBrand = typeof input !== "string";
+      const logPrefix = isBrand
+        ? "[fetchQuestions - Brand]"
+        : "[fetchQuestions - Query]";
+      const endpoint = isBrand
+        ? `api/CreateSurveyFromBrand`
+        : `api/CreateSurveyFromQuery`;
+      const payload = isBrand
+        ? {
+            brandId: (input as BrandOption).brandId,
+            domain: (input as BrandOption).domain,
+            name: (input as BrandOption).name,
+            icon: (input as BrandOption).icon,
+          }
+        : (input as string);
+
+      console.warn(
+        `${logPrefix} 401 Unauthorized, attempting to recreate token and retry...`
+      );
       try {
-        const onboardingModule = await import("../../../app/services/onboardingService");
+        const onboardingModule = await import(
+          "../../../app/services/onboardingService"
+        );
         await onboardingModule.createOnboardingSession();
-        
+
         // Retry the request once
-        const brandDto = {
-          brandId: brand.brandId,
-          domain: brand.domain,
-          name: brand.name,
-          icon: brand.icon,
-        };
-        
         const questions = await apiClient.post<BrandData>(
-          `api/CreateSurveyFromBrand`,
-          brandDto,
+          endpoint,
+          payload,
           options
         );
-        
+
         if (!questions) throw new Error("No questions found");
         return questions;
       } catch (retryError) {
-        console.error("[fetchBrandQuestions] Retry after token recreation failed:", retryError);
+        console.error(
+          `${logPrefix} Retry after token recreation failed:`,
+          retryError
+        );
         throw error; // Throw original error
       }
     }
@@ -175,7 +247,14 @@ export const fetchBrandQuestions = async (
       throw error;
     }
 
-    console.error("Failed to fetch brand questions:", error);
+    const isBrand = typeof input !== "string";
+    const logPrefix = isBrand
+      ? "[fetchQuestions - Brand]"
+      : "[fetchQuestions - Query]";
+    console.error(
+      `Failed to fetch ${isBrand ? "brand" : "query"} questions: ${logPrefix}`,
+      error
+    );
     throw new ApiError(
       error instanceof Error
         ? error.message
@@ -184,108 +263,19 @@ export const fetchBrandQuestions = async (
   }
 };
 
+// Keep backward compatibility - these functions now call the unified function
+export const fetchBrandQuestions = async (
+  brand: BrandOption,
+  options?: ApiRequestConfig
+): Promise<BrandData> => {
+  return fetchQuestions(brand, options);
+};
+
 export const fetchQueryQuestions = async (
   query: string,
   options?: ApiRequestConfig
 ): Promise<BrandData> => {
-  try {
-    // Ensure we have a token before making the request
-    // Import token and createOnboardingSession dynamically to avoid circular dependencies
-    const tokenModule = await import("../../../app/utils/token");
-    const onboardingModule = await import("../../../app/services/onboardingService");
-    
-    if (!tokenModule.default.getVisitor()) {
-      console.log("[fetchQueryQuestions] No token found, creating visitor session...");
-      await onboardingModule.createOnboardingSession();
-    }
-
-    const response = await apiClient.post<BrandData>(
-      `api/CreateSurveyFromQuery`,
-      query,
-      options
-    );
-
-    // Handle different response formats - API might return array directly or wrapped
-    let questionsArray: string[] = [];
-    let questionIds: number[] = [];
-    
-    if (Array.isArray(response)) {
-      questionsArray = response;
-    } else if (response && Array.isArray(response.Questions)) {
-      // Check if Questions is array of objects with Id and Text, or just strings
-      if (response.Questions.length > 0 && typeof response.Questions[0] === 'object' && 'Id' in response.Questions[0] && 'Text' in response.Questions[0]) {
-        // Questions are objects with Id and Text
-        questionsArray = response.Questions.map((q: { Id: number; Text: string }) => q.Text);
-        questionIds = response.Questions.map((q: { Id: number; Text: string }) => q.Id);
-      } else {
-        // Questions are just strings
-        questionsArray = response.Questions;
-      }
-    } else if (typeof response === 'object' && response !== null) {
-      // Try to extract questions from object
-      console.warn("Unexpected response format from CreateSurveyFromQuery:", response);
-      questionsArray = [];
-    }
-    
-    if (questionsArray.length === 0) throw new Error("No questions found");
-
-    // Transform response to match BrandData format, using API response values when available
-    const brandData: BrandData = {
-      Id: response?.Id ?? 0,
-      PasswordOne: response?.PasswordOne ?? null,
-      PasswordTwo: response?.PasswordTwo ?? null,
-      BrandName: response?.BrandName ?? null,
-      DescriptionOfTheBrand: response?.DescriptionOfTheBrand ?? `Survey about: ${query}`,
-      DescriptionOfTheBrandShort: response?.DescriptionOfTheBrandShort ?? query.substring(0, 100),
-      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-      DescriptionOfTheQuestionShort: response?.DescriptionOfTheQuestionShort ?? null,
-      QueryType: response?.QueryType ?? "query",
-      Questions: questionsArray,
-      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
-    };
-
-    return brandData;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // If 401 Unauthorized, try to recreate token and retry once
-    if (error instanceof ApiError && error.status === 401) {
-      console.warn("[fetchQueryQuestions] 401 Unauthorized, attempting to recreate token and retry...");
-      try {
-        const onboardingModule = await import("../../../app/services/onboardingService");
-        await onboardingModule.createOnboardingSession();
-        
-        // Retry the request once
-        const questions = await apiClient.post<BrandData>(
-          `api/CreateSurveyFromQuery`,
-          query,
-          options
-        );
-        
-        if (!questions) throw new Error("No questions found");
-        return questions;
-      } catch (retryError) {
-        console.error("[fetchQueryQuestions] Retry after token recreation failed:", retryError);
-        throw error; // Throw original error
-      }
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to fetch query questions:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to fetch questions. Please try again."
-    );
-  }
+  return fetchQuestions(query, options);
 };
 
 export const startSurvey = async (
