@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import MagicLinkHandler from "../../features/auth/components/MagicLinkHandler";
 import ProtectedRoute from "../../features/auth/components/ProtectedRoute";
+import { RoleProtectedRoute } from "../../features/auth/components/RoleProtectedRoute";
 import CompleteProfile from "../../features/auth/pages/CompleteProfile";
 import MagicLinkSent from "../../features/auth/pages/MagicLinkSent";
 import Signin from "../../features/auth/pages/Signin";
@@ -55,10 +56,24 @@ const Router = () => {
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<Settings />} />
         <Route path="support" element={<Support />} />
-        <Route path="billing" element={<Billing />} />
+        <Route
+          path="billing"
+          element={
+            <RoleProtectedRoute requiredPermission="viewBilling">
+              <Billing />
+            </RoleProtectedRoute>
+          }
+        />
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
-        <Route path="new-survey/:projectId" element={<NewSurvey />} />
+        <Route
+          path="new-survey/:projectId"
+          element={
+            <RoleProtectedRoute requiredPermission="createSurveys">
+              <NewSurvey />
+            </RoleProtectedRoute>
+          }
+        />
         <Route path="new-project" element={<NewProject />} />
         <Route
           path="review-questions/:projectId"
