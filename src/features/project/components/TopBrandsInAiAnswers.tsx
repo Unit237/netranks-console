@@ -1,7 +1,7 @@
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import type { TopBrand } from "../@types";
-import { getInitials, toPercentage } from "../hooks/utils";
+import { toPercentage } from "../hooks/utils";
 
 interface RankedBrandListProps {
   items: TopBrand[];
@@ -30,10 +30,6 @@ export default function RankedBrandList({ items }: RankedBrandListProps) {
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 w-6">
                   {index + 1}.
                 </span>
-
-                <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {getInitials(item.Name)}
-                </div>
 
                 <span className="flex items-center text-sm font-medium text-gray-900 dark:text-gray-100">
                   <span className="h-6 p-2 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-700 dark:text-gray-300 mr-1">
