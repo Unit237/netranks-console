@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BiLeftArrowCircle } from "react-icons/bi";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../../app/lib/api";
+import { useToast } from "../../../app/providers/ToastProvider";
 import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails } from "../@types";
 import NewSurveySchedule from "../components/NewSurveySchedule";
@@ -17,6 +18,7 @@ const UpdateSurvey = () => {
   const { addTab } = useTabs();
   const [changing, setChanging] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [surveyDetails, setSurveyDetails] = useState<SurveyDetails | null>(
     null
@@ -91,6 +93,11 @@ const UpdateSurvey = () => {
           NextRunAt: NextRunAt as string | null,
         };
       });
+
+      toast.success({
+        title: "Success",
+        message: "Survey schedule changed successfully",
+      });
       setChanging(false);
     } catch (err) {
       console.error("Error changing survey schedule:", err);
@@ -107,6 +114,10 @@ const UpdateSurvey = () => {
           message = err.message;
         }
       }
+      toast.error({
+        title: "Error",
+        message: message,
+      });
       setChanging(false);
       setScheduleError(message);
     }
@@ -227,7 +238,7 @@ const UpdateSurvey = () => {
         )}
 
         {/* Survey Schedule Component */}
-        <div className="w-full flex items-center justify-center">
+        <div className="">
           <NewSurveySchedule
             newSurvey={newSurveyData}
             setNewSurvey={handleNewSurveyUpdate}

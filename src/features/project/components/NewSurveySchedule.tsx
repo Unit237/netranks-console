@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useToast } from "../../../app/providers/ToastProvider";
 import { money } from "../hooks/utils";
 import { Confirm } from "./Confirm";
 
@@ -25,24 +24,28 @@ type NewSurvey = {
 interface Props {
   newSurvey: NewSurvey;
   setNewSurvey: React.Dispatch<React.SetStateAction<NewSurvey>>;
-  onContinue?: () => void;
   onChange?: (period: number) => Promise<void>;
 }
 
 export default function NewSurveySchedule({
   newSurvey,
   setNewSurvey,
-  onContinue,
   onChange,
 }: Props) {
   const confirm = useRef<any>(null);
-  const toast = useToast();
+
   const [changing, setChanging] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleRow | null>(
+    null
+  );
 
   useEffect(() => {
     if (newSurvey.SchedulePeriodHours == null) {
       const def = rows.find((x) => x.default);
-      if (def) select(def);
+      if (def) {
+        setSelectedSchedule(def);
+        select(def);
+      }
     }
   }, [newSurvey.SchedulePeriodHours]);
 
@@ -55,7 +58,11 @@ export default function NewSurveySchedule({
     }));
   };
 
-  const handleSelect = async (x: ScheduleRow) => {
+  const handleSelect = async () => {
+    if (!selectedSchedule) return;
+
+    const x = selectedSchedule;
+
     if (!onChange) {
       select(x);
       return;
@@ -69,15 +76,7 @@ export default function NewSurveySchedule({
         try {
           await onChange(x.period);
           select(x);
-          toast.success({
-            title: "Success",
-            message: "Survey schedule changed successfully",
-          });
         } catch (error: any) {
-          toast.error({
-            title: "Error",
-            message: error.message,
-          });
         } finally {
           setChanging(false);
         }
@@ -85,22 +84,9 @@ export default function NewSurveySchedule({
     );
   };
 
-  if (changing) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-10">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-gray-700" />
-        <p className="text-lg font-medium text-gray-700">
-          Changing the survey schedule
-        </p>
-
-        <Confirm ref={confirm} />
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="w-full max-w-[600px] overflow-hidden rounded-lg border border-gray-200">
+    <div className="min-w-[40vw] flex flex-col items-center justify-center space-y-4">
+      <div className="w-full overflow-hidden rounded-lg border border-gray-200">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -115,45 +101,49 @@ export default function NewSurveySchedule({
           </thead>
 
           <tbody>
-            {rows.map((x) => {
-              const checked = newSurvey.SchedulePeriodHours === x.period;
+            {rows.map((x) => (
+              <tr
+                key={x.period}
+                onClick={() => setSelectedSchedule(x)}
+                className="cursor-pointer border-t transition hover:bg-gray-50"
+              >
+                <td className="px-4 py-3 text-center">
+                  <input
+                    type="radio"
+                    checked={selectedSchedule?.period === x.period}
+                    readOnly
+                    className="h-4 w-4 accent-gray-800"
+                  />
+                </td>
 
-              return (
-                <tr
-                  key={x.period}
-                  onClick={() => handleSelect(x)}
-                  className="cursor-pointer border-t transition hover:bg-gray-50"
-                >
-                  <td className="px-4 py-3 text-center">
-                    <input
-                      type="radio"
-                      checked={checked}
-                      readOnly
-                      className="h-4 w-4 accent-gray-800"
-                    />
-                  </td>
+                <td className="px-4 py-3 font-medium text-gray-800">
+                  {x.name}
+                </td>
 
-                  <td className="px-4 py-3 font-medium text-gray-800">
-                    {x.name}
-                  </td>
-
-                  <td className="px-4 py-3 text-right text-gray-700">
-                    {money(x.cost)}
-                  </td>
-                </tr>
-              );
-            })}
+                <td className="px-4 py-3 text-right text-gray-700">
+                  {money(x.cost)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {onContinue && (
-        <div className="mt-6">
-          <button onClick={onContinue}>Continue</button>
-        </div>
-      )}
+      <div className="w-full flex justify-end items-end gap-2">
+        <button
+          onClick={() => handleSelect()}
+          disabled={!selectedSchedule || changing}
+          className="bg-green-500 hover:bg-green-600 transition-all text-white rounded-md px-3 py-1 w-[6rem] items-center flex justify-center"
+        >
+          {changing ? (
+            <div className="h-6 w-6 animate-spin rounded-full border-4 border-white border-t-gray-600" />
+          ) : (
+            "Finish"
+          )}
+        </button>
+      </div>
 
       <Confirm ref={confirm} />
-    </>
+    </div>
   );
 }
