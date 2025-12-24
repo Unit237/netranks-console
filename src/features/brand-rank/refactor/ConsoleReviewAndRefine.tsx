@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "../../../app/components/LoadingButton";
 import { useUser } from "../../auth/context/UserContext";
-import { useNavigate, useParams } from "react-router-dom";
 import { useTabs } from "../../console/context/TabContext";
-import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import { createSurvey } from "../../project/services/projectService";
+import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import type { BrandData } from "../@types";
 
 interface ConsoleReviewAndRefineProps {
@@ -38,7 +38,8 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [surveyName, setSurveyName] = useState(
-    sanitizeSurveyName(survey.DescriptionOfTheBrandShort) || "New Pricing Plan – Sentiment Analysis"
+    sanitizeSurveyName(survey.DescriptionOfTheBrandShort) ||
+      "New Pricing Plan – Sentiment Analysis"
   );
   const [frequency, setFrequency] = useState("single-run");
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
@@ -177,25 +178,6 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
   };
 
   const handleSubmit = async () => {
-    // selectedData is prepared but not currently used in the submission
-    // const selectedData = {
-    //   surveyName,
-    //   frequency,
-    //   questions: questionCountValue,
-    //   totalIterations,
-    //   runsPerMonth,
-    //   costPerPrompt,
-    //   monthlyCost,
-    //   models: models
-    //     .filter((m) => m.enabled)
-    //     .map((m) => ({
-    //       name: m.name,
-    //       iterations: m.iterations,
-    //       costPerPrompt: m.costPerPrompt,
-    //     })),
-    // };
-
-
     if (!projectId) {
       console.error("Project ID not found");
       return;
@@ -203,7 +185,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
     try {
       setIsCreatingSurvey(true);
-      
+
       // Use the current questions from ConsoleQuestionSection (filtered to exclude deleted ones)
       const questionsToSend =
         questions.length > 0 ? questions : survey.Questions;
@@ -217,80 +199,80 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
       );
 
       if (surveyId) {
-          // Refresh user data to get the updated project with new survey
-          await refreshUser();
+        // Refresh user data to get the updated project with new survey
+        await refreshUser();
 
-          const surveyPath = `/console/survey/${surveyId}`;
+        const surveyPath = `/console/survey/${surveyId}`;
 
-          // Show toast notification with View button at the bottom
-          toast.custom(
-            (t) => (
-              <div
-                className={`${
-                  t.visible ? "animate-enter" : "animate-leave"
-                } fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full bg-black shadow-lg rounded-[20px] pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-                style={{
-                  animation: t.visible
-                    ? "slideInUp 0.3s ease-out"
-                    : "slideOutDown 0.2s ease-in",
-                }}
-              >
-                <div className="flex-1 w-0 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                          <svg
-                            className="h-5 w-5 text-green-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="ml-3 flex-1">
-                        <p className="text-sm font-medium text-white">
-                          Survey created successfully
-                        </p>
+        // Show toast notification with View button at the bottom
+        toast.custom(
+          (t) => (
+            <div
+              className={`${
+                t.visible ? "animate-enter" : "animate-leave"
+              } fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full bg-black shadow-lg rounded-[20px] pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+              style={{
+                animation: t.visible
+                  ? "slideInUp 0.3s ease-out"
+                  : "slideOutDown 0.2s ease-in",
+              }}
+            >
+              <div className="flex-1 w-0 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg
+                          className="h-5 w-5 text-green-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        toast.dismiss(t.id);
-                        // Replace current tab with survey tab seamlessly
-                        replaceTab(activeTabId, {
-                          name: surveyName,
-                          path: surveyPath,
-                          headerName: surveyName,
-                        });
-                        // Navigate to the survey page
-                        navigate(surveyPath);
-                      }}
-                      className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
-                    >
-                      View
-                    </button>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-white">
+                        Survey created successfully
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      toast.dismiss(t.id);
+                      // Replace current tab with survey tab seamlessly
+                      replaceTab(activeTabId, {
+                        name: surveyName,
+                        path: surveyPath,
+                        headerName: surveyName,
+                      });
+                      // Navigate to the survey page
+                      navigate(surveyPath);
+                    }}
+                    className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
+                  >
+                    View
+                  </button>
                 </div>
               </div>
-            ),
-            {
-              duration: 6000,
-              position: "bottom-center",
-            }
-          );
+            </div>
+          ),
+          {
+            duration: 6000,
+            position: "bottom-center",
+          }
+        );
 
-          // Navigate to project page and ensure tab is set
-          navigateToTab(`/console/project/${projectId}`);
-          navigate(`/console/project/${projectId}`);
-        }
+        // Navigate to project page and ensure tab is set
+        navigateToTab(`/console/project/${projectId}`);
+        navigate(`/console/project/${projectId}`);
+      }
     } catch (error) {
       console.error("Failed to create survey:", error);
       toast.error("Failed to create survey. Please try again.");
@@ -305,7 +287,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-[20px] z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-gray-200 dark:border-gray-700 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Creating survey...</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Creating survey...
+            </p>
           </div>
         </div>
       )}
@@ -321,7 +305,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
             <input
               type="text"
               value={surveyName}
-              onChange={(e) => setSurveyName(sanitizeSurveyName(e.target.value))}
+              onChange={(e) =>
+                setSurveyName(sanitizeSurveyName(e.target.value))
+              }
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>

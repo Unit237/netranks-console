@@ -20,7 +20,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
 }) => {
   // Check if survey has ProjectId - if not, manage questions locally only
   const isLocalMode = !survey.ProjectId;
-  
+
   const [showAddQuestion, setShowAddQuestion] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuestionInput, setEditQuestionInput] = useState("");
@@ -38,7 +38,9 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   useEffect(() => {
     if (survey && Array.isArray(survey.Questions)) {
       setQuestions(survey.Questions);
-      setQuestionIds(Array.isArray(survey.QuestionIds) ? survey.QuestionIds : []);
+      setQuestionIds(
+        Array.isArray(survey.QuestionIds) ? survey.QuestionIds : []
+      );
     } else {
       setQuestions([]);
       setQuestionIds([]);
@@ -123,7 +125,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
   const handleConfirmDelete = async (index: number) => {
     const question = questions[index];
     const questionId = questionIds[index];
-    
+
     if (!question) return;
 
     setIsSubmitting(true);
@@ -176,13 +178,13 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
 
       // Update local state regardless of mode
       // Add question at the top (beginning) of the list
-      setQuestions((prev) => [trimmedQuestion, ...prev]);
-      
+      setQuestions((prev) => [...prev, trimmedQuestion]);
+
       // Only update questionIds if we got a real ID from API
       if (newQuestionId) {
-        setQuestionIds((prev) => [newQuestionId!, ...prev]);
+        setQuestionIds((prev) => [...prev, newQuestionId!]);
       }
-      
+
       setNewQuestionInput("");
       setShowAddQuestion(false);
       setToastType("add");
@@ -200,7 +202,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
     if (!trimmedQuestion) return;
 
     const questionId = questionIds[index];
-    
+
     // Only require questionId if not in local mode
     if (!isLocalMode && !questionId) {
       console.error("Question ID not found for index:", index);
@@ -289,109 +291,110 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
               </div>
             ) : (
               <ul className="m-0 p-0 list-none overflow-x-hidden">
-                {Array.isArray(questions) && questions.map((q, i) => {
-                  if (deletedQuestions.has(i)) return null;
+                {Array.isArray(questions) &&
+                  questions.map((q, i) => {
+                    if (deletedQuestions.has(i)) return null;
 
-                  return (
-                    <li
-                      key={i}
-                      className=""
-                      onMouseEnter={() => setHoveredQuestion(i)}
-                      onMouseLeave={() => {
-                        setHoveredQuestion(null);
-                        if (confirmingDelete === i) {
-                          setConfirmingDelete(null);
-                        }
-                      }}
-                    >
-                      {editingIndex === i ? (
-                        <div className="flex items-start gap-3 w-full h-24 px-4 py-2">
-                          <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 mt-2">
-                            {String(i + 1)}.
-                          </span>
-                          <div className="flex-1 flex flex-col gap-2">
-                            <input
-                              type="text"
-                              value={editQuestionInput}
-                              onChange={(e) =>
-                                setEditQuestionInput(e.target.value)
-                              }
-                              onKeyDown={(e) => handleEditKeyPress(e, i)}
-                              className="w-full px-3 py-2 text-sm bg-transparent dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:ring-white focus:border-transparent"
-                              disabled={isSubmitting}
-                              autoFocus
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <button
-                                onClick={handleCancelEdit}
-                                disabled={isSubmitting}
-                                className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleEditQuestion(i)}
-                                disabled={
-                                  !editQuestionInput.trim() || isSubmitting
+                    return (
+                      <li
+                        key={i}
+                        className=""
+                        onMouseEnter={() => setHoveredQuestion(i)}
+                        onMouseLeave={() => {
+                          setHoveredQuestion(null);
+                          if (confirmingDelete === i) {
+                            setConfirmingDelete(null);
+                          }
+                        }}
+                      >
+                        {editingIndex === i ? (
+                          <div className="flex items-start gap-3 w-full h-24 px-4 py-2">
+                            <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 mt-2">
+                              {String(i + 1).padStart(2, "0")}.
+                            </span>
+                            <div className="flex-1 flex flex-col gap-2">
+                              <input
+                                type="text"
+                                value={editQuestionInput}
+                                onChange={(e) =>
+                                  setEditQuestionInput(e.target.value)
                                 }
-                                className="px-3 py-1.5 text-xs font-medium text-white bg-black rounded-lg hover:bg-black transition-colors duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {isSubmitting ? (
-                                  <>
-                                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Saving...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Check size={14} />
-                                    Save
-                                  </>
-                                )}
-                              </button>
+                                onKeyDown={(e) => handleEditKeyPress(e, i)}
+                                className="w-full px-3 py-2 text-sm bg-transparent dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:ring-white focus:border-transparent"
+                                disabled={isSubmitting}
+                                autoFocus
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <button
+                                  onClick={handleCancelEdit}
+                                  disabled={isSubmitting}
+                                  className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleEditQuestion(i)}
+                                  disabled={
+                                    !editQuestionInput.trim() || isSubmitting
+                                  }
+                                  className="px-3 py-1.5 text-xs font-medium text-white bg-black rounded-lg hover:bg-black transition-colors duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isSubmitting ? (
+                                    <>
+                                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check size={14} />
+                                      Save
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between w-full min-h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
-                          <div
-                            className="flex items-start gap-6 flex-1 min-w-0 cursor-pointer px-4 py-3"
-                            onClick={() => handleClickQuestion(i, q)}
-                          >
-                            <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 flex-shrink-0">
-                              {String(i + 1)}.
-                            </span>
-                            <p className="text-sm flex-1 min-w-0 leading-5 m-0 text-gray-900 dark:text-gray-100 break-words overflow-wrap-anywhere">
-                              {q}
-                            </p>
-                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between w-full min-h-14 rounded-[20px] border bg-white border-gray-200 dark:border-gray-700 relative transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <div
+                              className="flex items-start gap-6 flex-1 min-w-0 cursor-pointer px-4 py-3"
+                              onClick={() => handleClickQuestion(i, q)}
+                            >
+                              <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 flex-shrink-0">
+                                {String(i + 1).padStart(2, "0")}.
+                              </span>
+                              <p className="text-sm flex-1 min-w-0 leading-5 m-0 text-gray-900 dark:text-gray-100 break-words overflow-wrap-anywhere">
+                                {q}
+                              </p>
+                            </div>
 
-                          <div className="flex justify-end items-end pr-3">
-                            {hoveredQuestion === i &&
-                              confirmingDelete !== i && (
+                            <div className="flex justify-end items-end pr-3">
+                              {hoveredQuestion === i &&
+                                confirmingDelete !== i && (
+                                  <button
+                                    onClick={() => handleDeleteQuestion(i)}
+                                    className="p-2 rounded-full text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all duration-200"
+                                    aria-label="Delete question"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+
+                              {confirmingDelete === i && (
                                 <button
-                                  onClick={() => handleDeleteQuestion(i)}
-                                  className="p-2 rounded-full text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all duration-200"
-                                  aria-label="Delete question"
+                                  onClick={() => handleConfirmDelete(i)}
+                                  className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all duration-200 flex items-center gap-1"
                                 >
-                                  <Trash2 size={16} />
+                                  <Trash2 size={14} />
+                                  Confirm?
                                 </button>
                               )}
-
-                            {confirmingDelete === i && (
-                              <button
-                                onClick={() => handleConfirmDelete(i)}
-                                className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all duration-200 flex items-center gap-1"
-                              >
-                                <Trash2 size={14} />
-                                Confirm?
-                              </button>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
+                        )}
+                      </li>
+                    );
+                  })}
               </ul>
             )}
 
