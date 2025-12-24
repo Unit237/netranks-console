@@ -10,7 +10,6 @@ import {
   changeSurveySchedule,
   getSurveyById,
 } from "../services/projectService";
-import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 const UpdateSurvey = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
@@ -41,11 +40,11 @@ const UpdateSurvey = () => {
       } else {
         setSurveyDetails(res);
         // Add tab to header when survey details are successfully fetched
-        const cleanedName = sanitizeSurveyName(res.Name) || "Update survey";
+
         addTab({
-          name: cleanedName,
-          path: `/console/survey/${surveyId}`,
-          headerName: cleanedName,
+          name: "Update survey",
+          path: `/console/update-survey/${surveyId}`,
+          headerName: "Update survey",
         });
       }
     } catch (err) {
