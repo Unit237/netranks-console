@@ -99,6 +99,7 @@ const UpdateSurvey = () => {
         message: "Survey schedule changed successfully",
       });
       setChanging(false);
+      navigate(-1);
     } catch (err) {
       console.error("Error changing survey schedule:", err);
       let message = "Failed to change survey schedule. Please try again.";
