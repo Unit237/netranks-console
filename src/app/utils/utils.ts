@@ -11,6 +11,9 @@ export function truncate(str?: string, maxLength: number = 23): string {
   return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 }
 
+export const truncateSurveyName = (text: string, limit = 50) =>
+  text.length > limit ? `${text.slice(0, limit)}...` : text;
+
 export function cleanDescription(text: string | null | undefined): string {
   if (!text) return "";
 
