@@ -1,4 +1,4 @@
-import { Check, Edit2, Pause, Plus, X } from "lucide-react";
+import { Check, Edit, Edit2, Pause, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
@@ -332,8 +332,11 @@ const ProjectDetails = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                     Last Run
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                     Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Edit
                   </th>
                 </tr>
               </thead>
@@ -356,7 +359,6 @@ const ProjectDetails = () => {
 
                   return (
                     <tr
-                      onClick={() => surveyDetails(survey)}
                       key={survey.Id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
@@ -366,7 +368,10 @@ const ProjectDetails = () => {
                           className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
-                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                      <td
+                        onClick={() => surveyDetails(survey)}
+                        className="px-6 py-4 border-r border-gray-200 dark:border-gray-700"
+                      >
                         <div className="flex items-center gap-2">
                           {survey.HasIndicator && (
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
@@ -403,8 +408,16 @@ const ProjectDetails = () => {
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
                         {lastRunDisplay}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
                         {plan?.cost === 0 ? "Free" : `${plan?.cost}/pm`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        <Edit
+                          onClick={() =>
+                            navigate(`/console/update-survey/${survey.Id}`)
+                          }
+                          className="w-4 h-4"
+                        />
                       </td>
                     </tr>
                   );
