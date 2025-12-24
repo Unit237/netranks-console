@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import { AlertCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { BiLeftArrowCircle } from "react-icons/bi";
+import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../../app/lib/api";
 import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails } from "../@types";
@@ -15,6 +16,7 @@ const UpdateSurvey = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
   const { addTab } = useTabs();
   const [changing, setChanging] = useState(false);
+  const navigate = useNavigate();
 
   const [surveyDetails, setSurveyDetails] = useState<SurveyDetails | null>(
     null
@@ -196,6 +198,13 @@ const UpdateSurvey = () => {
 
   return (
     <div className="p-4 w-full">
+      <div className="flex items-center text-[13px] mb-2">
+        <BiLeftArrowCircle
+          onClick={() => navigate(-1)}
+          className="h-4 w-4 mr-2 text-2xl cursor-pointer"
+        />
+        Go back
+      </div>
       <div className="flex flex-col items-center justify-center gap-6">
         {/* Error Message for Schedule Change */}
         {scheduleError && (
