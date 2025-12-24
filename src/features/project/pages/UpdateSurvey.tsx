@@ -5,7 +5,6 @@ import { BiLeftArrowCircle } from "react-icons/bi";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../../app/lib/api";
 import { useToast } from "../../../app/providers/ToastProvider";
-import { useTabs } from "../../console/context/TabContext";
 import type { SurveyDetails } from "../@types";
 import NewSurveySchedule from "../components/NewSurveySchedule";
 import {
@@ -15,7 +14,6 @@ import {
 
 const UpdateSurvey = () => {
   const { surveyId } = useParams<{ surveyId: string }>();
-  const { addTab } = useTabs();
   const [changing, setChanging] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
@@ -43,13 +41,6 @@ const UpdateSurvey = () => {
         setError("Survey not found.");
       } else {
         setSurveyDetails(res);
-        // Add tab to header when survey details are successfully fetched
-
-        addTab({
-          name: "Update survey",
-          path: `/console/update-survey/${surveyId}`,
-          headerName: "Update survey",
-        });
       }
     } catch (err) {
       console.error("Error fetching survey details:", err);
