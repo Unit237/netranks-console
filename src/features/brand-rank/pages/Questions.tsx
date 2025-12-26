@@ -182,6 +182,7 @@ const Questions: React.FC = () => {
       if (isFirstTimeUser) {
         // Store survey details for redirect after signin
         const redirectData = {
+          surveyId: survey.Id,
           surveyRunId,
           p1,
           p2,
