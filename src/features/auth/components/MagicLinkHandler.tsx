@@ -31,15 +31,23 @@ const MagicLinkHandler = () => {
           const redirectData = JSON.parse(pendingRedirect);
           // Clear the stored redirect
           localStorage.removeItem("pendingSurveyRedirect");
-          // Redirect to BrandRankSurveyRun
-          navigate(`/brand-rank/survey/${redirectData.surveyRunId}/${redirectData.p1}/${redirectData.p2}`, {
-            replace: true,
-            state: {
-              query: redirectData.query,
-              selectedBrand: redirectData.selectedBrand,
-              survey: redirectData.survey,
-            },
-          });
+          
+          // Navigate directly to the newly created survey dashboard
+          if (redirectData.surveyId) {
+            navigate(`/console/survey/${redirectData.surveyId}`, {
+              replace: true,
+            });
+          } else {
+            // Fallback: if surveyId is missing, navigate to survey run page
+            navigate(`/brand-rank/survey/${redirectData.surveyRunId}/${redirectData.p1}/${redirectData.p2}`, {
+              replace: true,
+              state: {
+                query: redirectData.query,
+                selectedBrand: redirectData.selectedBrand,
+                survey: redirectData.survey,
+              },
+            });
+          }
           return;
         } catch (error) {
           console.error("Failed to parse pending redirect:", error);
