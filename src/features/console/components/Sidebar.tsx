@@ -150,7 +150,7 @@ const Sidebar = () => {
       </div>
 
       {/* Projects Section */}
-      <div className="flex flex-col px-2 py-4">
+      <div className="flex-1 flex flex-col px-2 py-4 min-h-0">
         {!isCollapsed && (
           <>
             <div className="flex items-center justify-between mb-3 px-2">
@@ -204,11 +204,7 @@ const Sidebar = () => {
           </>
         )}
 
-        <div
-          className={`space-y-1 ${
-            isCollapsed ? "max-h-96" : "max-h-64"
-          } overflow-y-auto`}
-        >
+        <div className="flex-1 space-y-1 overflow-y-auto min-h-0">
           {filteredProjects && filteredProjects.length > 0
             ? filteredProjects.map((project) => {
                 const isActiveProject = activeProjectId === project.Id;
@@ -256,33 +252,6 @@ const Sidebar = () => {
               )}
         </div>
       </div>
-
-      {/* Navigation Links */}
-      <nav className="flex-1 flex flex-col py-4 px-2 space-y-1">
-        {sidebarLinks.map((link) => {
-          const Icon = link.icon;
-          const isActiveLink = location.pathname === link.path;
-
-          // isCurrentPageInTabs &&
-          return (
-            <button
-              key={link.path}
-              onClick={() => handleSidebarLinkClick(link.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isCollapsed ? "justify-center" : "justify-start"
-              } ${
-                isActiveLink
-                  ? "bg-white dark:bg-white text-gray-900 dark:text-gray-900"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-              title={isCollapsed ? link.label : undefined}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>{link.label}</span>}
-            </button>
-          );
-        })}
-      </nav>
 
       {/* Operational Items - Bottom Section */}
       <div className="border-t border-gray-200 dark:border-gray-800 p-2 mt-auto space-y-1">
