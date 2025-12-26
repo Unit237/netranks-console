@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { canViewBilling } from "../../../app/utils/userRole";
+import { canViewBilling, canManageMembers } from "../../../app/utils/userRole";
 import { useUser } from "../../auth/context/UserContext";
 import ProjectDetails from "../../project/pages/ProjectDetails";
 import BillingTab from "../../settings/components/BillingTab";
+import ProjectMembersTab from "../../project/components/tabs/ProjectMembersTab";
 
 const Project = () => {
   const { user } = useUser();
@@ -15,17 +16,18 @@ const Project = () => {
     : (user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id);
   
   const canView = canViewBilling(user, projectId);
+  const canViewMembers = canManageMembers(user, projectId);
   
-  const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Billing">(
+  const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Members" | "Billing">(
     "ProjectDetails"
   );
 
-  // Reset to ProjectDetails if user cannot view billing and tab is set to Billing
+  // Reset to ProjectDetails if user cannot view billing/members and tab is set to those tabs
   useEffect(() => {
-    if (!canView && activeTab === "Billing") {
+    if ((!canView && activeTab === "Billing") || (!canViewMembers && activeTab === "Members")) {
       setActiveTab("ProjectDetails");
     }
-  }, [canView, activeTab]);
+  }, [canView, canViewMembers, activeTab]);
 
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
@@ -43,6 +45,18 @@ const Project = () => {
             >
               Project
             </button>
+            {canViewMembers && (
+              <button
+                onClick={() => setActiveTab("Members")}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === "Members"
+                    ? "text-gray-900 dark:text-gray-100"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                Members
+              </button>
+            )}
             {canView && (
               <button
                 onClick={() => setActiveTab("Billing")}
@@ -59,6 +73,10 @@ const Project = () => {
         </div>
 
         {activeTab === "ProjectDetails" && <ProjectDetails />}
+
+        {activeTab === "Members" && canViewMembers && projectId && (
+          <ProjectMembersTab projectId={projectId} />
+        )}
 
         {activeTab === "Billing" && canView && <BillingTab />}
       </div>
