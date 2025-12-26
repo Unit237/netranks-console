@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import { canCreateSurveys } from "../../../app/utils/userRole";
+import { truncateSurveyName } from "../../../app/utils/utils";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
@@ -11,7 +12,6 @@ import { renameProject } from "../services/projectService";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
 import { formatLastRun } from "../utils/formatLastRun";
 import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
-
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -86,7 +86,7 @@ const ProjectDetails = () => {
 
   const handleSaveName = async () => {
     if (!project || !projectId || !user) return;
-    
+
     const trimmedName = editedName.trim();
     if (!trimmedName) {
       alert("Project name cannot be empty");
@@ -101,11 +101,11 @@ const ProjectDetails = () => {
     setIsSaving(true);
     try {
       await renameProject(Number(projectId), trimmedName);
-      
+
       // Update local project state immediately
       const updatedProject = { ...project, Name: trimmedName };
       setProject(updatedProject);
-      
+
       // Update user context without full refresh
       if (user.Projects) {
         const updatedProjects = user.Projects.map((p) =>
@@ -113,7 +113,7 @@ const ProjectDetails = () => {
         );
         setUser({ ...user, Projects: updatedProjects });
       }
-      
+
       setIsEditingName(false);
     } catch (error) {
       console.error("Failed to rename project:", error);
@@ -272,7 +272,10 @@ const ProjectDetails = () => {
 
         {/* Header */}
         <div className="py-4 flex items-center justify-between">
-          {canCreateSurveys(user, projectId ? parseInt(projectId, 10) : null) && (
+          {canCreateSurveys(
+            user,
+            projectId ? parseInt(projectId, 10) : null
+          ) && (
             <button
               onClick={handleCreateNewSurvey}
               className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
@@ -364,10 +367,16 @@ const ProjectDetails = () => {
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
                             {(() => {
-                              const cleanedName = sanitizeSurveyName(survey.Name);
-                              return cleanedName
-                                ? cleanedName.substring(0, 50) + (cleanedName.length > 50 ? "..." : "")
-                                : "Untitled Survey";
+                              const cleanedName = sanitizeSurveyName(
+                                survey.Name
+                              );
+                              const cleanedDescription = sanitizeSurveyName(
+                                survey.DescriptionShort
+                              );
+
+                              const displayText =
+                                cleanedName || cleanedDescription;
+                              return truncateSurveyName(displayText);
                             })()}
                           </span>
                         </div>
