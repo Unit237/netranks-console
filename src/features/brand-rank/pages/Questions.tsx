@@ -315,9 +315,7 @@ const Questions: React.FC = () => {
                     onMouseEnter={() => setHoveredQuestion(i)}
                     onMouseLeave={() => {
                       setHoveredQuestion(null);
-                      if (confirmingDelete === i) {
-                        setConfirmingDelete(null);
-                      }
+                      // Don't clear confirmingDelete on hover out - keep confirm button visible
                     }}
                   >
                     <div className="flex items-start sm:items-center justify-between gap-2 sm:gap-4">
@@ -354,8 +352,7 @@ const Questions: React.FC = () => {
                           >
                             <Trash2 size={12} className="sm:hidden" />
                             <Trash2 size={14} className="hidden sm:block" />
-                            <span className="hidden xs:inline">Confirm?</span>
-                            <span className="xs:hidden">Del?</span>
+                            <span>Confirm</span>
                           </button>
                         )}
                       </div>

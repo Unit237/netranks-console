@@ -299,9 +299,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                       onMouseEnter={() => setHoveredQuestion(i)}
                       onMouseLeave={() => {
                         setHoveredQuestion(null);
-                        if (confirmingDelete === i) {
-                          setConfirmingDelete(null);
-                        }
+                        // Don't clear confirmingDelete on hover out - keep confirm button visible
                       }}
                     >
                       {editingIndex === i ? (
@@ -383,7 +381,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                                 className="px-2 py-1 bg-red-500 text-white rounded-lg text-xs font-medium hover:bg-red-600 transition-all duration-200 flex items-center gap-1"
                               >
                                 <Trash2 size={14} />
-                                Confirm?
+                                Confirm
                               </button>
                             )}
                           </div>
