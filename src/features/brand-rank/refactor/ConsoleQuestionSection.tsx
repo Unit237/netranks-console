@@ -305,7 +305,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                       {editingIndex === i ? (
                         <div className="flex items-start gap-3 w-full h-24 px-4 py-2">
                           <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 mt-2">
-                            {String(i + 1)}.
+                            {String(i + 1).padStart(2, "0")}.
                           </span>
                           <div className="flex-1 flex flex-col gap-2">
                             <input
@@ -356,7 +356,7 @@ const ConsoleQuestionSection: React.FC<ConsoleQuestionSectionProps> = ({
                             onClick={() => handleClickQuestion(i, q)}
                           >
                             <span className="font-normal min-w-[2rem] text-right text-[13px] leading-5 text-gray-600 dark:text-gray-400 flex-shrink-0">
-                              {String(i + 1)}.
+                              {String(i + 1).padStart(2, "0")}.
                             </span>
                             <p className="text-sm flex-1 min-w-0 leading-5 m-0 text-gray-900 dark:text-gray-100 break-words overflow-wrap-anywhere">
                               {q}
