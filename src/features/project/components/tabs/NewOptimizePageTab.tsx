@@ -62,6 +62,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     manualUrlProp !== undefined ? manualUrlProp : localManualUrl;
   const setManualUrl = onManualUrlChange || setLocalManualUrl;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Use prop if provided, otherwise use local state
   const [localBatchResponse, setLocalBatchResponse] =
@@ -141,12 +142,45 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     return `https://${trimmed}`;
   };
 
+  // Helper function to detect if error is a fetch/CORS error
+  const isFetchOrCorsError = (error: unknown): boolean => {
+    if (!error) return false;
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorName = error instanceof Error ? error.name : "";
+    
+    // Check for common fetch/CORS error indicators
+    const fetchErrorIndicators = [
+      "Failed to fetch",
+      "NetworkError",
+      "Network request failed",
+      "CORS",
+      "cors",
+      "blocked by CORS",
+      "Access-Control",
+      "fetch",
+      "network",
+      "ERR_FAILED",
+      "ERR_NETWORK",
+      "ERR_CONNECTION",
+    ];
+    
+    return (
+      errorName === "TypeError" ||
+      errorName === "NetworkError" ||
+      fetchErrorIndicators.some((indicator) =>
+        errorMessage.toLowerCase().includes(indicator.toLowerCase())
+      )
+    );
+  };
+
   const triggerPredictions = async (brandName: string, url: string) => {
     // Normalize URL to ensure it has a protocol
     const normalizedUrl = normalizeUrl(url);
 
     if (!normalizedUrl) {
       console.warn("❌ triggerPredictions early return: No URL");
+      setFetchError(null); // Clear error if no URL
       return;
     }
 
@@ -160,8 +194,12 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
         hasSelectedQuestion: !!selectedQuestion,
         questionCount: surveyDetails?.Questions?.length || 0,
       });
+      setFetchError(null); // Clear error if no questions
       return;
     }
+
+    // Clear previous error
+    setFetchError(null);
 
     try {
       // Fetch batch predictions for selected question(s)
@@ -173,9 +211,18 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
       // Store the full response
       setBatchResponse(response);
+      setFetchError(null); // Clear error on success
     } catch (error) {
       console.error("❌ Error fetching batch predictions:", error);
       setBatchResponse(null);
+      
+      // Check if it's a fetch/CORS error
+      if (isFetchOrCorsError(error)) {
+        setFetchError("this site doesn't allow us to fetch content");
+      } else {
+        // For other errors, don't show the CORS message
+        setFetchError(null);
+      }
     }
   };
 
@@ -230,6 +277,10 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
   const handleManualUrlChange = (url: string) => {
     setManualUrl(url);
+    // Clear error when user changes the URL
+    if (fetchError) {
+      setFetchError(null);
+    }
   };
 
   // Transform action_priorities from batch response into tasks
@@ -540,7 +591,11 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
                   : "Enter brand URL (required)"
               }
               required
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-all"
+              className={`w-full px-4 py-3 rounded-xl border-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                fetchError
+                  ? "border-red-500 dark:border-red-500 focus:ring-red-500 dark:focus:ring-red-500"
+                  : "border-gray-200 dark:border-gray-600 focus:ring-green-500 dark:focus:ring-green-400"
+              }`}
             />
             {brandUrl && brandUrl.trim() !== "" && !manualUrl && (
               <p className="mt-1 text-xs text-gray-500">
@@ -558,6 +613,11 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
             {!brandUrl && !manualUrl && (
               <p className="mt-1 text-xs text-orange-600">
                 No URL found from search. Please enter a URL.
+              </p>
+            )}
+            {fetchError && (
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">
+                {fetchError}
               </p>
             )}
             <LoadingButton
