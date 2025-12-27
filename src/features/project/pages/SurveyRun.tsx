@@ -4,10 +4,11 @@ import { IoShareSocial } from "react-icons/io5";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSurveyRun } from "../../brand-rank/services/brandService";
 import { useTabs } from "../../console/context/TabContext";
+import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
 
 export default function SurveyRun() {
   const params = useParams();
-  const { projectId, surveyRunId, p1, p2 } = params;
+  const { surveyId, surveyName, surveyRunId, p1, p2 } = params;
   const timeoutId = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   );
@@ -17,7 +18,7 @@ export default function SurveyRun() {
   const [total, setTotal] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  const { navigateToTab } = useTabs();
+  const { replaceTab, activeTabId } = useTabs();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,9 +100,15 @@ export default function SurveyRun() {
     return "pending";
   };
 
-  const goToDashboard = () => {
-    navigateToTab(`/console/project/${projectId}`);
-    navigate(`/console/project/${projectId}`);
+  const surveyDetails = () => {
+    const cleanedName = sanitizeSurveyName(surveyName) || "Survey Details";
+
+    replaceTab(activeTabId, {
+      name: cleanedName,
+      path: `/console/survey/${surveyId}`,
+      headerName: cleanedName,
+    });
+    navigate(`/console/survey/${surveyId}`);
   };
 
   return (
@@ -196,10 +203,10 @@ export default function SurveyRun() {
         {progress === 100 && brands.length > 0 && (
           <div className="flex justify-center mb-6">
             <button
-              onClick={goToDashboard}
+              onClick={surveyDetails}
               className="w-full sm:w-auto px-6 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors duration-200 shadow-sm"
             >
-              Go to Dashboard
+              Go to survey
             </button>
           </div>
         )}

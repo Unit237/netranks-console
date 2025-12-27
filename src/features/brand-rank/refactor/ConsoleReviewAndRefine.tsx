@@ -209,7 +209,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         const p1 = survey?.PasswordOne;
         const p2 = survey?.PasswordTwo;
 
-        const surveyPath = `/console/survey/${projectId}/${surveyRunId}/${p1}/${p2}`;
+        const surveyPath = `/console/survey/${surveyId}/${surveyName}/${surveyRunId}/${p1}/${p2}`;
 
         // Show toast notification with View button at the bottom
         toast.custom(

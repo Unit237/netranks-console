@@ -78,7 +78,7 @@ const Router = () => {
         />
 
         <Route
-          path="survey/:projectId/:surveyRunId/:p1/:p2"
+          path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
           element={<SurveyRun />}
         />
         <Route path="new-project" element={<NewProject />} />
