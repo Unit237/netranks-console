@@ -21,6 +21,8 @@ import Project from "../../features/console/pages/Project";
 import Support from "../../features/console/pages/Support";
 import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
 import SurveyDetails from "../../features/project/pages/SurveyDetails";
+import SurveyRun from "../../features/project/pages/SurveyRun";
+import UpdateSurvey from "../../features/project/pages/UpdateSurvey";
 import Settings from "../../features/settings/pages/Settings";
 
 const Router = () => {
@@ -74,7 +76,13 @@ const Router = () => {
             </RoleProtectedRoute>
           }
         />
+
+        <Route
+          path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
+          element={<SurveyRun />}
+        />
         <Route path="new-project" element={<NewProject />} />
+        <Route path="update-survey/:surveyId" element={<UpdateSurvey />} />
         <Route
           path="review-questions/:projectId"
           element={<PricingAndQuestion />}

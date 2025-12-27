@@ -15,6 +15,8 @@ import { useTabs } from "../../console/context/TabContext";
 import { createSurvey } from "../../project/services/projectService";
 import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
 import type { BrandData } from "../@types";
+import { SurveyCreatedToast } from "../components/ui/SurveyCreatedToast";
+import { startSurvey } from "../services/brandService";
 
 interface ConsoleReviewAndRefineProps {
   survey: BrandData;
@@ -202,66 +204,32 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         // Refresh user data to get the updated project with new survey
         await refreshUser();
 
-        const surveyPath = `/console/survey/${surveyId}`;
+        const surveyRunId = await startSurvey(survey.Id);
+
+        const p1 = survey?.PasswordOne;
+        const p2 = survey?.PasswordTwo;
+
+        const surveyPath = `/console/survey/${surveyId}/${surveyName}/${surveyRunId}/${p1}/${p2}`;
 
         // Show toast notification with View button at the bottom
         toast.custom(
           (t) => (
-            <div
-              className={`${
-                t.visible ? "animate-enter" : "animate-leave"
-              } fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full bg-black shadow-lg rounded-[20px] pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-              style={{
-                animation: t.visible
-                  ? "slideInUp 0.3s ease-out"
-                  : "slideOutDown 0.2s ease-in",
+            <SurveyCreatedToast
+              t={t}
+              onView={() => {
+                toast.dismiss(t.id);
+
+                // Replace current tab with survey tab
+                replaceTab(activeTabId, {
+                  name: surveyName,
+                  path: surveyPath,
+                  headerName: surveyName,
+                });
+
+                // Navigate to the survey page
+                navigate(surveyPath);
               }}
-            >
-              <div className="flex-1 w-0 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                        <svg
-                          className="h-5 w-5 text-green-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <p className="text-sm font-medium text-white">
-                        Survey created successfully
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      toast.dismiss(t.id);
-                      // Replace current tab with survey tab seamlessly
-                      replaceTab(activeTabId, {
-                        name: surveyName,
-                        path: surveyPath,
-                        headerName: surveyName,
-                      });
-                      // Navigate to the survey page
-                      navigate(surveyPath);
-                    }}
-                    className="ml-4 px-4 py-2 bg-white text-black text-sm font-medium rounded-[20px] hover:bg-gray-100 transition-colors"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            </div>
+            />
           ),
           {
             duration: 6000,
@@ -269,9 +237,13 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           }
         );
 
-        // Navigate to project page and ensure tab is set
-        navigateToTab(`/console/project/${projectId}`);
-        navigate(`/console/project/${projectId}`);
+        replaceTab(activeTabId, {
+          name: "Run survey",
+          path: surveyPath,
+          headerName: "Run survey",
+        });
+
+        navigate(surveyPath);
       }
     } catch (error) {
       console.error("Failed to create survey:", error);
@@ -537,7 +509,7 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
             loadingText="Creating..."
             className="px-6 py-1 bg-black text-white rounded-lg hover:bg-gray-800 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Finish & save →
+            Save & run →
           </LoadingButton>
         </div>
       </div>
