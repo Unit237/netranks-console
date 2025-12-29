@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import MagicLinkHandler from "../../features/auth/components/MagicLinkHandler";
 import ProtectedRoute from "../../features/auth/components/ProtectedRoute";
-import { RoleProtectedRoute } from "../../features/auth/components/RoleProtectedRoute";
 import CompleteProfile from "../../features/auth/pages/CompleteProfile";
 import MagicLinkSent from "../../features/auth/pages/MagicLinkSent";
 import Signin from "../../features/auth/pages/Signin";
@@ -21,8 +20,6 @@ import Project from "../../features/console/pages/Project";
 import Support from "../../features/console/pages/Support";
 import SurveyDashboard from "../../features/dashboard/pages/SurveyDashboard";
 import SurveyDetails from "../../features/project/pages/SurveyDetails";
-import SurveyRun from "../../features/project/pages/SurveyRun";
-import UpdateSurvey from "../../features/project/pages/UpdateSurvey";
 import Settings from "../../features/settings/pages/Settings";
 
 const Router = () => {
@@ -43,6 +40,7 @@ const Router = () => {
       <Route path="signin" element={<Signin />} />
       <Route path="complete-profile" element={<CompleteProfile />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
+      {/* Support both /login/:id/:p1/:p2 and /:id/:p1/:p2 patterns for magic links */}
       <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route path=":magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route
@@ -58,31 +56,11 @@ const Router = () => {
         <Route path="members" element={<Members />} />
         <Route path="settings" element={<Settings />} />
         <Route path="support" element={<Support />} />
-        <Route
-          path="billing"
-          element={
-            <RoleProtectedRoute requiredPermission="viewBilling">
-              <Billing />
-            </RoleProtectedRoute>
-          }
-        />
+        <Route path="billing" element={<Billing />} />
         <Route path="brand" element={<Brand />} />
         <Route path="project/:projectId" element={<Project />} />
-        <Route
-          path="new-survey/:projectId"
-          element={
-            <RoleProtectedRoute requiredPermission="createSurveys">
-              <NewSurvey />
-            </RoleProtectedRoute>
-          }
-        />
-
-        <Route
-          path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
-          element={<SurveyRun />}
-        />
+        <Route path="new-survey/:projectId" element={<NewSurvey />} />
         <Route path="new-project" element={<NewProject />} />
-        <Route path="update-survey/:surveyId" element={<UpdateSurvey />} />
         <Route
           path="review-questions/:projectId"
           element={<PricingAndQuestion />}

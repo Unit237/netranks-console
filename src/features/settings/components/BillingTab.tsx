@@ -1,27 +1,9 @@
 import { ArrowUpRight, Check } from "lucide-react";
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { canViewBilling } from "../../../app/utils/userRole";
-import { useUser } from "../../auth/context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const BillingTab: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
-  const { projectId: projectIdParam } = useParams<{ projectId?: string }>();
-  
-  // Use projectId from URL params if available, otherwise fall back to active project
-  const projectId = projectIdParam 
-    ? parseInt(projectIdParam, 10) 
-    : (user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id);
-  
-  // Check if user can view billing
-  const canView = canViewBilling(user, projectId);
-  
-  // Hide entire billing tab for viewers
-  if (!canView) {
-    return null;
-  }
-  
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
       <div className="max-w-[35vw] mx-auto p-4 space-y-4">
@@ -113,17 +95,15 @@ const BillingTab: React.FC = () => {
               </p>
             </div>
 
-            {canView && (
-              <div className="px-6 py-5">
-                <button
-                  onClick={() => navigate("/console/billing")}
-                  className="inline-flex items-center gap-2 px-2 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-                >
-                  Manage billing
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            <div className="px-6 py-5">
+              <button
+                onClick={() => navigate("/console/billing")}
+                className="inline-flex items-center gap-2 px-2 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+              >
+                Manage billing
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
