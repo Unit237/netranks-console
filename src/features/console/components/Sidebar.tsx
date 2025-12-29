@@ -1,44 +1,40 @@
 import { ChevronDown, Plus, Search, Settings, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import token from "../../../app/utils/token";
 import { truncate } from "../../../app/utils/utils";
 import { useUser } from "../../auth/context/UserContext";
 
 const Sidebar = () => {
   const { user } = useUser();
+  // const { tabs } = useTabs(); // tabs not currently used
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false);
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { projectId, surveyId } = useParams<{
-    projectId?: string;
-    surveyId?: string;
-  }>();
 
   // Check if we're on the dashboard route
   const isDashboardRoute = location.pathname.startsWith("/console/dashboard/");
 
-  function getProjectIdBySurveyId(surveyId?: string): number | null {
-    if (!surveyId) return null;
+  // Check if current location has a tab (is available in tabs)
+  // const currentTab = tabs.find((tab) => tab.path === location.pathname);
 
-    for (const project of user?.Projects || []) {
-      const found = project.Surveys.some(
-        (survey) => survey.Id === Number(surveyId)
-      );
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    const authToken = token.get();
+    return !!authToken && !!user;
+  };
 
-      if (found) {
-        return project.Id;
-      }
+  // Handle click to redirect to signin if not authenticated
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated()) {
+      e.preventDefault();
+      e.stopPropagation();
+      navigate("/signin");
     }
-
-    return null;
-  }
-
-  const activeProjectId = projectId
-    ? Number(projectId)
-    : getProjectIdBySurveyId(surveyId);
+  };
 
   // const sidebarLinks: Array<{
   //   icon: React.ComponentType<{ className?: string }>;
@@ -48,6 +44,15 @@ const Sidebar = () => {
   // }> = [];
 
   const handleSidebarLinkClick = (path: string) => {
+    if (!isAuthenticated()) {
+      navigate("/signin");
+      return;
+    }
+    // addTab({
+    //   name: label,
+    //   path: path,
+    //   headerName: headerName,
+    // });
     navigate(path);
   };
 
@@ -56,17 +61,25 @@ const Sidebar = () => {
     _projectName: string,
     _headerName: string
   ) => {
+    if (!isAuthenticated()) {
+      navigate("/signin");
+      return;
+    }
     navigate(`/console/project/${projectId}`);
   };
 
   const handleNewProject = () => {
+    if (!isAuthenticated()) {
+      navigate("/signin");
+      return;
+    }
     navigate("/console/new-project");
   };
 
   const handleSearchClick = () => {
     setShowSearchInput(!showSearchInput);
     if (showSearchInput) {
-      setSearchQuery("");
+      setSearchQuery(""); // Clear search when closing
     }
   };
 
@@ -87,11 +100,25 @@ const Sidebar = () => {
       .sort((a, b) => b.Id - a.Id);
   }, [user?.Projects, searchQuery]);
 
+  // const handleSupportClick = () => {
+  //   if (!isAuthenticated()) {
+  //     navigate("/signin");
+  //     return;
+  //   }
+  //   addTab({
+  //     name: "Support",
+  //     path: "/console/support",
+  //     headerName: "Support",
+  //   });
+  //   navigate("/console/support");
+  // };
+
   return (
     <div
+      onClick={handleClick}
       className={`bg-gray-200 dark:bg-gray-900 flex flex-col transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
-      }`}
+      } ${!isAuthenticated() ? "cursor-pointer" : ""}`}
     >
       {/* User Section */}
       <div className="px-4 py-2">
@@ -207,8 +234,8 @@ const Sidebar = () => {
         <div className="flex-1 space-y-1 overflow-y-auto min-h-0">
           {filteredProjects && filteredProjects.length > 0
             ? filteredProjects.map((project) => {
-                const isActiveProject = activeProjectId === project.Id;
-
+                const projectPath = `/console/project/${project.Id}`;
+                const isActiveProject = location.pathname === projectPath;
                 return (
                   <button
                     key={project.Id}

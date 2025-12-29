@@ -4,6 +4,9 @@ import prms from "../utils/config";
 import token from "../utils/token";
 import { urlParams } from "../utils/urlUtils";
 
+// Singleton promise to prevent concurrent session creation (race condition fix)
+let sessionCreationPromise: Promise<void> | null = null;
+
 /**
  * Creates an onboarding session for visitors who don't have a token yet.
  * This function:
@@ -15,11 +18,51 @@ import { urlParams } from "../utils/urlUtils";
  * This is a fire-and-forget operation that should not block app initialization.
  * Errors are logged but do not prevent the app from rendering.
  *
+ * IMPORTANT: This function uses a singleton promise pattern to prevent race conditions
+ * when multiple callers (e.g., OnboardingSessionInitializer and fetchQuestions)
+ * try to create a session simultaneously.
+ *
  * @returns Promise that resolves when onboarding is complete or skipped
  */
 export async function createOnboardingSession(): Promise<void> {
   const isProduction = import.meta.env.VITE_PROD === "true";
   const existingToken = token.getVisitor();
+
+  // If a token already exists, no need to create a new session
+  if (existingToken) {
+    if (import.meta.env.DEV) {
+      console.log("[Onboarding] Token already exists, skipping session creation", {
+        tokenPreview: existingToken.substring(0, 20) + "...",
+      });
+    }
+    return;
+  }
+
+  // If a session creation is already in progress, wait for it instead of starting another
+  // This prevents race conditions when multiple components call this simultaneously
+  if (sessionCreationPromise) {
+    if (import.meta.env.DEV) {
+      console.log("[Onboarding] Session creation already in progress, waiting for it...");
+    }
+    return sessionCreationPromise;
+  }
+
+  // Start a new session creation and store the promise
+  sessionCreationPromise = createOnboardingSessionInternal(isProduction, existingToken);
+
+  try {
+    await sessionCreationPromise;
+  } finally {
+    // Clear the promise so future calls can create new sessions if needed
+    sessionCreationPromise = null;
+  }
+}
+
+/**
+ * Internal implementation of session creation.
+ * Separated to allow the public function to handle the singleton promise pattern.
+ */
+async function createOnboardingSessionInternal(isProduction: boolean, existingToken: string | null): Promise<void> {
   
   // In production, always try to create a fresh token to ensure it's valid
   // In dev, skip if token already exists (optional optimization)

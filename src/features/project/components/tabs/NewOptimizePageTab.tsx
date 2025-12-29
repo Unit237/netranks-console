@@ -1,6 +1,6 @@
-import { ChevronDown, Menu, TrendingUp } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, ChevronDown, Menu, TrendingUp } from "lucide-react";
 import LoadingButton from "../../../../app/components/LoadingButton";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
 import type { Brand, CreateSearchPayload } from "../../@types/optimization";
@@ -9,7 +9,6 @@ import {
   getBatchPrediction,
   getDashboardFilterFields,
 } from "../../services/optimizeService";
-import TasksTabMenu from "./TasksTabMenu";
 
 interface Task {
   id: string;
@@ -691,14 +690,58 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       {/* Right Column - Tasks */}
       <div className="flex-1">
         {batchResponse && tasks.length > 0 ? (
-          <TasksTabMenu
-            tasks={tasks}
-            selectedPayload={selectedPayload}
-            selectedQuestion={selectedQuestion}
-            surveyDetails={surveyDetails}
-            manualUrl={manualUrl}
-            brandUrl={brandUrl}
-          />
+          <div className="bg-gray-100 rounded-[20px] shadow-sm border border-gray-200">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Your tasks
+                </span>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                  {tasks.length}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 p-2">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="px-6 py-4 hover:bg-gray-50 transition-colors bg-white rounded-[20px] shadow-sm border border-gray-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">
+                        {task.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {task.description}
+                      </p>
+
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          {task.impact === "high" ? (
+                            <>
+                              <AlertCircle className="w-3 h-3 text-red-600" />
+                              <span className="text-xs font-medium text-red-600">
+                                High impact
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-3 h-3 rounded-full border-2 border-gray-300" />
+                              <span className="text-xs text-gray-500">
+                                Normal impact
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : batchResponse ? (
           <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-12">
             <div className="text-center">
