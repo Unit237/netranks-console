@@ -1,31 +1,11 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { canViewBilling } from "../../../app/utils/userRole";
-import { useUser } from "../../auth/context/UserContext";
+import { useState } from "react";
 import ProjectDetails from "../../project/pages/ProjectDetails";
 import BillingTab from "../../settings/components/BillingTab";
 
 const Project = () => {
-  const { user } = useUser();
-  const { projectId: projectIdParam } = useParams<{ projectId?: string }>();
-  
-  // Use projectId from URL params if available, otherwise fall back to active project
-  const projectId = projectIdParam 
-    ? parseInt(projectIdParam, 10) 
-    : (user?.Projects?.find((p) => p.IsActive)?.Id || user?.Projects?.[0]?.Id);
-  
-  const canView = canViewBilling(user, projectId);
-  
   const [activeTab, setActiveTab] = useState<"ProjectDetails" | "Billing">(
     "ProjectDetails"
   );
-
-  // Reset to ProjectDetails if user cannot view billing and tab is set to Billing
-  useEffect(() => {
-    if (!canView && activeTab === "Billing") {
-      setActiveTab("ProjectDetails");
-    }
-  }, [canView, activeTab]);
 
   return (
     <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
@@ -43,24 +23,22 @@ const Project = () => {
             >
               Project
             </button>
-            {canView && (
-              <button
-                onClick={() => setActiveTab("Billing")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === "Billing"
-                    ? "text-gray-900 dark:text-gray-100"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Billing
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab("Billing")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === "Billing"
+                  ? "text-gray-900 dark:text-gray-100"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              Billing
+            </button>
           </div>
         </div>
 
         {activeTab === "ProjectDetails" && <ProjectDetails />}
 
-        {activeTab === "Billing" && canView && <BillingTab />}
+        {activeTab === "Billing" && <BillingTab />}
       </div>
     </div>
   );
