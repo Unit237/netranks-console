@@ -40,6 +40,7 @@ const Sidebar = () => {
   const activeProjectId = projectId
     ? Number(projectId)
     : getProjectIdBySurveyId(surveyId);
+
   // const sidebarLinks: Array<{
   //   icon: React.ComponentType<{ className?: string }>;
   //   label: string;
