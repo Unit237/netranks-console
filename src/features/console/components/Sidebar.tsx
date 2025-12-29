@@ -40,12 +40,12 @@ const Sidebar = () => {
     ? Number(projectId)
     : getProjectIdBySurveyId(surveyId);
 
-  const sidebarLinks: Array<{
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    path: string;
-    headerName: string;
-  }> = [];
+  // const sidebarLinks: Array<{
+  //   icon: React.ComponentType<{ className?: string }>;
+  //   label: string;
+  //   path: string;
+  //   headerName: string;
+  // }> = [];
 
   const handleSidebarLinkClick = (path: string) => {
     navigate(path);
