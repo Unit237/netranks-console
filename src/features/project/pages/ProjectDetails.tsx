@@ -1,8 +1,9 @@
-import { Check, Edit2, Pause, Plus, X } from "lucide-react";
+import { Check, Edit, Edit2, Pause, Plus, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "../../../app/components/LoadingSpinner";
 import { canCreateSurveys } from "../../../app/utils/userRole";
+import { truncateSurveyName } from "../../../app/utils/utils";
 import type { Project, Survey } from "../../auth/@types";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
@@ -11,7 +12,6 @@ import { renameProject } from "../services/projectService";
 import { calculateLastRunAt } from "../utils/calculateLastRunAt";
 import { formatLastRun } from "../utils/formatLastRun";
 import { sanitizeSurveyName } from "../utils/sanitizeSurveyName";
-
 
 const ProjectDetails = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -86,7 +86,7 @@ const ProjectDetails = () => {
 
   const handleSaveName = async () => {
     if (!project || !projectId || !user) return;
-    
+
     const trimmedName = editedName.trim();
     if (!trimmedName) {
       alert("Project name cannot be empty");
@@ -101,11 +101,11 @@ const ProjectDetails = () => {
     setIsSaving(true);
     try {
       await renameProject(Number(projectId), trimmedName);
-      
+
       // Update local project state immediately
       const updatedProject = { ...project, Name: trimmedName };
       setProject(updatedProject);
-      
+
       // Update user context without full refresh
       if (user.Projects) {
         const updatedProjects = user.Projects.map((p) =>
@@ -113,7 +113,7 @@ const ProjectDetails = () => {
         );
         setUser({ ...user, Projects: updatedProjects });
       }
-      
+
       setIsEditingName(false);
     } catch (error) {
       console.error("Failed to rename project:", error);
@@ -272,7 +272,10 @@ const ProjectDetails = () => {
 
         {/* Header */}
         <div className="py-4 flex items-center justify-between">
-          {canCreateSurveys(user, projectId ? parseInt(projectId, 10) : null) && (
+          {canCreateSurveys(
+            user,
+            projectId ? parseInt(projectId, 10) : null
+          ) && (
             <button
               onClick={handleCreateNewSurvey}
               className="flex items-center border rounded-xl py-1 px-2 gap-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
@@ -326,8 +329,11 @@ const ProjectDetails = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                     Last Run
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                     Cost
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Edit
                   </th>
                 </tr>
               </thead>
@@ -350,24 +356,32 @@ const ProjectDetails = () => {
 
                   return (
                     <tr
-                      onClick={() => surveyDetails(survey)}
                       key={survey.Id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
                       <td className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
                         {index + 1}
                       </td>
-                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
+                      <td
+                        onClick={() => surveyDetails(survey)}
+                        className="px-6 py-4 border-r border-gray-200 dark:border-gray-700"
+                      >
                         <div className="flex items-center gap-2">
                           {survey.HasIndicator && (
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                           )}
                           <span className="text-sm text-gray-900 dark:text-gray-100">
                             {(() => {
-                              const cleanedName = sanitizeSurveyName(survey.Name);
-                              return cleanedName
-                                ? cleanedName.substring(0, 50) + (cleanedName.length > 50 ? "..." : "")
-                                : "Untitled Survey";
+                              const cleanedName = sanitizeSurveyName(
+                                survey.Name
+                              );
+                              const cleanedDescription = sanitizeSurveyName(
+                                survey.DescriptionShort
+                              );
+
+                              const displayText =
+                                cleanedName || cleanedDescription;
+                              return truncateSurveyName(displayText);
                             })()}
                           </span>
                         </div>
@@ -388,8 +402,16 @@ const ProjectDetails = () => {
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
                         {lastRunDisplay}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">
                         {plan?.cost === 0 ? "Free" : `${plan?.cost}/pm`}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        <Edit
+                          onClick={() =>
+                            navigate(`/console/update-survey/${survey.Id}`)
+                          }
+                          className="w-4 h-4"
+                        />
                       </td>
                     </tr>
                   );
