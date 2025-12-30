@@ -30,6 +30,10 @@ export default function SampleAiAnswerSnippet({
 
   useEffect(() => {
     const fetchAnswers = async () => {
+      // Reset items to show loading state
+      setItems([]);
+      setCurrentIndex(0);
+      
       try {
         const answers = await Promise.all(
           snippets.map(async (snippet) => {
@@ -49,10 +53,14 @@ export default function SampleAiAnswerSnippet({
         setItems(carouselItems);
       } catch (error) {
         console.error("Failed to fetch AI answers:", error);
+        // Set empty items on error to show loading state
+        setItems([]);
       }
     };
 
-    fetchAnswers();
+    if (snippets && snippets.length > 0) {
+      fetchAnswers();
+    }
   }, [snippets]);
 
   const goToPrevious = () => {

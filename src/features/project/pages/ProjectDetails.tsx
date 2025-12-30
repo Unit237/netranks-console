@@ -308,11 +308,8 @@ const ProjectDetails = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="w-8 px-6 py-3 border-r border-gray-200 dark:border-gray-700">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                    />
+                  <th className="w-12 px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
+                    #
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">
                     Survey Name
@@ -332,7 +329,7 @@ const ProjectDetails = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {(project.Surveys || []).map((survey) => {
+                {(project.Surveys || []).map((survey, index) => {
                   const plan = getPlanByPeriod(survey.SchedulePeriodHours || 0);
 
                   // Calculate Status from SchedulePeriodHours
@@ -354,11 +351,8 @@ const ProjectDetails = () => {
                       key={survey.Id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                     >
-                      <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                        />
+                      <td className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">
+                        {index + 1}
                       </td>
                       <td className="px-6 py-4 border-r border-gray-200 dark:border-gray-700">
                         <div className="flex items-center gap-2">
