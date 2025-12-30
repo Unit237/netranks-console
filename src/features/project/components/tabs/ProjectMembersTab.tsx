@@ -199,7 +199,7 @@ const ProjectMembersTab = ({ projectId }: ProjectMembersTabProps) => {
     setIsInviting(true);
 
     try {
-      const invitationId = await apiClient.post<number>(`api/AddMember`, {
+      await apiClient.post<number>(`api/AddMember`, {
         ProjectId: projectId,
         FullName: inviteName,
         EMail: inviteEmail,
