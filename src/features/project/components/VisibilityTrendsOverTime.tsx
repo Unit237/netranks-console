@@ -81,8 +81,8 @@ export default function VisibilityTrendsOverTime({
                       borderRadius: "4px",
                       padding: "8px",
                     }}
-                    formatter={(value: number) => [
-                      `${value}%`,
+                    formatter={(value: number | undefined) => [
+                      `${value ?? 0}%`,
                       filteredBrand!.Name,
                     ]}
                   />

@@ -1,4 +1,4 @@
-import type { UserData, Project } from "../../features/auth/@types";
+import type { UserData } from "../../features/auth/@types";
 
 export type UserRole = "Owner" | "Editor" | "Viewer";
 
