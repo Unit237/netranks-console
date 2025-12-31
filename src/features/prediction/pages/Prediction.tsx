@@ -1,22 +1,43 @@
+// Currently unused, not wired into Router.tsx
+import React, { useState } from "react";
 import { Clock, Sparkles, Star } from "lucide-react";
-import { useState } from "react";
 import Brand from "../refactor/Brand";
 import ContentAttributionAnalyzer from "../refactor/ContentAttribute";
 
-const Prediction: React.FC = () => {
+interface PredictionProps {}
+
+const Prediction: React.FC<PredictionProps> = () => {
+  // State
   const [activeTab, setActiveTab] = useState("brand");
 
-  const TabContent = () => {
+  // Tab configuration
+  const tabs = [
+    { key: "brand", label: "Prediction & Suggest", icon: Clock },
+    {
+      key: "content-attribution",
+      label: "Content Attribution",
+      icon: Star,
+    },
+  ];
+
+  // Tab content renderer
+  const renderTabContent = () => {
     if (activeTab === "brand") {
       return <Brand />;
-    } else if (activeTab === "content-attribution") {
+    }
+    if (activeTab === "content-attribution") {
       return <ContentAttributionAnalyzer />;
     }
     return null;
   };
 
+  // Tab click handler
+  const handleTabClick = (tabKey: string) => {
+    setActiveTab(tabKey);
+  };
+
   return (
-    <div className={`transition-colors duration-200`}>
+    <div className="transition-colors duration-200">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex justify-center mb-8">
@@ -43,34 +64,24 @@ const Prediction: React.FC = () => {
             content ranking
           </h1>
         </div>
+
+        {/* Navigation Tabs */}
         <div className="flex items-center justify-center w-full">
           <nav className="flex w-full justify-around gap-6 border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm">
-            {[
-              { key: "brand", label: "Prediction & Suggest", icon: Clock },
-              {
-                key: "content-attribution",
-                label: "Content Attribution",
-                icon: Star,
-              },
-            ].map(({ key, label, icon: Icon }) => (
+            {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
-                onClick={() => setActiveTab(key)}
-                className={`
-          relative flex items-center gap-2 px-4 py-2 text-[15px] font-medium
-          transition-all duration-300 rounded-md
-          ${
-            activeTab === key
-              ? "text-emerald-500"
-              : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-          }
-        `}
+                onClick={() => handleTabClick(key)}
+                className={`relative flex items-center gap-2 px-4 py-2 text-[15px] font-medium transition-all duration-300 rounded-md ${
+                  activeTab === key
+                    ? "text-emerald-500"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                }`}
               >
                 <Icon className="w-5 h-5" />
                 {label}
-
                 {activeTab === key && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-full transition-all duration-300"></span>
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-full transition-all duration-300" />
                 )}
               </button>
             ))}
@@ -78,9 +89,7 @@ const Prediction: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="">
-          <TabContent />
-        </div>
+        <div>{renderTabContent()}</div>
       </div>
     </div>
   );
