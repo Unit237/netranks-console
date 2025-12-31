@@ -1,6 +1,6 @@
-import { AlertCircle, ChevronDown, Menu, TrendingUp } from "lucide-react";
-import LoadingButton from "../../../../app/components/LoadingButton";
+import { ChevronDown, Menu, TrendingUp } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import LoadingButton from "../../../../app/components/LoadingButton";
 import { searchBrands } from "../../../brand-rank/services/brandService";
 import type { SurveyDetails } from "../../@types";
 import type { Brand, CreateSearchPayload } from "../../@types/optimization";
@@ -9,6 +9,7 @@ import {
   getBatchPrediction,
   getDashboardFilterFields,
 } from "../../services/optimizeService";
+import TasksTabMenu from "./TasksTabMenu";
 
 interface Task {
   id: string;
@@ -61,7 +62,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     manualUrlProp !== undefined ? manualUrlProp : localManualUrl;
   const setManualUrl = onManualUrlChange || setLocalManualUrl;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Use prop if provided, otherwise use local state
   const [localBatchResponse, setLocalBatchResponse] =
@@ -141,45 +141,12 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
     return `https://${trimmed}`;
   };
 
-  // Helper function to detect if error is a fetch/CORS error
-  const isFetchOrCorsError = (error: unknown): boolean => {
-    if (!error) return false;
-    
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorName = error instanceof Error ? error.name : "";
-    
-    // Check for common fetch/CORS error indicators
-    const fetchErrorIndicators = [
-      "Failed to fetch",
-      "NetworkError",
-      "Network request failed",
-      "CORS",
-      "cors",
-      "blocked by CORS",
-      "Access-Control",
-      "fetch",
-      "network",
-      "ERR_FAILED",
-      "ERR_NETWORK",
-      "ERR_CONNECTION",
-    ];
-    
-    return (
-      errorName === "TypeError" ||
-      errorName === "NetworkError" ||
-      fetchErrorIndicators.some((indicator) =>
-        errorMessage.toLowerCase().includes(indicator.toLowerCase())
-      )
-    );
-  };
-
   const triggerPredictions = async (brandName: string, url: string) => {
     // Normalize URL to ensure it has a protocol
     const normalizedUrl = normalizeUrl(url);
 
     if (!normalizedUrl) {
       console.warn("❌ triggerPredictions early return: No URL");
-      setFetchError(null); // Clear error if no URL
       return;
     }
 
@@ -193,12 +160,8 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
         hasSelectedQuestion: !!selectedQuestion,
         questionCount: surveyDetails?.Questions?.length || 0,
       });
-      setFetchError(null); // Clear error if no questions
       return;
     }
-
-    // Clear previous error
-    setFetchError(null);
 
     try {
       // Fetch batch predictions for selected question(s)
@@ -210,18 +173,9 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
       // Store the full response
       setBatchResponse(response);
-      setFetchError(null); // Clear error on success
     } catch (error) {
       console.error("❌ Error fetching batch predictions:", error);
       setBatchResponse(null);
-      
-      // Check if it's a fetch/CORS error
-      if (isFetchOrCorsError(error)) {
-        setFetchError("this site doesn't allow us to fetch content");
-      } else {
-        // For other errors, don't show the CORS message
-        setFetchError(null);
-      }
     }
   };
 
@@ -276,10 +230,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
 
   const handleManualUrlChange = (url: string) => {
     setManualUrl(url);
-    // Clear error when user changes the URL
-    if (fetchError) {
-      setFetchError(null);
-    }
   };
 
   // Transform action_priorities from batch response into tasks
@@ -590,11 +540,7 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
                   : "Enter brand URL (required)"
               }
               required
-              className={`w-full px-4 py-3 rounded-xl border-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
-                fetchError
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-500 dark:focus:ring-red-500"
-                  : "border-gray-200 dark:border-gray-600 focus:ring-green-500 dark:focus:ring-green-400"
-              }`}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 transition-all"
             />
             {brandUrl && brandUrl.trim() !== "" && !manualUrl && (
               <p className="mt-1 text-xs text-gray-500">
@@ -612,11 +558,6 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
             {!brandUrl && !manualUrl && (
               <p className="mt-1 text-xs text-orange-600">
                 No URL found from search. Please enter a URL.
-              </p>
-            )}
-            {fetchError && (
-              <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">
-                {fetchError}
               </p>
             )}
             <LoadingButton
@@ -690,58 +631,14 @@ const NewOptimizePageTab: React.FC<OptimizePageTabProps> = ({
       {/* Right Column - Tasks */}
       <div className="flex-1">
         {batchResponse && tasks.length > 0 ? (
-          <div className="bg-gray-100 rounded-[20px] shadow-sm border border-gray-200">
-            <div className="border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Your tasks
-                </span>
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                  {tasks.length}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2 p-2">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="px-6 py-4 hover:bg-gray-50 transition-colors bg-white rounded-[20px] shadow-sm border border-gray-200"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-gray-900 mb-1">
-                        {task.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {task.description}
-                      </p>
-
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          {task.impact === "high" ? (
-                            <>
-                              <AlertCircle className="w-3 h-3 text-red-600" />
-                              <span className="text-xs font-medium text-red-600">
-                                High impact
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-3 h-3 rounded-full border-2 border-gray-300" />
-                              <span className="text-xs text-gray-500">
-                                Normal impact
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <TasksTabMenu
+            tasks={tasks}
+            selectedPayload={selectedPayload}
+            selectedQuestion={selectedQuestion}
+            surveyDetails={surveyDetails}
+            manualUrl={manualUrl}
+            brandUrl={brandUrl}
+          />
         ) : batchResponse ? (
           <div className="bg-white rounded-[20px] shadow-sm border border-gray-200 p-12">
             <div className="text-center">
