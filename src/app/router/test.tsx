@@ -15,7 +15,6 @@ import PricingAndQuestion from "../../features/brand-rank/pages/ReviewAndQuestio
 import Alerts from "../../features/console/pages/Alerts";
 import Console from "../../features/console/pages/Console";
 import Members from "../../features/console/pages/Members";
-import NewProject from "../../features/console/pages/NewProject";
 import NewSurvey from "../../features/console/pages/NewSurvey";
 import Project from "../../features/console/pages/Project";
 import Support from "../../features/console/pages/Support";
@@ -43,7 +42,6 @@ const Router = () => {
       <Route path="signin" element={<Signin />} />
       <Route path="complete-profile" element={<CompleteProfile />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
-      {/* Support both /login/:id/:p1/:p2 and /:id/:p1/:p2 patterns for magic links */}
       <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route path=":magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route
@@ -77,11 +75,12 @@ const Router = () => {
             </RoleProtectedRoute>
           }
         />
+
         <Route
           path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
           element={<SurveyRun />}
         />
-        <Route path="new-project" element={<NewProject />} />
+
         <Route path="update-survey/:surveyId" element={<UpdateSurvey />} />
         <Route
           path="review-questions/:projectId"

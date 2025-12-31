@@ -27,3 +27,7 @@ export function toPercentage(value: number, decimals: number = 0): string {
 
   return (value * 100).toFixed(decimals) + "%";
 }
+
+export function money(amount: number) {
+  return amount ? `$${amount}` : `Free`;
+}
