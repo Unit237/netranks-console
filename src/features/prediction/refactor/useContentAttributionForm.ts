@@ -2,11 +2,6 @@
 import { useEffect, useState } from "react";
 import { questions } from "./constants";
 
-interface FormData {
-  name: string;
-  url: string;
-}
-
 interface UseContentAttributionFormReturn {
   name: string;
   url: string;
