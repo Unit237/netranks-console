@@ -1,180 +1,54 @@
+// NOTE: This component is currently unused and not wired into Router.tsx
+// Content Attribution Analyzer: Analyzes content segments to understand which parts help or hurt AI visibility ranking
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
-  ArrowUp,
   BarChart3,
   CheckCircle,
-  FileText,
-  Sparkles,
-  Target,
+  Loader2,
   TrendingUp,
   XCircle,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
-import prms from "../../../app/shared/utils/prms";
 import ProfessionalDropdown from "../components/ui/ProfessionalDropdown";
 import SegmentCard from "../components/ui/SegmentCard";
 import type { Segment } from "../components/ui/SegmentDetailModal";
 import SegmentDetailModal from "../components/ui/SegmentDetailModal";
+import { questions } from "./constants";
+import { useContentAttributionForm } from "./useContentAttributionForm";
+import {
+  getContentAttribution,
+  type ContentAttributionResponse,
+} from "./predictionService";
 
 // Types
-interface AnalysisResult {
-  success: boolean;
-  predicted_rank: number;
-  summary: {
-    total_segments: number;
-    avg_uniqueness_score: number;
-    avg_preservation_score: number;
-    avg_hybrid_score: number;
-  };
-  top_helping?: Segment[];
-  top_hurting?: Segment[];
-  segments?: Segment[];
-  error?: string;
-}
-
 type SortOrder = "original" | "worst-to-best" | "best-to-worst";
 
-const questions = [
-  {
-    value: "ranking_optimization",
-    label:
-      "Which project management apps are industry leaders currently using?",
-    description:
-      "Discover top project management tools used by industry leaders",
-    category: "Project Management",
-    icon: <Sparkles className="w-4 h-4" />,
-  },
-  {
-    value: "content_gaps",
-    label:
-      "Looking for cloud-based software to oversee construction projects—any suggestions?",
-    description:
-      "Find specialized construction project management software solutions",
-    category: "Construction Software",
-    icon: <Target className="w-4 h-4" />,
-  },
-  {
-    value: "competitor_analysis",
-    label:
-      "How can I access healthcare advice 24/7 without going to the hospital?",
-    description: "Explore 24/7 healthcare advice and telemedicine services",
-    category: "Healthcare Services",
-    icon: <FileText className="w-4 h-4" />,
-  },
-  {
-    value: "keyword_optimization",
-    label: "What app offers online doctor booking and chat in Indonesia?",
-    description: "Find telemedicine apps with doctor booking in Indonesia",
-    category: "Telemedicine Apps",
-    icon: <ArrowUp className="w-4 h-4" />,
-  },
-  {
-    value: "content_structure",
-    label: "Where can I find telemedicine services for common illnesses?",
-    description: "Locate telemedicine platforms for common health issues",
-    category: "Telemedicine Services",
-    icon: <FileText className="w-4 h-4" />,
-  },
-  {
-    value: "user_intent",
-    label: "I need top-notch printing services in Warsaw. Any recommendations?",
-    description: "Find high-quality printing services in Warsaw, Poland",
-    category: "Printing Services",
-    icon: <Target className="w-4 h-4" />,
-  },
-  {
-    value: "technical_seo",
-    label: "Which software works best for collaborative project planning?",
-    description: "Compare collaborative project planning software solutions",
-    category: "Collaborative Tools",
-    icon: <AlertCircle className="w-4 h-4" />,
-  },
-  {
-    value: "content_freshness",
-    label: "What app offers online doctor booking and chat in Indonesia?",
-    description: "Find telemedicine apps with doctor booking in Indonesia",
-    category: "Telemedicine Apps",
-    icon: <Sparkles className="w-4 h-4" />,
-  },
-];
-
-const analyzeContent = async (data: {
-  question_text: string;
-  suggest_name: string;
-  url_title: string;
-  url: string;
-}): Promise<AnalysisResult> => {
-  const response = await fetch(`${prms.API_BASE_URL}/analyze-segments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      question_text: data.question_text,
-      suggest_name: data.suggest_name,
-      url_title: data.url_title,
-      url: data.url,
-    }),
-  });
-
-  if (!response.ok) throw new Error("Failed to fetch prediction");
-
-  const result = await response.json();
-
-  return {
-    success: true,
-    ...result,
-  };
-};
+const STORAGE_PREFIX = "contentAttribution_";
 
 const ContentAttributionAnalyzer: React.FC = () => {
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("");
-  const [formData, setFormData] = useState({
-    questionText: "",
-    suggestName: "",
-    urlTitle: "",
-    url: "",
-  });
+  // Form state management via custom hook
+  const {
+    name,
+    url,
+    selectedQuestion,
+    setName,
+    setUrl,
+    setSelectedQuestion,
+    getQuestionText,
+  } = useContentAttributionForm();
+
+  // Component state
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<AnalysisResult | null>(null);
+  const [results, setResults] = useState<ContentAttributionResponse | null>(
+    null
+  );
   const [error, setError] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("original");
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
 
-  // Load saved data from localStorage on mount
+  // Load saved results from localStorage on mount
   useEffect(() => {
-    const savedFormData = localStorage.getItem("contentAttribution_formData");
-    const savedSelectedQuestion = localStorage.getItem(
-      "contentAttribution_selectedQuestion"
-    );
-    const savedResults = localStorage.getItem("contentAttribution_data");
-
-    if (savedFormData) {
-      try {
-        const parsed = JSON.parse(savedFormData);
-        setFormData(parsed);
-      } catch (e) {
-        console.error("Failed to parse saved form data:", e);
-      }
-    }
-
-    if (savedSelectedQuestion) {
-      setSelectedQuestion(savedSelectedQuestion);
-    } else if (savedFormData) {
-      // Try to match saved questionText to a question in the dropdown
-      try {
-        const parsed = JSON.parse(savedFormData);
-        if (parsed.questionText) {
-          const matchingQuestion = questions.find(
-            (q) => q.label === parsed.questionText
-          );
-          if (matchingQuestion) {
-            setSelectedQuestion(matchingQuestion.value);
-          }
-        }
-      } catch (e) {
-        // Ignore
-      }
-    }
-
+    const savedResults = localStorage.getItem(`${STORAGE_PREFIX}data`);
     if (savedResults) {
       try {
         const parsed = JSON.parse(savedResults);
@@ -187,14 +61,30 @@ const ContentAttributionAnalyzer: React.FC = () => {
     }
   }, []);
 
-  const handleSubmit = async () => {
-    // Get the question text from the selected question
-    const selectedQuestionObj = questions.find(
-      (q) => q.value === selectedQuestion
-    );
-    const questionText = selectedQuestionObj?.label || formData.questionText;
+  // Save results to localStorage when they change
+  useEffect(() => {
+    if (results) {
+      localStorage.setItem(`${STORAGE_PREFIX}data`, JSON.stringify(results));
+    }
+  }, [results]);
 
-    if (!questionText || !formData.url) {
+  // URL validation
+  const isValidUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      const validProtocol = ["http:", "https:"].includes(parsed.protocol);
+      const tldPattern = /\.[a-z]{2,}(?:\.[a-z]{2,})?$/i;
+      return validProtocol && tldPattern.test(parsed.hostname);
+    } catch {
+      return false;
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    const questionText = getQuestionText();
+
+    if (!questionText || !url) {
       setError("Please fill in required fields");
       return;
     }
@@ -203,30 +93,15 @@ const ContentAttributionAnalyzer: React.FC = () => {
     setError("");
 
     try {
-      const result = await analyzeContent({
+      const result = await getContentAttribution({
         question_text: questionText,
-        suggest_name: formData.suggestName,
-        url_title: formData.urlTitle,
-        url: formData.url,
+        suggest_name: name,
+        url_title: name,
+        url: url,
       });
 
       if (result.success) {
         setResults(result);
-        // Save to localStorage
-        localStorage.setItem("contentAttribution_data", JSON.stringify(result));
-        localStorage.setItem(
-          "contentAttribution_formData",
-          JSON.stringify({
-            ...formData,
-            questionText: questionText,
-          })
-        );
-        if (selectedQuestion) {
-          localStorage.setItem(
-            "contentAttribution_selectedQuestion",
-            selectedQuestion
-          );
-        }
       } else {
         setError(result.error || "Analysis failed");
       }
@@ -237,30 +112,28 @@ const ContentAttributionAnalyzer: React.FC = () => {
     }
   };
 
-  const isValidUrl = (url: string) => {
-    try {
-      const parsed = new URL(url);
-      const validProtocol = ["http:", "https:"].includes(parsed.protocol);
+  // Auto-submit when all fields are filled and URL is valid
+  const handleChange = (field: "name" | "url", value: string) => {
+    if (field === "name") {
+      setName(value);
+    } else {
+      setUrl(value);
+    }
 
-      const tldPattern = /\.[a-z]{2,}(?:\.[a-z]{2,})?$/i;
+    // Check if we should auto-submit
+    const updatedName = field === "name" ? value : name;
+    const updatedUrl = field === "url" ? value : url;
+    const allFilled = updatedName && updatedUrl && selectedQuestion;
 
-      return validProtocol && tldPattern.test(parsed.hostname);
-    } catch {
-      return false;
+    if (allFilled && isValidUrl(updatedUrl)) {
+      // Small delay to allow state to update
+      setTimeout(() => {
+        handleSubmit();
+      }, 100);
     }
   };
 
-  const handleChange = (key: string, value: string) => {
-    const updated = { ...formData, [key]: value };
-    setFormData(updated);
-
-    const allFilled = Object.values(updated).every((v) => v && v.trim() !== "");
-
-    if (allFilled && isValidUrl(updated.url)) {
-      handleSubmit();
-    }
-  };
-
+  // Sort segments based on selected order
   const sortedSegments = useMemo(() => {
     if (!results?.segments) return [];
 
@@ -276,6 +149,7 @@ const ContentAttributionAnalyzer: React.FC = () => {
     }
   }, [results?.segments, sortOrder]);
 
+  // Get color for score visualization
   const getScoreColor = (score: number) => {
     if (score > 0) {
       const intensity = Math.min(score, 1.0);
@@ -291,8 +165,7 @@ const ContentAttributionAnalyzer: React.FC = () => {
     <div className="p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-
-        <div className="">
+        <div>
           <h2 className="text-xl font-semibold text-[#141414] dark:text-white">
             Rank Prediction & Suggestions
           </h2>
@@ -303,7 +176,7 @@ const ContentAttributionAnalyzer: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white dark:bg-slate-800">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6">
           <div className="space-y-4">
             <div className="w-full mb-4">
               <ProfessionalDropdown
@@ -322,17 +195,17 @@ const ContentAttributionAnalyzer: React.FC = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label
-                  htmlFor="suggestName"
+                  htmlFor="name"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                 >
-                  Suggest Name / Brand{" "}
+                  Brand Name{" "}
                   <span className="text-slate-500">(optional)</span>
                 </label>
                 <input
                   type="text"
-                  id="suggestName"
-                  value={formData.suggestName}
-                  onChange={(e) => handleChange("suggestName", e.target.value)}
+                  id="name"
+                  value={name}
+                  onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="OpenAI"
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                 />
@@ -340,55 +213,37 @@ const ContentAttributionAnalyzer: React.FC = () => {
 
               <div>
                 <label
-                  htmlFor="urlTitle"
+                  htmlFor="url"
                   className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
                 >
-                  URL / Domain{" "}
-                  <span className="text-slate-500">(optional)</span>
+                  Full URL{" "}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 ml-2">
+                    🔗 Auto-Fetch
+                  </span>
                 </label>
                 <input
-                  type="text"
-                  id="urlTitle"
-                  value={formData.urlTitle}
-                  onChange={(e) => handleChange("urlTitle", e.target.value)}
-                  placeholder="openai.com"
+                  type="url"
+                  id="url"
+                  value={url}
+                  onChange={(e) => handleChange("url", e.target.value)}
+                  placeholder="https://openai.com/product"
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                 />
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Site content will be automatically fetched and analyzed from
+                  this URL
+                </p>
               </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="url"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Full URL{" "}
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 ml-2">
-                  🔗 Auto-Fetch
-                </span>
-              </label>
-              <input
-                type="url"
-                id="url"
-                value={formData.url}
-                onChange={(e) => handleChange("url", e.target.value)}
-                placeholder="https://openai.com/product"
-                className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-              />
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Site content will be automatically fetched and analyzed from
-                this URL
-              </p>
             </div>
 
             <button
               onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              disabled={isLoading || !url || !selectedQuestion}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   Analyzing...
                 </>
               ) : (
