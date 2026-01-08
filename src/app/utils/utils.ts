@@ -31,28 +31,43 @@ export function cleanDescription(text: string | null | undefined): string {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, " ");
 
-  // Remove patterns like "cite turn0view0" or similar unwanted text
+  // Remove patterns like "cite turn0view0", "cite turn1search12" or similar unwanted text
   // Match various combinations with flexible spacing and number patterns
   cleaned = cleaned
     // Pattern: "cite turn0view0" or "cite turn 0 view 0" (with spaces)
     .replace(/\bcite\s*turn\s*\d*\s*view\s*\d*\b/gi, "")
     .replace(/\bcite\s*turn\d*view\d*\b/gi, "")
+    // Pattern: "cite turn1search12" or "cite turn 1 search 12" (with "search" instead of "view")
+    .replace(/\bcite\s*turn\s*\d*\s*search\s*\d*\b/gi, "")
+    .replace(/\bcite\s*turn\d*search\d*\b/gi, "")
     // Pattern: "turn0view0" or "turn 0 view 0"
     .replace(/\bturn\s*\d*\s*view\s*\d*\b/gi, "")
     .replace(/\bturn\d*view\d*\b/gi, "")
+    // Pattern: "turn1search12" or "turn 1 search 12"
+    .replace(/\bturn\s*\d*\s*search\s*\d*\b/gi, "")
+    .replace(/\bturn\d*search\d*\b/gi, "")
     // Pattern: "cite turn0" or "cite turn 0"
     .replace(/\bcite\s*turn\s*\d*\b/gi, "")
     .replace(/\bcite\s*turn\d*\b/gi, "")
     // Pattern: "cite view0" or "cite view 0"
     .replace(/\bcite\s*view\s*\d*\b/gi, "")
     .replace(/\bcite\s*view\d*\b/gi, "")
-    // More aggressive: remove standalone "cite", "turn0", "view0" patterns
+    // Pattern: "cite search0" or "cite search 0"
+    .replace(/\bcite\s*search\s*\d*\b/gi, "")
+    .replace(/\bcite\s*search\d*\b/gi, "")
+    // More aggressive: remove standalone "cite", "turn0", "view0", "search0" patterns
     .replace(/\bcite\b/gi, "")
     .replace(/\bturn\s*\d+\b/gi, "")
     .replace(/\bview\s*\d+\b/gi, "")
-    // Remove any sequence of "cite turn view" regardless of spacing/numbers
+    .replace(/\bsearch\s*\d+\b/gi, "")
+    // Remove any sequence of "cite turn view" or "cite turn search" regardless of spacing/numbers
     .replace(/cite[\s]*turn[\s]*\d*[\s]*view[\s]*\d*/gi, "")
-    .replace(/turn[\s]*\d*[\s]*view[\s]*\d*/gi, "");
+    .replace(/turn[\s]*\d*[\s]*view[\s]*\d*/gi, "")
+    .replace(/cite[\s]*turn[\s]*\d*[\s]*search[\s]*\d*/gi, "")
+    .replace(/turn[\s]*\d*[\s]*search[\s]*\d*/gi, "");
+  
+  // Remove "mentions" at the end (case insensitive)
+  cleaned = cleaned.replace(/\s+mentions\s*$/gi, "");
 
   // Remove any remaining HTML entity patterns (&#number; or &entity;)
   cleaned = cleaned.replace(/&#?\w+;/g, "");
