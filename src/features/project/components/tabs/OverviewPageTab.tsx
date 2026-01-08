@@ -69,10 +69,7 @@ const OverviewPageTab: React.FC<OverviewPageTabProps> = ({ surveyDetails }) => {
 
       {dashboard.SampleAiAnswerSnippets &&
         dashboard.SampleAiAnswerSnippets.length > 0 && (
-          <SampleAiAnswerSnippet 
-            key={dashboard.SampleAiAnswerSnippets.map(s => s.AnswerUrl).join('|')}
-            aiAnswer={dashboard.SampleAiAnswerSnippets} 
-          />
+          <SampleAiAnswerSnippet aiAnswer={dashboard.SampleAiAnswerSnippets} />
         )}
 
       {/* <VisibilityTrendsOverTime
