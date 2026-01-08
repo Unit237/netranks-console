@@ -61,7 +61,7 @@ const Signin: React.FC = () => {
               Enter your email to get started
             </p>
 
-            <form className="w-full" onSubmit={handleSubmit}>
+            <div className="w-full">
               {/* Email Input */}
               <div className="relative w-full mb-6">
                 <Keyboard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300 w-5 h-5" />
@@ -83,7 +83,7 @@ const Signin: React.FC = () => {
               >
                 {submitting ? "Sending Magic Link..." : "Send Magic Link"}
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>

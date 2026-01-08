@@ -131,9 +131,8 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
           </div>
 
           {/* Dropdown - Multiple brands detected */}
-          {showDropdown && options.length > 0 && <div className=""></div>}
-
-          {/* <div className="absolute w-full left-0 sm:left-auto sm:w-[calc(100%-4rem)] sm:ml-8 border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-b-[20px] sm:rounded-b-[25px] z-10">
+          {showDropdown && options.length > 0 && (
+            <div className="absolute w-full left-0 sm:left-auto sm:w-[calc(100%-4rem)] sm:ml-8 border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-b-[20px] sm:rounded-b-[25px] z-10">
               <div className="flex items-start space-x-2 p-3 sm:p-4">
                 <div className="text-orange-500 flex items-center flex-shrink-0">
                   <svg
@@ -160,8 +159,9 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
                     Not seeing your brand? Try adding website
                   </p>
                 </div>
-              </div> 20 sm:mt-20 md:mt-28
-            </div> */}
+              </div>
+            </div>
+          )}
 
           {/* Error message */}
           {error && (
@@ -173,7 +173,7 @@ const AutocompleteBrand: React.FC<Props> = ({ onSelect }) => {
       </div>
 
       {/* Brand options */}
-      <div className="flex flex-col bg-gray-100 dark:bg-gray-700 rounded-[20px] sm:rounded-[26px] mt-2 w-full max-w-[600px] mx-auto">
+      <div className="flex flex-col bg-gray-100 dark:bg-gray-700 rounded-[20px] sm:rounded-[26px] mt-20 sm:mt-20 md:mt-28 w-full max-w-[600px] mx-auto">
         {options.map((option) => (
           <div
             key={option.brandId}
