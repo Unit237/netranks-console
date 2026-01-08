@@ -27,3 +27,12 @@ export function toPercentage(value: number, decimals: number = 0): string {
 
   return (value * 100).toFixed(decimals) + "%";
 }
+
+export function money(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
