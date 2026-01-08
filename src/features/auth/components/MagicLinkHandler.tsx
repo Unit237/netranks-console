@@ -56,7 +56,7 @@ const MagicLinkHandler = () => {
       }
 
       // Default redirect to console after successful authentication
-      navigate("/console/project/1", { replace: true });
+      navigate("/console", { replace: true });
     } catch (err) {
       console.error("Magic link authentication failed", err);
 

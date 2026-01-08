@@ -76,7 +76,7 @@ export default function SampleAiAnswerSnippet({
       <div className="flex flex-col gap-2 flex-grow mb-8 bg-white rounded-lg shadow-md border border-gray-200">
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 p-4">
-            Actual AI answers for aiAnswer
+            Actual AI answers
           </h2>
           <div className="h-[300px] flex items-center justify-center">
             <LoadingSpinner message="Loading" />
@@ -92,7 +92,7 @@ export default function SampleAiAnswerSnippet({
     <div className="bg-gray-100 dark:bg-gray-800 rounded-[20px] shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="px-2 py-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 pb-4 pl-4">
-          Actual AI answers for aiAnswer
+          Actual AI answers
         </h2>
 
         <div className="relative">
