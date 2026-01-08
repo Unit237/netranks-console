@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "../../../app/components/LoadingButton";
+import { getTwoWords } from "../../../app/utils/utils";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { createSurvey } from "../../project/services/projectService";
@@ -209,7 +210,9 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
         const p1 = survey?.PasswordOne;
         const p2 = survey?.PasswordTwo;
 
-        const surveyPath = `/console/survey/${surveyId}/${surveyName}/${surveyRunId}/${p1}/${p2}`;
+        const newSurveyName = getTwoWords(surveyName);
+
+        const surveyPath = `/console/survey/${surveyId}/${newSurveyName}/${surveyRunId}/${p1}/${p2}`;
 
         // Show toast notification with View button at the bottom
         toast.custom(
