@@ -7,13 +7,17 @@ variable "aws_region" {
 variable "bucket_name" {
   description = "Name of the S3 bucket"
   type        = string
-  default     = "console.netranks.ai"
+  # Default will be overridden by workspace-specific tfvars files
+  # Dev: dev.netranks.ai
+  # Prod: console.netranks.ai
 }
 
 variable "environment" {
-  description = "Environment name (e.g., production, staging)"
+  description = "Environment name (e.g., production, development)"
   type        = string
-  default     = "production"
+  # Default will be overridden by workspace-specific tfvars files
+  # Dev: development
+  # Prod: production
 }
 
 variable "domain_name" {

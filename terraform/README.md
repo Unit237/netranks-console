@@ -2,6 +2,8 @@
 
 This directory contains Terraform configuration for deploying the NetRanks Console frontend to AWS S3 and CloudFront.
 
+**Supports multiple environments:** Dev and Production using Terraform workspaces.
+
 ## Prerequisites
 
 1. **AWS CLI** installed and configured with appropriate credentials
@@ -11,41 +13,48 @@ This directory contains Terraform configuration for deploying the NetRanks Conso
    - CloudFront distributions
    - IAM policies
 
-## Setup
+## Quick Start
 
-1. **Copy the example variables file:**
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
+### Dev Environment
 
-2. **Edit `terraform.tfvars`** if you need to customize any values:
-   ```hcl
-   aws_region  = "eu-central-1"
-   bucket_name = "console.netranks.ai"
-   environment = "production"
-   ```
+```bash
+cd terraform
 
-3. **Initialize Terraform:**
-   ```bash
-   cd terraform
-   terraform init
-   ```
+# Create and select dev workspace
+terraform workspace new dev
+terraform workspace select dev
 
-4. **Review the planned changes:**
-   ```bash
-   terraform plan
-   ```
+# Initialize
+terraform init
 
-5. **Apply the infrastructure:**
-   ```bash
-   terraform apply
-   ```
+# Plan and apply
+terraform plan -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
+```
 
-   This will create:
-   - S3 bucket: `console.netranks.ai`
-   - CloudFront distribution
-   - Origin Access Control (OAC) for secure S3 access
-   - Bucket policy allowing CloudFront access
+### Production Environment
+
+```bash
+cd terraform
+
+# Create and select prod workspace
+terraform workspace new prod
+terraform workspace select prod
+
+# Initialize
+terraform init
+
+# Plan and apply
+terraform plan -var-file=prod.tfvars
+terraform apply -var-file=prod.tfvars
+```
+
+## Environment Configuration
+
+- **Dev**: Uses `dev.tfvars` → Creates `dev.netranks.ai` bucket
+- **Prod**: Uses `prod.tfvars` → Creates `console.netranks.ai` bucket
+
+See [WORKSPACES.md](WORKSPACES.md) for detailed workspace management guide.
 
 ## Deployment
 

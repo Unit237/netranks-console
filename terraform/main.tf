@@ -102,8 +102,8 @@ resource "aws_cloudfront_distribution" "console" {
   comment             = "CloudFront distribution for ${var.bucket_name}"
   default_root_object = "index.html"
 
-  # Custom domain configuration (optional - uncomment if you have ACM certificate)
-  # aliases = [var.domain_name]
+  # Custom domain configuration
+  aliases = var.domain_name != "" ? [var.domain_name] : []
 
   # Default cache behavior
   default_cache_behavior {
@@ -245,16 +245,22 @@ resource "aws_cloudfront_distribution" "console" {
     }
   }
 
-  # SSL certificate configuration (uncomment if using custom domain)
-  # viewer_certificate {
-  #   acm_certificate_arn      = var.acm_certificate_arn
-  #   ssl_support_method       = "sni-only"
-  #   minimum_protocol_version = "TLSv1.2_2021"
-  # }
+  # SSL certificate configuration
+  dynamic "viewer_certificate" {
+    for_each = var.acm_certificate_arn != "" ? [1] : []
+    content {
+      acm_certificate_arn      = var.acm_certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
+    }
+  }
 
-  # Use CloudFront default certificate for now
-  viewer_certificate {
-    cloudfront_default_certificate = true
+  # Use CloudFront default certificate if no ACM cert provided
+  dynamic "viewer_certificate" {
+    for_each = var.acm_certificate_arn == "" ? [1] : []
+    content {
+      cloudfront_default_certificate = true
+    }
   }
 
   tags = {
