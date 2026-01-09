@@ -55,13 +55,13 @@ jobs:
         with:
           terraform_version: '1.0.0'
 
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -backend-config=backend-config/dev.hcl
+
       - name: Select Terraform workspace
         working-directory: terraform
         run: terraform workspace select ${{ env.TERRAFORM_WORKSPACE }} || terraform workspace new ${{ env.TERRAFORM_WORKSPACE }}
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
 
       - name: Get Terraform outputs
         id: terraform-outputs
