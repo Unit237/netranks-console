@@ -36,7 +36,7 @@ jobs:
         env:
           VITE_PROD: "true"
           VITE_BACKEND_API_URL: ${{ secrets.VITE_BACKEND_API_URL }}
-          VITE_NETRANKS_DOMAIN: ${{ secrets.VITE_NETRANKS_DOMAIN }}
+          VITE_NETRANKS_DOMAIN: ${{ secrets.VITE_NETRANKS_DOMAIN_PROD }}
           # Note: VITE_DEMO_BACKEND_API_URL is intentionally NOT set for production
         run: npm run build
 
