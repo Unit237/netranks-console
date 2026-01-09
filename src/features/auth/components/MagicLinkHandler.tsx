@@ -55,7 +55,7 @@ const MagicLinkHandler = () => {
         }
       }
 
-      // Default redirect to console after successful authentication
+      // Default redirect to console prior to successful authentication
       navigate("/console", { replace: true });
     } catch (err) {
       console.error("Magic link authentication failed", err);
