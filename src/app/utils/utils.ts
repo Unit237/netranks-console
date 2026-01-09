@@ -11,6 +11,12 @@ export function truncate(str?: string, maxLength: number = 23): string {
   return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 }
 
+export function getTwoWords(sentence?: string): string {
+  if (!sentence) return "";
+
+  return sentence.trim().split(/\s+/).slice(0, 2).join(" ");
+}
+
 export const truncateSurveyName = (text: string, limit = 50) =>
   text.length > limit ? `${text.slice(0, limit)}...` : text;
 
@@ -68,7 +74,7 @@ export function cleanDescription(text: string | null | undefined): string {
     .replace(/turn[\s]*\d*[\s]*view[\s]*\d*/gi, "")
     .replace(/cite[\s]*turn[\s]*\d*[\s]*search[\s]*\d*/gi, "")
     .replace(/turn[\s]*\d*[\s]*search[\s]*\d*/gi, "");
-  
+
   // Remove "mentions" at the end (case insensitive)
   cleaned = cleaned.replace(/\s+mentions\s*$/gi, "");
 
