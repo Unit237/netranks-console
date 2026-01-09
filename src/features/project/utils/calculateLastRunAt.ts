@@ -15,7 +15,7 @@ export const calculateLastRunAt = (
     return null;
   }
 
-  // If paused (SchedulePeriodHours === 0), can not calculate LastRunAt
+  // If paused (SchedulePeriodHours === 0), can't calculate LastRunAt
   if (schedulePeriodHours === 0) {
     return null;
   }
