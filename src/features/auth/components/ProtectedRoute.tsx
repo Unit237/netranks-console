@@ -1,15 +1,10 @@
-import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { debugLog } from "../../../app/utils/debugLogger";
 import token from "../../../app/utils/token";
 import { useUser } from "../context/UserContext";
 
-interface ProtectedRouteProps {
-  children: ReactNode;
-}
-
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const ProtectedRoute = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading, error } = useUser();
@@ -29,7 +24,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       errorMessage: error?.message,
     });
 
-    // Skip authentication check for dashboard route
     if (isDashboardRoute) {
       debugLog("ProtectedRoute", "Skipping auth check (dashboard route)");
       return;
@@ -43,7 +37,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       return;
     }
 
-    // Track when loading starts (API call initiated)
     if (loading) {
       debugLog("ProtectedRoute", "Loading in progress");
       hasStartedLoading.current = true;
@@ -54,7 +47,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     if (hasStartedLoading.current && !hasLoggedAuthStatus.current) {
       hasLoggedAuthStatus.current = true;
 
-      // Only log if API call completed and user is not authenticated
       if (error || !user) {
         debugLog("ProtectedRoute", "User not authenticated, redirecting", {
           hasError: !!error,
@@ -69,8 +61,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Allow dashboard route without authentication
   if (isDashboardRoute) {
-    debugLog("ProtectedRoute", "Rendering children (dashboard route)");
-    return <>{children}</>;
+    debugLog("ProtectedRoute", "Rendering outlet (dashboard route)");
+    return <Outlet />;
   }
 
   // Show loading state while checking authentication
@@ -79,6 +71,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       loading,
       hasUser: !!user,
     });
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">
@@ -89,8 +82,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  debugLog("ProtectedRoute", "Rendering protected children");
-  return <>{children}</>;
+  debugLog("ProtectedRoute", "Rendering protected outlet");
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

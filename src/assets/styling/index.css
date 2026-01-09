@@ -42,3 +42,32 @@ body {
 .animate-\[slideUp_0\.3s_ease-out\] {
   animation: slideUp 0.3s ease-out;
 }
+
+/* Enable smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Style the scrollbar track */
+::-webkit-scrollbar {
+  width: 2px; /* vertical scrollbar */
+  height: 2px; /* horizontal scrollbar */
+  color: #5a5656;
+}
+
+/* Scrollbar track (background) */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+/* Scrollbar thumb (the moving handle) */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+/* Scrollbar thumb on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

@@ -43,55 +43,49 @@ const Router = () => {
       <Route path="signin" element={<Signin />} />
       <Route path="complete-profile" element={<CompleteProfile />} />
       <Route path="magic-link-sent" element={<MagicLinkSent />} />
-      {/* Support both /login/:id/:p1/:p2 and /:id/:p1/:p2 patterns for magic links */}
       <Route path="login/:magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
       <Route path=":magicLinkId/:p1/:p2" element={<MagicLinkHandler />} />
-      <Route
-        path="console"
-        element={
-          <ProtectedRoute>
-            <Console />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Project />} />
-        <Route path="alerts" element={<Alerts />} />
-        <Route path="members" element={<Members />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="support" element={<Support />} />
-        <Route
-          path="billing"
-          element={
-            <RoleProtectedRoute requiredPermission="viewBilling">
-              <Billing />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route path="brand" element={<Brand />} />
-        <Route path="project/:projectId" element={<Project />} />
-        <Route
-          path="new-survey/:projectId"
-          element={
-            <RoleProtectedRoute requiredPermission="createSurveys">
-              <NewSurvey />
-            </RoleProtectedRoute>
-          }
-        />
-        <Route
-          path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
-          element={<SurveyRun />}
-        />
-        <Route path="new-project" element={<NewProject />} />
-        <Route path="update-survey/:surveyId" element={<UpdateSurvey />} />
-        <Route
-          path="review-questions/:projectId"
-          element={<PricingAndQuestion />}
-        />
-        <Route path="survey/:surveyId" element={<SurveyDetails />} />
-        <Route
-          path="dashboard/:surveyRunId/:p1/:p2"
-          element={<SurveyDashboard />}
-        />
+      <Route element={<ProtectedRoute />}>
+        <Route path="console" element={<Console />}>
+          <Route index element={<Project />} />
+          <Route path="alerts" element={<Alerts />} />
+          <Route path="members" element={<Members />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="support" element={<Support />} />
+          <Route
+            path="billing"
+            element={
+              <RoleProtectedRoute requiredPermission="viewBilling">
+                <Billing />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route path="brand" element={<Brand />} />
+          <Route path="project/:projectId" element={<Project />} />
+          <Route
+            path="new-survey/:projectId"
+            element={
+              <RoleProtectedRoute requiredPermission="createSurveys">
+                <NewSurvey />
+              </RoleProtectedRoute>
+            }
+          />
+          <Route
+            path="survey/:surveyId/:surveyName/:surveyRunId/:p1/:p2"
+            element={<SurveyRun />}
+          />
+          <Route path="new-project" element={<NewProject />} />
+          <Route path="update-survey/:surveyId" element={<UpdateSurvey />} />
+          <Route
+            path="review-questions/:projectId"
+            element={<PricingAndQuestion />}
+          />
+          <Route path="survey/:surveyId" element={<SurveyDetails />} />
+          <Route
+            path="dashboard/:surveyRunId/:p1/:p2"
+            element={<SurveyDashboard />}
+          />
+        </Route>
       </Route>
     </Routes>
   );
