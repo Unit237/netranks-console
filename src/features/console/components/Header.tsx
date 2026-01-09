@@ -93,6 +93,7 @@ const Header = () => {
           <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
             {tabs.map((tab) => {
               const isActive = tab.id === activeTabId;
+
               return (
                 <div
                   key={tab.id}

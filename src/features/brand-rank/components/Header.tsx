@@ -108,12 +108,12 @@ const Header = () => {
                 Sign in
               </button>
 
-              <button
+              {/* <button
                 className="px-4 py-1.5 text-sm rounded-md border transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                 onClick={() => navigate("/signin")}
               >
                 Sign up
-              </button>
+              </button> */}
             </motion.div>
 
             {/* Mobile Menu Button */}
@@ -152,7 +152,7 @@ const Header = () => {
                   Sign in
                 </button>
 
-                <button
+                {/* <button
                   className="w-full rounded-md border px-4 py-2 text-sm bg-gray-100 dark:hover:bg-white/10"
                   onClick={() => {
                     navigate("/signin");
@@ -160,7 +160,7 @@ const Header = () => {
                   }}
                 >
                   Sign up
-                </button>
+                </button> */}
               </div>
             </motion.div>
           )}
