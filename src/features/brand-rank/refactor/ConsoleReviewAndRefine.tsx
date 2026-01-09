@@ -11,7 +11,6 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import LoadingButton from "../../../app/components/LoadingButton";
 import { getTwoWords } from "../../../app/utils/utils";
-import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../../console/context/TabContext";
 import { createSurvey } from "../../project/services/projectService";
 import { sanitizeSurveyName } from "../../project/utils/sanitizeSurveyName";
@@ -51,7 +50,6 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
   const navigate = useNavigate();
   const { activeTabId, replaceTab, navigateToTab, addTab } = useTabs();
-  const { refreshUser } = useUser();
 
   const [models, setModels] = useState<Model[]>([
     {
@@ -203,7 +201,6 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
 
       if (surveyId) {
         // Refresh user data to get the updated project with new survey
-        await refreshUser();
 
         const surveyRunId = await startSurvey(survey.Id);
 
@@ -240,13 +237,15 @@ const ConsoleReviewAndRefine: React.FC<ConsoleReviewAndRefineProps> = ({
           }
         );
 
-        replaceTab(activeTabId, {
-          name: "Run survey",
-          path: surveyPath,
-          headerName: "Run survey",
-        });
+        setTimeout(() => {
+          replaceTab(activeTabId, {
+            name: "Run survey",
+            path: surveyPath,
+            headerName: "Run survey",
+          });
 
-        navigate(surveyPath);
+          navigate(surveyPath);
+        }, 2000);
       }
     } catch (error) {
       console.error("Failed to create survey:", error);
