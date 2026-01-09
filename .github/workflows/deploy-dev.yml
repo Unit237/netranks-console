@@ -1,0 +1,116 @@
+name: Deploy to Dev Environment
+
+on:
+  push:
+    branches:
+      - jt-cicd
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - 'README.md'
+
+env:
+  AWS_REGION: eu-central-1
+  NODE_VERSION: '20'
+  TERRAFORM_WORKSPACE: dev
+
+jobs:
+  deploy:
+    name: Build and Deploy to Dev
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application (Dev)
+        env:
+          VITE_PROD: "false"
+          VITE_BACKEND_API_URL: ${{ secrets.VITE_BACKEND_API_URL }}
+          VITE_DEMO_BACKEND_API_URL: ${{ secrets.VITE_DEMO_BACKEND_API_URL }}
+          VITE_NETRANKS_DOMAIN: ${{ secrets.VITE_NETRANKS_DOMAIN }}
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.0.0'
+
+      - name: Select Terraform workspace
+        working-directory: terraform
+        run: terraform workspace select ${{ env.TERRAFORM_WORKSPACE }} || terraform workspace new ${{ env.TERRAFORM_WORKSPACE }}
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Get Terraform outputs
+        id: terraform-outputs
+        working-directory: terraform
+        run: |
+          BUCKET_NAME=$(terraform output -raw s3_bucket_name)
+          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+
+      - name: Sync static assets to S3
+        run: |
+          aws s3 sync dist/ s3://${{ steps.terraform-outputs.outputs.bucket_name }} \
+            --region ${{ env.AWS_REGION }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "service-worker.js"
+
+      - name: Sync HTML files to S3
+        run: |
+          aws s3 sync dist/ s3://${{ steps.terraform-outputs.outputs.bucket_name }} \
+            --region ${{ env.AWS_REGION }} \
+            --delete \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --include "*.html" \
+            --include "service-worker.js"
+
+      - name: Set HTML content type
+        run: |
+          aws s3 cp dist/index.html s3://${{ steps.terraform-outputs.outputs.bucket_name }}/index.html \
+            --region ${{ env.AWS_REGION }} \
+            --content-type "text/html" \
+            --cache-control "public, max-age=0, must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        if: steps.terraform-outputs.outputs.distribution_id != ''
+        run: |
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.terraform-outputs.outputs.distribution_id }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          echo "CloudFront invalidation created: $INVALIDATION_ID"
+          echo "⏳ Cache invalidation may take a few minutes to complete."
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Dev deployment completed successfully!"
+          echo "🌐 Environment: Development"
+          echo "📦 S3 Bucket: ${{ steps.terraform-outputs.outputs.bucket_name }}"
+          echo "🚀 CloudFront Distribution: ${{ steps.terraform-outputs.outputs.distribution_id }}"
