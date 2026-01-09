@@ -81,10 +81,16 @@ export default function VisibilityTrendsOverTime({
                       borderRadius: "4px",
                       padding: "8px",
                     }}
-                    formatter={(value: number | undefined) => [
-                      `${value ?? 0}%`,
-                      filteredBrand!.Name,
-                    ]}
+                    formatter={(value) => {
+                      const numValue = typeof value === 'number' 
+                        ? value 
+                        : Array.isArray(value) 
+                          ? (typeof value[0] === 'number' ? value[0] : 0)
+                          : typeof value === 'string' 
+                            ? parseFloat(value) || 0
+                            : 0;
+                      return [`${numValue}%`, filteredBrand!.Name];
+                    }}
                   />
                   <Area
                     type="linear"
