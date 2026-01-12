@@ -2,6 +2,7 @@ import { Trash2, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
+import { useFormSubmission } from "../../../app/shared/hooks/useFormSubmission";
 import token from "../../../app/utils/token";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
@@ -19,7 +20,6 @@ const Questions: React.FC = () => {
   const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
 
-  const [startingSurvey, setStartingSurvey] = useState<boolean>(false);
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
@@ -31,7 +31,6 @@ const Questions: React.FC = () => {
   const [hoveredQuestion, setHoveredQuestion] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
   const displayBrand = hasParamQuestion ? null : selectedBrand ?? null;
@@ -72,74 +71,41 @@ const Questions: React.FC = () => {
     },
   });
 
-  // Combine fetch error and submit error for display
-  const error = fetchError?.message || submitError || null;
   const questions = survey?.Questions ?? [];
 
-  // Navigate away if no data source available
-  useEffect(() => {
-    if (!hasParamQuestion && !selectedBrand && !query) {
-      navigate("/");
-    }
-  }, [hasParamQuestion, selectedBrand, query, navigate]);
+  // Create submit function for useFormSubmission
+  const submitSurvey = useCallback(
+    async (surveyData: BrandData): Promise<void> => {
+      // Filter out deleted questions
+      const filteredQuestions =
+        surveyData?.Questions?.filter(
+          (_, index) => !deletedQuestions.has(index)
+        ) ?? [];
+      const filteredSurvey = surveyData
+        ? {
+            ...surveyData,
+            Questions: filteredQuestions,
+          }
+        : null;
 
-  // Handle click outside to cancel confirmation
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setConfirmingDelete(null);
-      }
-    };
+      // Get question indices (0-based) to include only non-deleted questions
+      const questionIndices =
+        surveyData?.Questions?.map((_, index) => index).filter(
+          (index) => !deletedQuestions.has(index)
+        ) ?? [];
 
-    if (confirmingDelete !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [confirmingDelete]);
-
-  const handleSubmit = async () => {
-    if (startingSurvey || !survey) {
-      return;
-    }
-
-    setStartingSurvey(true);
-    setSubmitError(null);
-
-    // Filter out deleted questions
-    const filteredQuestions =
-      survey?.Questions?.filter((_, index) => !deletedQuestions.has(index)) ??
-      [];
-    const filteredSurvey = survey
-      ? {
-          ...survey,
-          Questions: filteredQuestions,
-        }
-      : null;
-
-    // Get question indices (0-based) to include only non-deleted questions
-    const questionIndices =
-      survey?.Questions?.map((_, index) => index).filter(
-        (index) => !deletedQuestions.has(index)
-      ) ?? [];
-
-    try {
       let surveyRunId: string;
 
       if (deletedQuestions.size > 0) {
         try {
           // Attempt to start survey with filtered question indices
-          surveyRunId = await startSurvey(survey.Id, questionIndices);
+          surveyRunId = await startSurvey(surveyData.Id, questionIndices);
         } catch (error) {
-          surveyRunId = await startSurvey(survey.Id);
+          surveyRunId = await startSurvey(surveyData.Id);
         }
       } else {
         // No deleted questions, use GET
-        surveyRunId = await startSurvey(survey.Id);
+        surveyRunId = await startSurvey(surveyData.Id);
       }
 
       const p1 = filteredSurvey?.PasswordOne;
@@ -152,7 +118,7 @@ const Questions: React.FC = () => {
       if (isFirstTimeUser) {
         // Store survey details for redirect after signin
         const redirectData = {
-          surveyId: survey.Id,
+          surveyId: surveyData.Id,
           surveyRunId,
           p1,
           p2,
@@ -182,17 +148,61 @@ const Questions: React.FC = () => {
           },
         });
       }
-    } catch (error) {
-      console.error("Failed to start survey:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to start survey. Please try again.";
-      setSubmitError(errorMessage);
-    } finally {
-      setStartingSurvey(false);
+    },
+    [deletedQuestions, effectiveQuery, displayBrand, navigate]
+  );
+
+  // Use useFormSubmission hook for form submission
+  const {
+    submitting,
+    error: submitError,
+    handleSubmit,
+    reset: resetSubmitError,
+  } = useFormSubmission<BrandData, void>(submitSurvey, {
+    formatError: (err) => {
+      if (err instanceof Error) {
+        return err.message;
+      }
+      return "Failed to start survey. Please try again.";
+    },
+  });
+
+  // Combine fetch error and submit error for display
+  const error = fetchError?.message || submitError || null;
+
+  // Wrapper function to handle submission with survey check
+  const handleSubmitWrapper = useCallback(() => {
+    if (!survey) {
+      return;
     }
-  };
+    handleSubmit(survey);
+  }, [survey, handleSubmit]);
+
+  // Navigate away if no data source available
+  useEffect(() => {
+    if (!hasParamQuestion && !selectedBrand && !query) {
+      navigate("/");
+    }
+  }, [hasParamQuestion, selectedBrand, query, navigate]);
+
+  // Handle click outside to cancel confirmation
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setConfirmingDelete(null);
+      }
+    };
+
+    if (confirmingDelete !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [confirmingDelete]);
 
   const handleDeleteQuestion = (index: number) => {
     setConfirmingDelete(index);
@@ -229,8 +239,8 @@ const Questions: React.FC = () => {
         query={effectiveQuery}
         brand={displayBrand}
         survey={survey ?? null}
-        handleSubmit={handleSubmit}
-        startingSurvey={startingSurvey ?? false}
+        handleSubmit={handleSubmitWrapper}
+        startingSurvey={submitting}
         deletedQuestions={deletedQuestions}
       />
       {loading && !survey && !error && (
@@ -251,7 +261,7 @@ const Questions: React.FC = () => {
           </div>
           <button
             onClick={() => {
-              setSubmitError(null);
+              resetSubmitError();
               refetch();
             }}
             className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
