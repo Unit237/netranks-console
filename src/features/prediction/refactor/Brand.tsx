@@ -6,8 +6,9 @@ import {
   Sparkles,
   Target,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { MdHttps } from "react-icons/md";
+import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
 import prms from "../../../app/shared/utils/prms";
 import ActionStepsCarousel from "../components/ui/ActionStepsCarousel";
 import LengthDescription from "../components/ui/LengthDescription";
@@ -207,9 +208,6 @@ const Brand = () => {
   const [, setTheme] = useState<"light" | "dark">("light");
   const [brandName, setBrandName] = useState(getInitialBrandName);
   const [url, setUrl] = useState(getInitialUrl);
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<PredictionData | null>(getInitialData);
-  const [error, setError] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [showUrlSuggestions, setShowUrlSuggestions] = useState(false);
@@ -238,15 +236,7 @@ const Brand = () => {
     localStorage.setItem("brandForm_selectedQuestion", selectedQuestion);
   }, [selectedQuestion, isInitialMount]);
 
-  useEffect(() => {
-    if (isInitialMount) return;
-    if (data) {
-      localStorage.setItem("brandForm_data", JSON.stringify(data));
-    } else {
-      // Clear saved data if it's explicitly set to null
-      localStorage.removeItem("brandForm_data");
-    }
-  }, [data, isInitialMount]);
+  // Note: data useEffect will be added after useAsyncData hook declaration
 
   // Error boundary for rendering
   if (renderError) {
@@ -290,131 +280,156 @@ const Brand = () => {
     localStorage.setItem("recentSearches", JSON.stringify(updated));
   };
 
+  // Create fetch function for useAsyncData - handles parallel API calls
+  const fetchPredictionData = useCallback(async (): Promise<PredictionData> => {
+    // Get the question text from the selected question
+    const selectedQuestionObj = questions.find(
+      (q) => q.value === selectedQuestion
+    );
+    const questionText = selectedQuestionObj?.label || brandName;
+
+    // Make both API calls in parallel
+    const predictionPromise = fetch(`${prms.API_BASE_URL}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question_text: questionText,
+        suggest_name: brandName,
+        description: brandName,
+        url_title: brandName,
+        url: url,
+        survey_description: "",
+        description_short: "",
+        explain: false,
+        detail_level: "standard",
+      }),
+    });
+
+    // Content Attribution API call (only if we have required fields)
+    const attributionPromise =
+      url && questionText
+        ? fetch(`${prms.API_BASE_URL}/analyze-segments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              question_text: questionText,
+              suggest_name: brandName,
+              url_title: brandName,
+              url: url,
+            }),
+          })
+        : Promise.resolve(null);
+
+    const [predictionResponse, attributionResponse] =
+      await Promise.allSettled([predictionPromise, attributionPromise]);
+
+    // Handle prediction response (required - throws if fails)
+    let result: PredictionData;
+    if (predictionResponse.status === "fulfilled") {
+      const response = predictionResponse.value;
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = "Failed to fetch prediction";
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.error || errorJson.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      result = await response.json();
+
+      // Validate response structure
+      if (!result || typeof result !== "object") {
+        throw new Error("Invalid response format from server");
+      }
+
+      // Ensure prediction object exists with safe defaults
+      if (!result.prediction) {
+        result.prediction = {
+          predicted_rank: null as any,
+          current_rank: null as any,
+          improvement: null as any,
+          uncertainty: null as any,
+        };
+      }
+    } else {
+      throw predictionResponse.reason;
+    }
+
+    // Handle content attribution response (optional - doesn't throw)
+    // Save to localStorage even if prediction succeeds (this runs before the return)
+    if (
+      attributionResponse.status === "fulfilled" &&
+      attributionResponse.value
+    ) {
+      const response = attributionResponse.value;
+      if (response && response.ok) {
+        try {
+          const attributionResult = await response.json();
+          if (attributionResult.success) {
+            // Save to localStorage for Content Attribution tab
+            localStorage.setItem(
+              "contentAttribution_data",
+              JSON.stringify(attributionResult)
+            );
+            localStorage.setItem(
+              "contentAttribution_formData",
+              JSON.stringify({
+                questionText,
+                suggestName: brandName,
+                urlTitle: brandName,
+                url: url,
+              })
+            );
+          }
+        } catch (err) {
+          console.error("Failed to save content attribution:", err);
+          // Don't throw - attribution is optional
+        }
+      }
+    }
+
+    return result;
+  }, [brandName, url, selectedQuestion]);
+
+  // Use useAsyncData hook for data fetching (disabled by default, manually triggered)
+  const {
+    data,
+    loading,
+    error: fetchError,
+    refetch,
+  } = useAsyncData<PredictionData>(fetchPredictionData, {
+    enabled: false, // Don't auto-fetch, wait for form submission
+    initialData: getInitialData(),
+    onSuccess: () => {
+      // Save recent search on successful fetch
+      saveRecentSearch(brandName, url);
+    },
+  });
+
+  // Convert Error to string for compatibility with existing error state usage
+  const error = fetchError?.message || "";
+
+  // Form submission handler - triggers data fetch
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    setData(null);
-
-    try {
-      // Get the question text from the selected question
-      const selectedQuestionObj = questions.find(
-        (q) => q.value === selectedQuestion
-      );
-      const questionText = selectedQuestionObj?.label || brandName;
-
-      // Make both API calls in parallel
-      const predictionPromise = fetch(`${prms.API_BASE_URL}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question_text: questionText,
-          suggest_name: brandName,
-          description: brandName,
-          url_title: brandName,
-          url: url,
-          survey_description: "",
-          description_short: "",
-          explain: false,
-          detail_level: "standard",
-        }),
-      });
-
-      // Content Attribution API call (only if we have required fields)
-      const attributionPromise =
-        url && questionText
-          ? fetch(`${prms.API_BASE_URL}/analyze-segments`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                question_text: questionText,
-                suggest_name: brandName,
-                url_title: brandName,
-                url: url,
-              }),
-            })
-          : Promise.resolve(null);
-
-      const [predictionResponse, attributionResponse] =
-        await Promise.allSettled([predictionPromise, attributionPromise]);
-
-      // Handle prediction response
-      if (predictionResponse.status === "fulfilled") {
-        const response = predictionResponse.value;
-        if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage = "Failed to fetch prediction";
-          try {
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.error || errorJson.message || errorMessage;
-          } catch {
-            errorMessage = errorText || errorMessage;
-          }
-          throw new Error(errorMessage);
-        }
-
-        const result = await response.json();
-
-        // Validate response structure
-        if (!result || typeof result !== "object") {
-          throw new Error("Invalid response format from server");
-        }
-
-        // Ensure prediction object exists with safe defaults
-        if (!result.prediction) {
-          result.prediction = {
-            predicted_rank: null,
-            current_rank: null,
-            improvement: null,
-            uncertainty: null,
-          };
-        }
-
-        setData(result);
-        saveRecentSearch(brandName, url);
-      } else if (predictionResponse.status === "rejected") {
-        throw predictionResponse.reason;
-      }
-
-      // Handle content attribution response (save to localStorage even if prediction fails)
-      if (
-        attributionResponse.status === "fulfilled" &&
-        attributionResponse.value
-      ) {
-        const response = attributionResponse.value;
-        if (response && response.ok) {
-          try {
-            const attributionResult = await response.json();
-            if (attributionResult.success) {
-              // Save to localStorage for Content Attribution tab
-              localStorage.setItem(
-                "contentAttribution_data",
-                JSON.stringify(attributionResult)
-              );
-              localStorage.setItem(
-                "contentAttribution_formData",
-                JSON.stringify({
-                  questionText,
-                  suggestName: brandName,
-                  urlTitle: brandName,
-                  url: url,
-                })
-              );
-            }
-          } catch (err) {
-            console.error("Failed to save content attribution:", err);
-            // Don't throw - attribution is optional
-          }
-        }
-      }
-    } catch (err: any) {
-      console.error("Prediction error:", err);
-      setError(err?.message || "Failed to get prediction. Please try again.");
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
+    // Trigger the data fetch
+    await refetch();
   };
+
+  // Save data to localStorage whenever it changes (but skip initial mount)
+  useEffect(() => {
+    if (isInitialMount) return;
+    if (data) {
+      localStorage.setItem("brandForm_data", JSON.stringify(data));
+    } else {
+      // Clear saved data if it's explicitly set to null
+      localStorage.removeItem("brandForm_data");
+    }
+  }, [data, isInitialMount]);
 
   const selectRecentSearch = (search: RecentSearch) => {
     setBrandName(search.name);
