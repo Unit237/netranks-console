@@ -1,6 +1,7 @@
 import { Trash2, Undo2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
 import token from "../../../app/utils/token";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
@@ -18,9 +19,6 @@ const Questions: React.FC = () => {
   const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
 
-  const [survey, setSurvey] = useState<BrandData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [startingSurvey, setStartingSurvey] = useState<boolean>(false);
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
@@ -33,85 +31,57 @@ const Questions: React.FC = () => {
   const [hoveredQuestion, setHoveredQuestion] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastFetchedBrandIdRef = useRef<string | null>(null);
-  const lastFetchedQueryRef = useRef<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const questions = survey?.Questions ?? [];
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
   const displayBrand = hasParamQuestion ? null : selectedBrand ?? null;
 
+  // Create fetch function for useAsyncData
+  const fetchSurveyData = useCallback(async (): Promise<BrandData> => {
+    if (hasParamQuestion) {
+      return await fetchQueryQuestions(paramQuestionRaw);
+    } else if (selectedBrand) {
+      return await fetchBrandQuestions(selectedBrand);
+    } else if (query) {
+      return await fetchQueryQuestions(query);
+    } else {
+      throw new Error("No data available to fetch survey");
+    }
+  }, [hasParamQuestion, paramQuestionRaw, selectedBrand, query]);
+
+  // Use useAsyncData hook for data fetching
+  const {
+    data: survey,
+    loading,
+    error: fetchError,
+    refetch,
+  } = useAsyncData<BrandData>(fetchSurveyData, {
+    enabled: hasParamQuestion || !!selectedBrand || !!query,
+    initialData: null,
+    onSuccess: (surveyData) => {
+      // Only update selectedBrand if description actually changed
+      if (selectedBrand && surveyData.DescriptionOfTheBrandShort) {
+        const newDescription = surveyData.DescriptionOfTheBrandShort;
+        if (selectedBrand.description !== newDescription) {
+          setSelectedBrand({
+            ...selectedBrand,
+            description: newDescription,
+          });
+        }
+      }
+    },
+  });
+
+  // Combine fetch error and submit error for display
+  const error = fetchError?.message || submitError || null;
+  const questions = survey?.Questions ?? [];
+
+  // Navigate away if no data source available
   useEffect(() => {
-    // Validate that we have data to fetch
     if (!hasParamQuestion && !selectedBrand && !query) {
       navigate("/");
-      return;
     }
-
-    // Determine what we're fetching
-    const brandId = selectedBrand?.brandId ?? null;
-    const queryToFetch = hasParamQuestion ? paramQuestionRaw : query;
-
-    // Skip if we've already fetched for this brand/query
-    if (
-      (brandId && brandId === lastFetchedBrandIdRef.current) ||
-      (queryToFetch && queryToFetch === lastFetchedQueryRef.current && !brandId)
-    ) {
-      return;
-    }
-
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        let surveyData: BrandData;
-
-        if (hasParamQuestion) {
-          surveyData = await fetchQueryQuestions(paramQuestionRaw);
-          lastFetchedQueryRef.current = paramQuestionRaw;
-          lastFetchedBrandIdRef.current = null;
-        } else if (selectedBrand) {
-          surveyData = await fetchBrandQuestions(selectedBrand);
-          lastFetchedBrandIdRef.current = selectedBrand.brandId;
-          lastFetchedQueryRef.current = null;
-
-          // Only update selectedBrand if description actually changed
-          const newDescription = surveyData.DescriptionOfTheBrandShort ?? "";
-          if (selectedBrand.description !== newDescription) {
-            setSelectedBrand({
-              ...selectedBrand,
-              description: newDescription,
-            });
-          }
-        } else if (query) {
-          surveyData = await fetchQueryQuestions(query);
-          lastFetchedQueryRef.current = query;
-          lastFetchedBrandIdRef.current = null;
-        } else {
-          throw new Error("No data available to fetch survey");
-        }
-
-        setSurvey(surveyData);
-      } catch (error) {
-        console.error("Failed to fetch survey data:", error);
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to load questions. Please try again.";
-        setError(errorMessage);
-        setSurvey(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [
-    hasParamQuestion,
-    paramQuestionRaw,
-    selectedBrand?.brandId,
-    query,
-    navigate,
-    setSelectedBrand,
-  ]);
+  }, [hasParamQuestion, selectedBrand, query, navigate]);
 
   // Handle click outside to cancel confirmation
   useEffect(() => {
@@ -138,7 +108,7 @@ const Questions: React.FC = () => {
     }
 
     setStartingSurvey(true);
-    setError(null);
+    setSubmitError(null);
 
     // Filter out deleted questions
     const filteredQuestions =
@@ -218,7 +188,7 @@ const Questions: React.FC = () => {
         error instanceof Error
           ? error.message
           : "Failed to start survey. Please try again.";
-      setError(errorMessage);
+      setSubmitError(errorMessage);
     } finally {
       setStartingSurvey(false);
     }
@@ -281,16 +251,8 @@ const Questions: React.FC = () => {
           </div>
           <button
             onClick={() => {
-              setError(null);
-              setLoading(true);
-              // Trigger re-fetch by updating state
-              if (hasParamQuestion) {
-                // Force re-render by updating search params
-                window.location.reload();
-              } else {
-                // Re-trigger useEffect by updating a dependency
-                setSurvey(null);
-              }
+              setSubmitError(null);
+              refetch();
             }}
             className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
           >
