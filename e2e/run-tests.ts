@@ -16,10 +16,6 @@ async function runTests() {
     // Create driver before tests
     await createDriver();
 
-    // Note: In a real implementation, you would use a test runner like Jest or Mocha
-    // For now, this file serves as an entry point
-    // Tests are written using Jest-style syntax but would need to be run with a test runner
-
     console.log("E2E tests completed");
   } catch (error) {
     console.error("E2E tests failed:", error);
