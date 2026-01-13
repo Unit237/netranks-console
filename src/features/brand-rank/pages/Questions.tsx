@@ -35,18 +35,52 @@ const Questions: React.FC = () => {
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
   const displayBrand = hasParamQuestion ? null : selectedBrand ?? null;
 
+  // Use ref to access selectedBrand without causing functions to be recreated
+  // This prevents infinite loops when selectedBrand.description is updated in onSuccess
+  const selectedBrandRef = useRef(selectedBrand);
+  selectedBrandRef.current = selectedBrand;
+
+  // Use ref to access query to prevent unnecessary refetches when query changes
+  const queryRef = useRef(query);
+  queryRef.current = query;
+
+  // Memoize onSuccess callback to prevent infinite refetch loops
+  // Use ref to access selectedBrand so callback doesn't need to be recreated when selectedBrand changes
+  const handleSuccess = useCallback((surveyData: BrandData) => {
+    // Only update selectedBrand if description actually changed
+    // Consolidated if statement checks all conditions at once
+    if (
+      selectedBrandRef.current &&
+      surveyData.DescriptionOfTheBrandShort &&
+      selectedBrandRef.current.description !== surveyData.DescriptionOfTheBrandShort
+    ) {
+      setSelectedBrand({
+        ...selectedBrandRef.current,
+        description: surveyData.DescriptionOfTheBrandShort,
+      });
+    }
+  }, [setSelectedBrand]);
+
   // Create fetch function for useAsyncData
+  // Use brandId (primitive) and trimmed query in dependencies to avoid infinite loops
+  const brandId = selectedBrand?.brandId ?? null;
+  const trimmedQuery = query?.trim() || null;
   const fetchSurveyData = useCallback(async (): Promise<BrandData> => {
     if (hasParamQuestion) {
       return await fetchQueryQuestions(paramQuestionRaw);
-    } else if (selectedBrand) {
-      return await fetchBrandQuestions(selectedBrand);
-    } else if (query) {
-      return await fetchQueryQuestions(query);
+    } else if (selectedBrandRef.current) {
+      return await fetchBrandQuestions(selectedBrandRef.current);
+    } else if (queryRef.current?.trim()) {
+      // Validate query is not empty before sending
+      const queryToSend = queryRef.current.trim();
+      if (!queryToSend) {
+        throw new Error("Query cannot be empty");
+      }
+      return await fetchQueryQuestions(queryToSend);
     } else {
       throw new Error("No data available to fetch survey");
     }
-  }, [hasParamQuestion, paramQuestionRaw, selectedBrand, query]);
+  }, [hasParamQuestion, paramQuestionRaw, brandId, trimmedQuery]);
 
   // Use useAsyncData hook for data fetching
   const {
@@ -57,18 +91,7 @@ const Questions: React.FC = () => {
   } = useAsyncData<BrandData>(fetchSurveyData, {
     enabled: hasParamQuestion || !!selectedBrand || !!query,
     initialData: null,
-    onSuccess: (surveyData) => {
-      // Only update selectedBrand if description actually changed
-      if (selectedBrand && surveyData.DescriptionOfTheBrandShort) {
-        const newDescription = surveyData.DescriptionOfTheBrandShort;
-        if (selectedBrand.description !== newDescription) {
-          setSelectedBrand({
-            ...selectedBrand,
-            description: newDescription,
-          });
-        }
-      }
-    },
+    onSuccess: handleSuccess,
   });
 
   const questions = survey?.Questions ?? [];
