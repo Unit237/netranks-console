@@ -27,3 +27,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test artifacts
+coverage
+e2e/screenshots
+*.test.log
