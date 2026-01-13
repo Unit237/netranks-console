@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { MdHttps } from "react-icons/md";
-import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
+import { useFormSubmission } from "../../../app/shared/hooks/useFormSubmission";
 import prms from "../../../app/shared/utils/prms";
 import ActionStepsCarousel from "../components/ui/ActionStepsCarousel";
 import LengthDescription from "../components/ui/LengthDescription";
@@ -280,13 +280,18 @@ const Brand = () => {
     localStorage.setItem("recentSearches", JSON.stringify(updated));
   };
 
-  // Create fetch function for useAsyncData - handles parallel API calls
-  const fetchPredictionData = useCallback(async (): Promise<PredictionData> => {
+  // Initialize data state from localStorage
+  const [data, setData] = useState<PredictionData | null>(getInitialData());
+
+  // Fetch prediction data function - handles parallel API calls
+  const fetchPredictionData = useCallback(async (formData: { brandName: string; url: string; selectedQuestion: string }): Promise<PredictionData> => {
+    const { brandName: formBrandName, url: formUrl, selectedQuestion: formSelectedQuestion } = formData;
+    
     // Get the question text from the selected question
     const selectedQuestionObj = questions.find(
-      (q) => q.value === selectedQuestion
+      (q) => q.value === formSelectedQuestion
     );
-    const questionText = selectedQuestionObj?.label || brandName;
+    const questionText = selectedQuestionObj?.label || formBrandName;
 
     // Make both API calls in parallel
     const predictionPromise = fetch(`${prms.API_BASE_URL}/predict`, {
@@ -294,10 +299,10 @@ const Brand = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         question_text: questionText,
-        suggest_name: brandName,
-        description: brandName,
-        url_title: brandName,
-        url: url,
+        suggest_name: formBrandName,
+        description: formBrandName,
+        url_title: formBrandName,
+        url: formUrl,
         survey_description: "",
         description_short: "",
         explain: false,
@@ -307,15 +312,15 @@ const Brand = () => {
 
     // Content Attribution API call (only if we have required fields)
     const attributionPromise =
-      url && questionText
+      formUrl && questionText
         ? fetch(`${prms.API_BASE_URL}/analyze-segments`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               question_text: questionText,
-              suggest_name: brandName,
-              url_title: brandName,
-              url: url,
+              suggest_name: formBrandName,
+              url_title: formBrandName,
+              url: formUrl,
             }),
           })
         : Promise.resolve(null);
@@ -379,9 +384,9 @@ const Brand = () => {
               "contentAttribution_formData",
               JSON.stringify({
                 questionText,
-                suggestName: brandName,
-                urlTitle: brandName,
-                url: url,
+                suggestName: formBrandName,
+                urlTitle: formBrandName,
+                url: formUrl,
               })
             );
           }
@@ -393,31 +398,27 @@ const Brand = () => {
     }
 
     return result;
-  }, [brandName, url, selectedQuestion]);
+  }, []);
 
-  // Use useAsyncData hook for data fetching (disabled by default, manually triggered)
+  // Use useFormSubmission hook for form submission
   const {
-    data,
-    loading,
-    error: fetchError,
-    refetch,
-  } = useAsyncData<PredictionData>(fetchPredictionData, {
-    enabled: false, // Don't auto-fetch, wait for form submission
-    initialData: getInitialData(),
-    onSuccess: () => {
-      // Save recent search on successful fetch
-      saveRecentSearch(brandName, url);
-    },
-  });
+    submitting,
+    error: submitError,
+    handleSubmit: handleFormSubmit,
+  } = useFormSubmission<{ brandName: string; url: string; selectedQuestion: string }, PredictionData>(
+    fetchPredictionData,
+    {
+      onSuccess: (result, formData) => {
+        setData(result);
+        saveRecentSearch(formData.brandName, formData.url);
+      },
+    }
+  );
 
-  // Convert Error to string for compatibility with existing error state usage
-  const error = fetchError?.message || "";
-
-  // Form submission handler - triggers data fetch
+  // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Trigger the data fetch
-    await refetch();
+    await handleFormSubmit({ brandName, url, selectedQuestion });
   };
 
   // Save data to localStorage whenever it changes (but skip initial mount)
@@ -426,7 +427,6 @@ const Brand = () => {
     if (data) {
       localStorage.setItem("brandForm_data", JSON.stringify(data));
     } else {
-      // Clear saved data if it's explicitly set to null
       localStorage.removeItem("brandForm_data");
     }
   }, [data, isInitialMount]);
@@ -554,10 +554,10 @@ const Brand = () => {
 
           <button
             type="submit"
-            disabled={loading || !brandName || !url}
+            disabled={submitting || !brandName || !url}
             className="w-full md:w-auto px-8 py-1 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? (
+            {submitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Analyzing...
@@ -568,16 +568,16 @@ const Brand = () => {
           </button>
         </form>
 
-        {error && (
+        {submitError && (
           <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">{submitError}</p>
           </div>
         )}
       </div>
 
       {/* Loading State */}
-      {loading && (
+      {submitting && (
         <div className="flex flex-col items-center justify-center py-16">
           <Loader2 className="w-12 h-12 text-green-600 dark:text-green-400 animate-spin mb-4" />
           <p className="text-gray-600 dark:text-gray-400">
@@ -587,7 +587,7 @@ const Brand = () => {
       )}
 
       {/* Results */}
-      {data && !loading && (
+      {data && !submitting && (
         <>
           {/* Prediction Results */}
           <div className="my-8">
