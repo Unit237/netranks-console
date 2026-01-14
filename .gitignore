@@ -32,3 +32,6 @@ dist-ssr
 coverage
 e2e/screenshots
 *.test.log
+test-results
+playwright-report
+playwright/.cache

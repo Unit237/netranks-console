@@ -4,7 +4,7 @@ This project uses multiple testing frameworks:
 
 - **Jest** for unit/integration tests (new tests)
 - **Vitest** for existing unit tests (legacy tests)
-- **Selenium** for end-to-end tests
+- **Playwright** for end-to-end tests
 
 ## Test Types
 
@@ -31,7 +31,7 @@ Located in:
 
 Run with: `npm run test:vitest`
 
-### End-to-End Tests (Selenium)
+### End-to-End Tests (Playwright)
 
 Located in `e2e/tests/**/*.test.ts`
 
@@ -84,14 +84,16 @@ npm run test:vitest
 ### Jest Configuration
 
 - Main config: `jest.config.cjs` (CommonJS to avoid ES module conflicts)
-- E2E config: `jest.e2e.config.cjs` (CommonJS to avoid ES module conflicts)
 - Setup file: `src/tests/jest-setup.ts`
 
 ### E2E Configuration
 
-- Config file: `e2e/config.ts`
+- Config file: `playwright.config.ts`
 - Base URL: `http://localhost:5173` (or set `E2E_BASE_URL`)
-- Browser: Chrome (headless by default)
+- Browser: Chromium (headless by default)
+- Additional scripts:
+  - `test:e2e:ui` - Run tests with interactive UI
+  - `test:e2e:headed` - Run tests with visible browser
 
 ## CI/CD Integration
 
@@ -106,9 +108,8 @@ To skip tests during deployment (not recommended):
 ## Environment Variables for E2E Tests
 
 - `E2E_BASE_URL`: Application URL (default: `http://localhost:5173`)
-- `E2E_BROWSER`: Browser to use (default: `chrome`)
-- `E2E_HEADLESS`: Run headless (default: `true`)
 - `E2E_TEST_EMAIL`: Test user email
+- `E2E_TEST_USER_TOKEN`: Valid user token for authenticated tests (optional)
 
 ## Coverage Thresholds
 

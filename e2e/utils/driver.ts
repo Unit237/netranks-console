@@ -1,71 +1,92 @@
-import { Builder, WebDriver } from "selenium-webdriver";
-import chrome, { ServiceBuilder } from "selenium-webdriver/chrome";
+import { Browser, BrowserContext, Page, chromium } from "playwright";
 import { E2E_CONFIG } from "../config";
 
-let driver: WebDriver | null = null;
+let browser: Browser | null = null;
+let context: BrowserContext | null = null;
+let page: Page | null = null;
 
-export async function createDriver(): Promise<WebDriver> {
-  if (driver) {
-    return driver;
+export async function createBrowser(): Promise<Browser> {
+  if (browser) {
+    return browser;
   }
 
-  const options = new chrome.Options();
-
-  if (E2E_CONFIG.headless) {
-    options.addArguments("--headless");
-  }
-
-  options.addArguments("--no-sandbox");
-  options.addArguments("--disable-dev-shm-usage");
-  options.addArguments("--disable-gpu");
-  options.addArguments("--window-size=1920,1080");
-
-  // Configure ChromeDriver service
-  // The chromedriver package exports the path to the binary
-  let service: ServiceBuilder | undefined;
-
-  try {
-    const chromedriver = require("chromedriver");
-    const chromedriverPath =
-      typeof chromedriver === "string"
-        ? chromedriver
-        : chromedriver?.path || chromedriver;
-
-    if (chromedriverPath) {
-      service = new ServiceBuilder(chromedriverPath);
-    }
-  } catch (error) {
-    // If chromedriver package is not found, Selenium will try to find it in PATH
-    console.warn("ChromeDriver path not found, Selenium will use system PATH");
-  }
-
-  const builder = new Builder().forBrowser("chrome").setChromeOptions(options);
-
-  if (service) {
-    builder.setChromeService(service);
-  }
-
-  driver = await builder.build();
-
-  // Set timeouts
-  await driver.manage().setTimeouts({
-    implicit: E2E_CONFIG.implicitWait,
-    pageLoad: E2E_CONFIG.pageLoadTimeout,
+  browser = await chromium.launch({
+    headless: E2E_CONFIG.headless,
+    args: [
+      "--no-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+    ],
   });
 
-  return driver;
+  return browser;
+}
+
+export async function createContext(): Promise<BrowserContext> {
+  if (context) {
+    return context;
+  }
+
+  const browserInstance = await createBrowser();
+  
+  context = await browserInstance.newContext({
+    viewport: { width: 1920, height: 1080 },
+  });
+
+  // Set default timeouts
+  context.setDefaultTimeout(E2E_CONFIG.defaultTimeout);
+  context.setDefaultNavigationTimeout(E2E_CONFIG.pageLoadTimeout);
+
+  return context;
+}
+
+export async function getPage(): Promise<Page> {
+  if (page) {
+    return page;
+  }
+
+  const contextInstance = await createContext();
+  page = await contextInstance.newPage();
+  
+  return page;
+}
+
+export async function closeBrowser(): Promise<void> {
+  if (browser) {
+    await browser.close();
+    browser = null;
+    context = null;
+    page = null;
+  }
+}
+
+export async function closeContext(): Promise<void> {
+  if (context) {
+    await context.close();
+    context = null;
+    page = null;
+  }
+}
+
+export async function closePage(): Promise<void> {
+  if (page) {
+    await page.close();
+    page = null;
+  }
+}
+
+// Legacy compatibility functions
+export async function createDriver(): Promise<Page> {
+  return await getPage();
 }
 
 export async function quitDriver(): Promise<void> {
-  if (driver) {
-    await driver.quit();
-    driver = null;
-  }
+  await closeBrowser();
 }
 
-export function getDriver(): WebDriver {
-  if (!driver) {
-    throw new Error("Driver not initialized. Call createDriver() first.");
+export function getDriver(): Page {
+  if (!page) {
+    throw new Error("Page not initialized. Call createDriver() first.");
   }
-  return driver;
+  return page;
 }

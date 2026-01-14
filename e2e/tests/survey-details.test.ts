@@ -1,5 +1,4 @@
-import { WebDriver } from "selenium-webdriver";
-import { createDriver, quitDriver } from "../utils/driver";
+import { test, expect } from "@playwright/test";
 import {
   authenticate,
   clearStorage,
@@ -8,36 +7,23 @@ import {
   takeScreenshot,
 } from "../utils/helpers";
 
-describe("Survey Details E2E Tests", () => {
-  let driver: WebDriver;
-
-  beforeAll(async () => {
-    driver = await createDriver();
-    // Authenticate before running tests
-    // This sets visitorToken and userToken in localStorage
-    await authenticate(driver);
-  });
-
-  afterAll(async () => {
-    await quitDriver();
-  });
-
-  beforeEach(async () => {
+test.describe("Survey Details E2E Tests", () => {
+  test.beforeEach(async ({ page }) => {
     // Clear cookies and storage safely (handles data: URLs)
-    await clearStorage(driver);
-    await authenticate(driver);
+    await clearStorage(page);
+    await authenticate(page);
   });
 
-  test("should display survey details page with tabs", async () => {
+  test("should display survey details page with tabs", async ({ page }) => {
     try {
       // Assuming we have a test survey ID
       const surveyId = "4147";
-      await navigateTo(driver, `/console/survey/${surveyId}`);
+      await navigateTo(page, `/console/survey/${surveyId}`);
 
-      await driver.sleep(3000); // Wait for data to load
+      await page.waitForTimeout(3000); // Wait for data to load
 
       // Verify we're not redirected to signin (authentication check)
-      const currentUrl = await driver.getCurrentUrl();
+      const currentUrl = page.url();
       expect(currentUrl).not.toContain("/signin");
 
       // Check if tabs are present
@@ -45,8 +31,8 @@ describe("Survey Details E2E Tests", () => {
 
       for (const tab of tabs) {
         const tabPresent = await isElementPresent(
-          driver,
-          { xpath: `//button[contains(text(), '${tab}')]` },
+          page,
+          `button:has-text("${tab}")`,
           5000
         );
 
@@ -56,49 +42,47 @@ describe("Survey Details E2E Tests", () => {
         }
       }
     } catch (error) {
-      await takeScreenshot(driver, "survey-details-tabs-error");
+      await takeScreenshot(page, "survey-details-tabs-error");
       throw error;
     }
   });
 
-  test("should switch between tabs", async () => {
+  test("should switch between tabs", async ({ page }) => {
     try {
       const surveyId = "4147";
-      await navigateTo(driver, `/console/survey/${surveyId}`);
+      await navigateTo(page, `/console/survey/${surveyId}`);
 
-      await driver.sleep(3000);
+      await page.waitForTimeout(3000);
 
       // Click on Questions tab
-      const questionsTab = await driver.findElement({
-        xpath: "//button[contains(text(), 'Questions')]",
-      });
-      if (questionsTab) {
+      const questionsTab = page.locator('button:has-text("Questions")');
+      if (await questionsTab.count() > 0) {
         await questionsTab.click();
       }
 
-      await driver.sleep(1000);
+      await page.waitForTimeout(1000);
 
       // Verify Questions tab content is visible (or Overview is hidden)
       // The exact implementation depends on your tab switching logic
-      const pageSource = await driver.getPageSource();
+      const pageSource = await page.content();
 
       // Should show Questions-related content or hide Overview
       expect(pageSource.length).toBeGreaterThan(0);
     } catch (error) {
-      await takeScreenshot(driver, "survey-details-tab-switch-error");
+      await takeScreenshot(page, "survey-details-tab-switch-error");
       throw error;
     }
   });
 
-  test("should display loading state initially", async () => {
+  test("should display loading state initially", async ({ page }) => {
     try {
       const surveyId = "999999"; // Non-existent ID to trigger loading/error
-      await navigateTo(driver, `/console/survey/${surveyId}`);
+      await navigateTo(page, `/console/survey/${surveyId}`);
 
       // Should show loading spinner or error message
-      await driver.sleep(2000);
+      await page.waitForTimeout(2000);
 
-      const pageSource = await driver.getPageSource();
+      const pageSource = await page.content();
 
       // Should show either loading state or error message
       expect(
@@ -109,37 +93,35 @@ describe("Survey Details E2E Tests", () => {
           pageSource.includes("Failed")
       ).toBe(true);
     } catch (error) {
-      await takeScreenshot(driver, "survey-details-loading-error");
+      await takeScreenshot(page, "survey-details-loading-error");
       throw error;
     }
   });
 
-  test("should handle survey details with data", async () => {
+  test("should handle survey details with data", async ({ page }) => {
     try {
       // This test assumes a valid survey ID exists
       // In a real scenario, you'd create a test survey first
       const surveyId = "4147";
-      await navigateTo(driver, `/console/survey/${surveyId}`);
+      await navigateTo(page, `/console/survey/${surveyId}`);
 
-      await driver.sleep(3000);
+      await page.waitForTimeout(3000);
 
       // Check if survey details are displayed
-      const pageSource = await driver.getPageSource();
+      const pageSource = await page.content();
 
       // Should contain survey-related content
       // Exact content depends on your SurveyDetails component
       expect(pageSource.length).toBeGreaterThan(0);
 
       // Check if Overview tab is active by default
-      const overviewTab = await driver.findElement({
-        xpath: "//button[contains(text(), 'Overview')]",
-      });
-      const overviewClasses = await overviewTab.getAttribute("class");
+      const overviewTab = page.locator('button:has-text("Overview")');
+      const count = await overviewTab.count();
 
       // Overview tab should be visible/clickable
-      expect(overviewTab).toBeDefined();
+      expect(count).toBeGreaterThan(0);
     } catch (error) {
-      await takeScreenshot(driver, "survey-details-data-error");
+      await takeScreenshot(page, "survey-details-data-error");
       throw error;
     }
   });
