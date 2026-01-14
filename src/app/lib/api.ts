@@ -7,6 +7,7 @@ import { Component } from "react";
 import { v4 as uuid } from "uuid";
 import prms from "../utils/config";
 import token from "../utils/token";
+import { TokenStrategySelector } from "./strategies/tokenSelection/TokenStrategySelector";
 
 export interface ConnectionConfig extends AxiosRequestConfig {
   /**
@@ -61,6 +62,9 @@ const axios = Axios.create({
   // Don't set responseType - let axios auto-detect so we can handle both JSON and HTML
 });
 
+// Token strategy selector instance (singleton)
+const tokenStrategySelector = new TokenStrategySelector();
+
 axios.interceptors.request.use(async (config) => {
   if (!config.headers) {
     config.headers = {} as any;
@@ -80,46 +84,8 @@ axios.interceptors.request.use(async (config) => {
   // Determine which token to use based on endpoint type
   const url = config.url || "";
 
-  // Endpoints that require VisitorSession (anonymous) - these need visitor token
-  const isVisitorEndpoint =
-    url.includes("CreateSurveyFromQuery") ||
-    url.includes("CreateSurveyFromBrand") ||
-    url.includes("StartSurvey") ||
-    url.includes("GenerateQuestionsFromQuery") ||
-    url.includes("GenerateQuestionsFromBrand");
-
-  // Endpoints that require UserSession (authenticated) - MUST use user token, no fallback
-  const requiresUserToken =
-    url.includes("ChangeSurveySchedule") ||
-    url.includes("CreateSurvey") ||
-    url.includes("UpdateUser") ||
-    url.includes("DeleteMember") ||
-    url.includes("AddMember") ||
-    url.includes("UpdateMember") ||
-    url.includes("GetMembers") ||
-    url.includes("GetPendingInvitations") ||
-    url.includes("DeleteInvitation") ||
-    url.includes("AddQuestion") ||
-    url.includes("EditQuestion") ||
-    url.includes("DeleteQuestion");
-
-  // Select the appropriate token
-  let authToken: string | null;
-  if (isVisitorEndpoint) {
-    // Visitor endpoints MUST use visitor token
-    authToken = token.getVisitor();
-  } else if (requiresUserToken) {
-    // User-only endpoints: MUST use user token, don't fallback to visitor
-    authToken = token.getUser();
-    if (!authToken && import.meta.env.DEV) {
-      console.warn(
-        `[API] User token required for ${url} but not found. User may need to log in.`
-      );
-    }
-  } else {
-    // All other endpoints: prefer user token, fall back to visitor
-    authToken = token.getUser() || token.getVisitor();
-  }
+  // Select the appropriate token using Strategy Pattern
+  const authToken = tokenStrategySelector.selectToken(url);
 
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
