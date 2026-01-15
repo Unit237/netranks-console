@@ -9,7 +9,7 @@ import React, {
 import { useLocation } from "react-router-dom";
 import { debugLog, debugError } from "../../../app/utils/debugLogger";
 import { HubType, useHub } from "../../../app/utils/Hub";
-import token from "../../../app/utils/token";
+import AuthManager from "../../../app/auth/AuthManager";
 import type { UserData } from "../@types";
 import { getUser } from "../services/authService";
 
@@ -141,7 +141,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
     // Fetch user data when on console route OR when we have a token but user is null
     // This ensures we fetch user data after magic link authentication
-    const hasToken = token.getUser();
+    const hasToken = AuthManager.getUserToken();
 
     // Don't call GetUser for brand-rank/initial flow routes - they don't need authentication
     // Only fetch user data if we're on console route AND we don't already have user data

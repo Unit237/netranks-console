@@ -1,6 +1,6 @@
 import { Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import token from "../../../app/utils/token";
+import AuthManager from "../../../app/auth/AuthManager";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
@@ -12,7 +12,7 @@ const Header = () => {
 
   // Check if user is authenticated
   const isAuthenticated = () => {
-    const authToken = token.get();
+    const authToken = AuthManager.getAnyToken();
     return !!authToken && !!user;
   };
 

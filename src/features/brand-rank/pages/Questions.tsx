@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
 import { useFormSubmission } from "../../../app/shared/hooks/useFormSubmission";
-import token from "../../../app/utils/token";
+import AuthManager from "../../../app/auth/AuthManager";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
 import { useBrand } from "../context/BrandContext";
@@ -135,7 +135,7 @@ const Questions: React.FC = () => {
       const p2 = filteredSurvey?.PasswordTwo;
 
       // Check if user is first-time (no userToken)
-      const userToken = token.getUser();
+      const userToken = AuthManager.getUserToken();
       const isFirstTimeUser = !userToken;
 
       if (isFirstTimeUser) {

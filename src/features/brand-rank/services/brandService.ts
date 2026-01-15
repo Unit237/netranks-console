@@ -75,19 +75,16 @@ export const fetchQuestions = async (
     // Note: Using dynamic imports here to avoid circular dependencies.
     // These modules are also statically imported elsewhere, which prevents code-splitting
     // but is necessary to avoid circular dependency issues.
-    const tokenModule = await import("../../../app/utils/token");
-    const onboardingModule = await import(
-      "../../../app/services/onboardingService"
-    );
+    const AuthManager = (await import("../../../app/auth/AuthManager")).default;
 
     const isBrand = typeof input !== "string";
     const logPrefix = isBrand
       ? "[fetchQuestions - Brand]"
       : "[fetchQuestions - Query]";
 
-    if (!tokenModule.default.getVisitor()) {
+    if (!AuthManager.getVisitorToken()) {
       console.log(`${logPrefix} No token found, creating visitor session...`);
-      await onboardingModule.createOnboardingSession();
+      await AuthManager.ensureVisitorSession();
     }
 
     // Determine endpoint and payload based on input type

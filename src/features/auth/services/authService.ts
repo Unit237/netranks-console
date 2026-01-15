@@ -1,6 +1,6 @@
 import { apiClient, ApiError } from "../../../app/lib/api";
 import { getSelectedLanguage } from "../../../app/localization/language";
-import token from "../../../app/utils/token";
+import AuthManager from "../../../app/auth/AuthManager";
 import type { UserData } from "../@types";
 
 export const sendMagicLink = async (
@@ -50,7 +50,7 @@ export const consumeMagicLink = async (
 
     // Set token if we got a successful response
     if (typeof res === "string") {
-      token.setUser(res);
+      AuthManager.setUserToken(res);
       return res;
     } else {
       throw new ApiError("Invalid response format");
