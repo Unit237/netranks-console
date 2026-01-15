@@ -5,8 +5,8 @@ import Axios, {
 } from "axios";
 import { Component } from "react";
 import { v4 as uuid } from "uuid";
-import prms from "../utils/config";
-import token from "../utils/token";
+import runtimeConfig from "../utils/config";
+import { AuthService } from "../auth/AuthManager";
 
 export interface ConnectionConfig extends AxiosRequestConfig {
   /**
@@ -79,47 +79,7 @@ axios.interceptors.request.use(async (config) => {
   // This ensures we have the latest token value
   // Determine which token to use based on endpoint type
   const url = config.url || "";
-
-  // Endpoints that require VisitorSession (anonymous) - these need visitor token
-  const isVisitorEndpoint =
-    url.includes("CreateSurveyFromQuery") ||
-    url.includes("CreateSurveyFromBrand") ||
-    url.includes("StartSurvey") ||
-    url.includes("GenerateQuestionsFromQuery") ||
-    url.includes("GenerateQuestionsFromBrand");
-
-  // Endpoints that require UserSession (authenticated) - MUST use user token, no fallback
-  const requiresUserToken =
-    url.includes("ChangeSurveySchedule") ||
-    url.includes("CreateSurvey") ||
-    url.includes("UpdateUser") ||
-    url.includes("DeleteMember") ||
-    url.includes("AddMember") ||
-    url.includes("UpdateMember") ||
-    url.includes("GetMembers") ||
-    url.includes("GetPendingInvitations") ||
-    url.includes("DeleteInvitation") ||
-    url.includes("AddQuestion") ||
-    url.includes("EditQuestion") ||
-    url.includes("DeleteQuestion");
-
-  // Select the appropriate token
-  let authToken: string | null;
-  if (isVisitorEndpoint) {
-    // Visitor endpoints MUST use visitor token
-    authToken = token.getVisitor();
-  } else if (requiresUserToken) {
-    // User-only endpoints: MUST use user token, don't fallback to visitor
-    authToken = token.getUser();
-    if (!authToken && import.meta.env.DEV) {
-      console.warn(
-        `[API] User token required for ${url} but not found. User may need to log in.`
-      );
-    }
-  } else {
-    // All other endpoints: prefer user token, fall back to visitor
-    authToken = token.getUser() || token.getVisitor();
-  }
+  const authToken = AuthService.getTokenForUrl(url);
 
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
@@ -132,8 +92,12 @@ axios.interceptors.request.use(async (config) => {
     // Backend-main expects token in the "token" header (not Authorization)
     // Set it directly on headers object - this works for all HTTP methods
     // Use lowercase header name to ensure compatibility
-    config.headers["token"] = tokenStr;
-    config.headers["Token"] = tokenStr; // Also set with capital T for compatibility
+    const authHeaders = AuthService.getAuthHeadersForUrl(url);
+    if (Object.keys(authHeaders).length === 0) {
+      return config;
+    }
+    config.headers["token"] = authHeaders.token;
+    config.headers["Token"] = authHeaders.Token; // Also set with capital T for compatibility
 
     if (import.meta.env.DEV || import.meta.env.VITE_PROD === "true") {
       // console.log("[API] Adding token to request headers", {
@@ -270,26 +234,6 @@ async function myFetch<T>(
         }
 
         loading(setLoading, false);
-
-        // Check if this is a visitor auth endpoint that might need a fresh token
-        const isVisitorAuthEndpoint =
-          url.includes("CreateSurveyFromQuery") ||
-          url.includes("CreateSurveyFromBrand") ||
-          url.includes("CreateVisitorSession");
-
-        if (isVisitorAuthEndpoint && import.meta.env.VITE_PROD === "true") {
-          // In production, try to recreate the token once
-          console.warn(
-            "[API] 401 Unauthorized on visitor auth endpoint, token may be invalid",
-            {
-              url,
-              hasToken: !!token.get(),
-            }
-          );
-
-          // Don't auto-retry here - let the calling code handle it
-          // But log the issue for debugging
-        }
 
         reject(new ApiError("Unauthorized", 401, response.data));
         return;
@@ -465,7 +409,7 @@ export default function connection(
   setLoading?: (x: boolean) => {} | Component | undefined,
   config?: ConnectionConfig
 ) {
-  const baseUrl = prms.SERVER_URL;
+  const baseUrl = runtimeConfig.SERVER_URL;
 
   return {
     get: (url: string): any => {
@@ -672,7 +616,7 @@ class ApiClient {
 }
 
 // Export apiClient instance for the main API
-const serverUrl = prms.SERVER_URL;
+const serverUrl = runtimeConfig.SERVER_URL;
 if (import.meta.env.DEV) {
   // console.log("[ApiClient] Backend URL:", serverUrl || "http://localhost:4000");
   // console.log("[ApiClient] VITE_PROD:", import.meta.env.VITE_PROD);

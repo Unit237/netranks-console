@@ -3,7 +3,7 @@ import { Mail, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../auth/context/UserContext";
 import { apiClient } from "../../../app/lib/api";
-import token from "../../../app/utils/token";
+import { AuthService } from "../../../app/auth/AuthManager";
 import { useTabs } from "../../console/context/TabContext";
 
 const ProfileTab = () => {
@@ -100,7 +100,7 @@ const ProfileTab = () => {
       console.error("Logout API call failed:", error);
     } finally {
       // Clear all tokens
-      token.clear();
+      AuthService.clearAllTokens();
 
       // Close all tabs
       closeAllTabs();

@@ -1,7 +1,9 @@
 import { Trash2, Undo2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import token from "../../../app/utils/token";
+import { useAsyncData } from "../../../app/shared/hooks/useAsyncData";
+import { useFormSubmission } from "../../../app/shared/hooks/useFormSubmission";
+import { AuthService } from "../../../app/auth/AuthManager";
 import type { BrandData } from "../@types";
 import { BrandSurveyRunSummary } from "../components/BrandSurveyRunSummary";
 import { useBrand } from "../context/BrandContext";
@@ -18,10 +20,6 @@ const Questions: React.FC = () => {
   const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
 
-  const [survey, setSurvey] = useState<BrandData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [startingSurvey, setStartingSurvey] = useState<boolean>(false);
   const [deletedQuestions, setDeletedQuestions] = useState<Set<number>>(
     new Set()
   );
@@ -33,156 +31,117 @@ const Questions: React.FC = () => {
   const [hoveredQuestion, setHoveredQuestion] = useState<number | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastFetchedBrandIdRef = useRef<string | null>(null);
-  const lastFetchedQueryRef = useRef<string | null>(null);
 
-  const questions = survey?.Questions ?? [];
   const effectiveQuery = hasParamQuestion ? paramQuestionRaw : query;
   const displayBrand = hasParamQuestion ? null : selectedBrand ?? null;
 
-  useEffect(() => {
-    // Validate that we have data to fetch
-    if (!hasParamQuestion && !selectedBrand && !query) {
-      navigate("/");
-      return;
-    }
+  // Use ref to access selectedBrand without causing functions to be recreated
+  // This prevents infinite loops when selectedBrand.description is updated in onSuccess
+  const selectedBrandRef = useRef(selectedBrand);
+  selectedBrandRef.current = selectedBrand;
 
-    // Determine what we're fetching
-    const brandId = selectedBrand?.brandId ?? null;
-    const queryToFetch = hasParamQuestion ? paramQuestionRaw : query;
+  // Use ref to access query to prevent unnecessary refetches when query changes
+  const queryRef = useRef(query);
+  queryRef.current = query;
 
-    // Skip if we've already fetched for this brand/query
+  // Memoize onSuccess callback to prevent infinite refetch loops
+  // Use ref to access selectedBrand so callback doesn't need to be recreated when selectedBrand changes
+  const handleSuccess = useCallback((surveyData: BrandData) => {
+    // Only update selectedBrand if description actually changed
+    // Consolidated if statement checks all conditions at once
     if (
-      (brandId && brandId === lastFetchedBrandIdRef.current) ||
-      (queryToFetch && queryToFetch === lastFetchedQueryRef.current && !brandId)
+      selectedBrandRef.current &&
+      surveyData.DescriptionOfTheBrandShort &&
+      selectedBrandRef.current.description !== surveyData.DescriptionOfTheBrandShort
     ) {
-      return;
+      setSelectedBrand({
+        ...selectedBrandRef.current,
+        description: surveyData.DescriptionOfTheBrandShort,
+      });
     }
+  }, [setSelectedBrand]);
 
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Create fetch function for useAsyncData
+  // Use brandId (primitive) and trimmed query in dependencies to avoid infinite loops
+  const brandId = selectedBrand?.brandId ?? null;
+  const trimmedQuery = query?.trim() || null;
+  const fetchSurveyData = useCallback(async (): Promise<BrandData> => {
+    if (hasParamQuestion) {
+      return await fetchQueryQuestions(paramQuestionRaw);
+    } else if (selectedBrandRef.current) {
+      return await fetchBrandQuestions(selectedBrandRef.current);
+    } else if (queryRef.current?.trim()) {
+      // Validate query is not empty before sending
+      const queryToSend = queryRef.current.trim();
+      if (!queryToSend) {
+        throw new Error("Query cannot be empty");
+      }
+      return await fetchQueryQuestions(queryToSend);
+    } else {
+      throw new Error("No data available to fetch survey");
+    }
+  }, [hasParamQuestion, paramQuestionRaw, brandId, trimmedQuery]);
 
-        let surveyData: BrandData;
+  // Use useAsyncData hook for data fetching
+  const {
+    data: survey,
+    loading,
+    error: fetchError,
+    refetch,
+  } = useAsyncData<BrandData>(fetchSurveyData, {
+    enabled: hasParamQuestion || !!selectedBrand || !!query,
+    initialData: null,
+    onSuccess: handleSuccess,
+  });
 
-        if (hasParamQuestion) {
-          surveyData = await fetchQueryQuestions(paramQuestionRaw);
-          lastFetchedQueryRef.current = paramQuestionRaw;
-          lastFetchedBrandIdRef.current = null;
-        } else if (selectedBrand) {
-          surveyData = await fetchBrandQuestions(selectedBrand);
-          lastFetchedBrandIdRef.current = selectedBrand.brandId;
-          lastFetchedQueryRef.current = null;
+  const questions = survey?.Questions ?? [];
 
-          // Only update selectedBrand if description actually changed
-          const newDescription = surveyData.DescriptionOfTheBrandShort ?? "";
-          if (selectedBrand.description !== newDescription) {
-            setSelectedBrand({
-              ...selectedBrand,
-              description: newDescription,
-            });
+  // Create submit function for useFormSubmission
+  const submitSurvey = useCallback(
+    async (surveyData: BrandData): Promise<void> => {
+      // Filter out deleted questions
+      const filteredQuestions =
+        surveyData?.Questions?.filter(
+          (_, index) => !deletedQuestions.has(index)
+        ) ?? [];
+      const filteredSurvey = surveyData
+        ? {
+            ...surveyData,
+            Questions: filteredQuestions,
           }
-        } else if (query) {
-          surveyData = await fetchQueryQuestions(query);
-          lastFetchedQueryRef.current = query;
-          lastFetchedBrandIdRef.current = null;
-        } else {
-          throw new Error("No data available to fetch survey");
-        }
+        : null;
 
-        setSurvey(surveyData);
-      } catch (error) {
-        console.error("Failed to fetch survey data:", error);
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to load questions. Please try again.";
-        setError(errorMessage);
-        setSurvey(null);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [
-    hasParamQuestion,
-    paramQuestionRaw,
-    selectedBrand?.brandId,
-    query,
-    navigate,
-    setSelectedBrand,
-  ]);
+      // Get question indices (0-based) to include only non-deleted questions
+      const questionIndices =
+        surveyData?.Questions?.map((_, index) => index).filter(
+          (index) => !deletedQuestions.has(index)
+        ) ?? [];
 
-  // Handle click outside to cancel confirmation
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setConfirmingDelete(null);
-      }
-    };
-
-    if (confirmingDelete !== null) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [confirmingDelete]);
-
-  const handleSubmit = async () => {
-    if (startingSurvey || !survey) {
-      return;
-    }
-
-    setStartingSurvey(true);
-    setError(null);
-
-    // Filter out deleted questions
-    const filteredQuestions =
-      survey?.Questions?.filter((_, index) => !deletedQuestions.has(index)) ??
-      [];
-    const filteredSurvey = survey
-      ? {
-          ...survey,
-          Questions: filteredQuestions,
-        }
-      : null;
-
-    // Get question indices (0-based) to include only non-deleted questions
-    const questionIndices =
-      survey?.Questions?.map((_, index) => index).filter(
-        (index) => !deletedQuestions.has(index)
-      ) ?? [];
-
-    try {
       let surveyRunId: string;
 
       if (deletedQuestions.size > 0) {
         try {
           // Attempt to start survey with filtered question indices
-          surveyRunId = await startSurvey(survey.Id, questionIndices);
+          surveyRunId = await startSurvey(surveyData.Id, questionIndices);
         } catch (error) {
-          surveyRunId = await startSurvey(survey.Id);
+          surveyRunId = await startSurvey(surveyData.Id);
         }
       } else {
         // No deleted questions, use GET
-        surveyRunId = await startSurvey(survey.Id);
+        surveyRunId = await startSurvey(surveyData.Id);
       }
 
       const p1 = filteredSurvey?.PasswordOne;
       const p2 = filteredSurvey?.PasswordTwo;
 
       // Check if user is first-time (no userToken)
-      const userToken = token.getUser();
+      const userToken = AuthService.getUserToken();
       const isFirstTimeUser = !userToken;
 
       if (isFirstTimeUser) {
         // Store survey details for redirect after signin
         const redirectData = {
-          surveyId: survey.Id,
+          surveyId: surveyData.Id,
           surveyRunId,
           p1,
           p2,
@@ -212,17 +171,61 @@ const Questions: React.FC = () => {
           },
         });
       }
-    } catch (error) {
-      console.error("Failed to start survey:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to start survey. Please try again.";
-      setError(errorMessage);
-    } finally {
-      setStartingSurvey(false);
+    },
+    [deletedQuestions, effectiveQuery, displayBrand, navigate]
+  );
+
+  // Use useFormSubmission hook for form submission
+  const {
+    submitting,
+    error: submitError,
+    handleSubmit,
+    reset: resetSubmitError,
+  } = useFormSubmission<BrandData, void>(submitSurvey, {
+    formatError: (err) => {
+      if (err instanceof Error) {
+        return err.message;
+      }
+      return "Failed to start survey. Please try again.";
+    },
+  });
+
+  // Combine fetch error and submit error for display
+  const error = fetchError?.message || submitError || null;
+
+  // Wrapper function to handle submission with survey check
+  const handleSubmitWrapper = useCallback(() => {
+    if (!survey) {
+      return;
     }
-  };
+    handleSubmit(survey);
+  }, [survey, handleSubmit]);
+
+  // Navigate away if no data source available
+  useEffect(() => {
+    if (!hasParamQuestion && !selectedBrand && !query) {
+      navigate("/");
+    }
+  }, [hasParamQuestion, selectedBrand, query, navigate]);
+
+  // Handle click outside to cancel confirmation
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setConfirmingDelete(null);
+      }
+    };
+
+    if (confirmingDelete !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [confirmingDelete]);
 
   const handleDeleteQuestion = (index: number) => {
     setConfirmingDelete(index);
@@ -259,8 +262,8 @@ const Questions: React.FC = () => {
         query={effectiveQuery}
         brand={displayBrand}
         survey={survey ?? null}
-        handleSubmit={handleSubmit}
-        startingSurvey={startingSurvey ?? false}
+        handleSubmit={handleSubmitWrapper}
+        startingSurvey={submitting}
         deletedQuestions={deletedQuestions}
       />
       {loading && !survey && !error && (
@@ -281,16 +284,8 @@ const Questions: React.FC = () => {
           </div>
           <button
             onClick={() => {
-              setError(null);
-              setLoading(true);
-              // Trigger re-fetch by updating state
-              if (hasParamQuestion) {
-                // Force re-render by updating search params
-                window.location.reload();
-              } else {
-                // Re-trigger useEffect by updating a dependency
-                setSurvey(null);
-              }
+              resetSubmitError();
+              refetch();
             }}
             className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-red-800 dark:text-red-200 bg-red-100 dark:bg-red-900/40 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
           >
