@@ -6,7 +6,7 @@ import Axios, {
 import { Component } from "react";
 import { v4 as uuid } from "uuid";
 import prms from "../utils/config";
-import AuthManager from "../auth/AuthManager";
+import { AuthService } from "../auth/AuthManager";
 
 export interface ConnectionConfig extends AxiosRequestConfig {
   /**
@@ -79,9 +79,7 @@ axios.interceptors.request.use(async (config) => {
   // This ensures we have the latest token value
   // Determine which token to use based on endpoint type
   const url = config.url || "";
-  const isVisitorEndpoint = AuthManager.isVisitorEndpoint(url);
-  const requiresUserToken = AuthManager.requiresUserToken(url);
-  const authToken = AuthManager.getTokenForUrl(url);
+  const authToken = AuthService.getTokenForUrl(url);
 
   if (authToken) {
     // Safety check: ensure token is not HTML or invalid
@@ -94,7 +92,7 @@ axios.interceptors.request.use(async (config) => {
     // Backend-main expects token in the "token" header (not Authorization)
     // Set it directly on headers object - this works for all HTTP methods
     // Use lowercase header name to ensure compatibility
-    const authHeaders = AuthManager.getAuthHeadersForUrl(url);
+    const authHeaders = AuthService.getAuthHeadersForUrl(url);
     if (Object.keys(authHeaders).length === 0) {
       return config;
     }
@@ -116,8 +114,6 @@ axios.interceptors.request.use(async (config) => {
       console.warn("[API] No token available for request", {
         endpoint: config.url,
         method: config.method,
-        isVisitorEndpoint,
-        requiresUserToken,
       });
     }
   }
@@ -238,26 +234,6 @@ async function myFetch<T>(
         }
 
         loading(setLoading, false);
-
-        // Check if this is a visitor auth endpoint that might need a fresh token
-          const isVisitorAuthEndpoint =
-            url.includes("CreateSurveyFromQuery") ||
-            url.includes("CreateSurveyFromBrand") ||
-            url.includes("CreateVisitorSession");
-
-        if (isVisitorAuthEndpoint && import.meta.env.VITE_PROD === "true") {
-          // In production, try to recreate the token once
-          console.warn(
-            "[API] 401 Unauthorized on visitor auth endpoint, token may be invalid",
-            {
-              url,
-              hasToken: !!AuthManager.getAnyToken(),
-            }
-          );
-
-          // Don't auto-retry here - let the calling code handle it
-          // But log the issue for debugging
-        }
 
         reject(new ApiError("Unauthorized", 401, response.data));
         return;

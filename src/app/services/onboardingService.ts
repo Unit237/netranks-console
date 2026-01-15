@@ -1,4 +1,4 @@
-import AuthManager from "../auth/AuthManager";
+import { AuthService } from "../auth/AuthManager";
 
 // Singleton promise to prevent concurrent session creation (race condition fix)
 let sessionCreationPromise: Promise<void> | null = null;
@@ -25,7 +25,7 @@ export async function createOnboardingSession(): Promise<void> {
     return sessionCreationPromise;
   }
 
-  sessionCreationPromise = AuthManager.ensureVisitorSession();
+  sessionCreationPromise = AuthService.ensureVisitorSession();
   try {
     await sessionCreationPromise;
   } finally {

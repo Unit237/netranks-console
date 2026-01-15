@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { debugLog } from "../../../app/utils/debugLogger";
-import AuthManager from "../../../app/auth/AuthManager";
+import { AuthService } from "../../../app/auth/AuthManager";
 import { useUser } from "../context/UserContext";
 
 const ProtectedRoute = () => {
@@ -29,7 +29,7 @@ const ProtectedRoute = () => {
       return;
     }
 
-    const authToken = AuthManager.getUserToken();
+    const authToken = AuthService.getUserToken();
 
     if (!authToken) {
       debugLog("ProtectedRoute", "No token found, redirecting to signin");

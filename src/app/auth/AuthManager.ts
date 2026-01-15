@@ -5,7 +5,7 @@ import Hub, { HubType, useHub } from "../utils/Hub";
 import prms from "../utils/config";
 import { urlParams } from "../utils/urlUtils";
 
-class AuthManager {
+class AuthService {
   // Storage keys
   private static readonly USER_TOKEN_KEY = "userToken"; // For UserSession (authenticated)
   private static readonly VISITOR_TOKEN_KEY = "visitorToken"; // For VisitorSession (anonymous)
@@ -336,10 +336,10 @@ class AuthManager {
   }
 }
 
-export default AuthManager;
+export { AuthService };
 
 export function useIsLoggedIn() {
-  const [token, setToken] = useState(AuthManager.getUserToken());
+  const [token, setToken] = useState(AuthService.getUserToken());
   useHub(HubType.UserTokenChanged, setToken);
   return !!token;
 }

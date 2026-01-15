@@ -2,7 +2,7 @@ import { Keyboard } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../../app/providers/ToastProvider";
-import AuthManager from "../../../app/auth/AuthManager";
+import { AuthService } from "../../../app/auth/AuthManager";
 import Hand from "../../../assets/col.svg";
 import Logo from "../../../assets/user.svg";
 import SurveyStack from "../components/SurveyStack";
@@ -12,7 +12,7 @@ const Signin: React.FC = () => {
   const [email, setEmail] = useState("");
   const toast = useToast();
 
-  const visitorSessionToken = AuthManager.getVisitorToken();
+  const visitorSessionToken = AuthService.getVisitorToken();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = React.useState(false);
 

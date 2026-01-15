@@ -1,6 +1,6 @@
 import { LogOut, Mail, Shield, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AuthManager from "../../../app/auth/AuthManager";
+import { AuthService } from "../../../app/auth/AuthManager";
 import { useUser } from "../../auth/context/UserContext";
 import { useTabs } from "../context/TabContext";
 
@@ -11,7 +11,7 @@ const Settings = () => {
 
   const handleLogout = () => {
     // Clear all tokens
-    AuthManager.clearAllTokens();
+    AuthService.clearAllTokens();
 
     // Close all tabs
     closeAllTabs();
