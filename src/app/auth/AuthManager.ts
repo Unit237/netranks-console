@@ -2,7 +2,7 @@ import Axios from "axios";
 import CryptoJS from "crypto-js";
 import { useState } from "react";
 import Hub, { HubType, useHub } from "../utils/Hub";
-import prms from "../utils/config";
+import runtimeConfig from "../utils/config";
 import { urlParams } from "../utils/urlUtils";
 
 class AuthService {
@@ -236,7 +236,7 @@ class AuthService {
     try {
       if (import.meta.env.DEV || isProduction) {
         console.log("[Onboarding] Starting visitor session creation", {
-          backend: prms.SERVER_URL,
+          backend: runtimeConfig.SERVER_URL,
           isProduction,
           hasExistingToken: !!existingToken,
           existingTokenPreview: existingToken
@@ -266,8 +266,8 @@ class AuthService {
       }
 
       const key = CryptoJS.lib.WordArray.create(
-        prms.netranksSessionKey.words,
-        prms.netranksSessionKey.sigBytes
+        runtimeConfig.netranksSessionKey.words,
+        runtimeConfig.netranksSessionKey.sigBytes
       );
 
       const secret = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(ip), key, {
@@ -295,7 +295,7 @@ class AuthService {
           this.setVisitorToken(tokenValue.trim());
           if (import.meta.env.DEV) {
             console.log("[Onboarding] Visitor session token created and stored", {
-              backend: prms.SERVER_URL,
+              backend: runtimeConfig.SERVER_URL,
             });
           }
         } else {
@@ -322,7 +322,7 @@ class AuthService {
 
   private static buildUrl(endpoint: string): string {
     const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-    const baseURL = prms.SERVER_URL;
+    const baseURL = runtimeConfig.SERVER_URL;
 
     if (!baseURL || typeof baseURL !== "string") {
       return `http://localhost:4000${normalizedEndpoint}`;

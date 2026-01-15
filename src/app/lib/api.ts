@@ -5,7 +5,7 @@ import Axios, {
 } from "axios";
 import { Component } from "react";
 import { v4 as uuid } from "uuid";
-import prms from "../utils/config";
+import runtimeConfig from "../utils/config";
 import { AuthService } from "../auth/AuthManager";
 
 export interface ConnectionConfig extends AxiosRequestConfig {
@@ -409,7 +409,7 @@ export default function connection(
   setLoading?: (x: boolean) => {} | Component | undefined,
   config?: ConnectionConfig
 ) {
-  const baseUrl = prms.SERVER_URL;
+  const baseUrl = runtimeConfig.SERVER_URL;
 
   return {
     get: (url: string): any => {
@@ -616,7 +616,7 @@ class ApiClient {
 }
 
 // Export apiClient instance for the main API
-const serverUrl = prms.SERVER_URL;
+const serverUrl = runtimeConfig.SERVER_URL;
 if (import.meta.env.DEV) {
   // console.log("[ApiClient] Backend URL:", serverUrl || "http://localhost:4000");
   // console.log("[ApiClient] VITE_PROD:", import.meta.env.VITE_PROD);
