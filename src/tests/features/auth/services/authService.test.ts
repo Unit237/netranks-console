@@ -1,4 +1,4 @@
-import { sendMagicLink, consumeMagicLink } from '../authService';
+import { sendMagicLink, consumeMagicLink } from '../../../../features/auth/services/authService';
 import { apiClient } from '../../../../app/lib/api';
 import token from '../../../../app/utils/token';
 

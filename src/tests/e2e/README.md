@@ -48,7 +48,7 @@ npm run test:e2e:headed
 ### Run specific test file:
 
 ```bash
-npx playwright test e2e/tests/auth.test.ts
+npx playwright test src/tests/e2e/tests/auth.test.ts
 ```
 
 ### Run tests in debug mode:
@@ -59,20 +59,21 @@ npx playwright test --debug
 
 ## Test Structure
 
-- `e2e/tests/`: Test files
+- `src/tests/e2e/tests/`: Test files
 
   - `auth.test.ts`: Authentication flow tests
+  - `create-project.test.ts`: Project creation flow tests
   - `survey-creation.test.ts`: Survey creation flow tests
   - `survey-details.test.ts`: Survey details page tests
 
-- `e2e/utils/`: Utility functions
+- `src/tests/e2e/utils/`: Utility functions
 
   - `driver.ts`: Playwright browser/page setup and teardown
   - `helpers.ts`: Helper functions for common Playwright operations
 
-- `e2e/config.ts`: Configuration settings
+- `src/tests/e2e/config.ts`: Configuration settings
 
-- `e2e/screenshots/`: Screenshots saved on test failures (auto-created)
+- `src/tests/e2e/screenshots/`: Screenshots saved on test failures (auto-created)
 
 ## Authentication
 

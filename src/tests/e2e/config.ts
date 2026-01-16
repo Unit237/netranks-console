@@ -23,5 +23,5 @@ export const E2E_CONFIG = {
 
   // Screenshot settings
   screenshotOnFailure: true,
-  screenshotDir: "./e2e/screenshots",
+  screenshotDir: "./src/tests/e2e/screenshots",
 };

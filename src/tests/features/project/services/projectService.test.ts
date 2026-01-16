@@ -1,5 +1,5 @@
 import { apiClient } from "../../../../app/lib/api";
-import { createSurvey, getSurveyById } from "../projectService";
+import { createSurvey, getSurveyById } from "../../../../features/project/services/projectService";
 
 // Mock dependencies
 jest.mock("../../../../app/lib/api", () => ({

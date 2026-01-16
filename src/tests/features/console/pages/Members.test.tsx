@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import Members from '../Members';
-import { UserContext } from '../../../auth/context/UserContext';
+import Members from '../../../../features/console/pages/Members';
+import { UserContext } from '../../../../features/auth/context/UserContext';
 
 // Mock the apiClient
 vi.mock('../../../../app/lib/api', () => ({
@@ -310,4 +310,3 @@ describe('Members Page', () => {
     }
   });
 });
-

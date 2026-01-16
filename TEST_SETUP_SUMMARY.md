@@ -11,10 +11,10 @@
 - `jest.config.cjs` - Main Jest configuration for unit/integration tests (CommonJS format)
 - `jest.e2e.config.cjs` - Jest configuration for E2E tests (CommonJS format)
 - `src/tests/jest-setup.ts` - Jest setup file with mocks
-- `e2e/config.ts` - E2E test configuration
+- `src/tests/e2e/config.ts` - E2E test configuration
 
-### 3. E2E Tests Created (Selenium)
-Located in `e2e/tests/`:
+### 3. E2E Tests Created (Playwright)
+Located in `src/tests/e2e/tests/`:
 - ✅ **auth.test.ts** - Authentication flow tests
   - Signin page display
   - Magic link submission
@@ -30,15 +30,18 @@ Located in `e2e/tests/`:
   - Loading states
   - Survey data display
 
-### 4. Unit/Integration Tests Created (Jest)
-- ✅ `src/features/project/utils/__tests__/sanitizeSurveyName.test.ts` - Utility function tests
-- ✅ `src/app/utils/__tests__/Hub.test.ts` - Hub utility tests
-- ✅ `src/features/auth/services/__tests__/authService.test.ts` - Auth service integration tests
-- ✅ `src/features/project/services/__tests__/projectService.test.ts` - Project service integration tests
+### 4. Unit/Integration Tests Created (Jest/Vitest)
+Located in `src/tests/`:
+- ✅ `src/tests/app/utils/Hub.test.ts` - Hub utility tests
+- ✅ `src/tests/features/auth/services/authService.test.ts` - Auth service integration tests
+- ✅ `src/tests/features/project/services/projectService.test.ts` - Project service integration tests
+- ✅ `src/tests/features/project/utils/formatLastRun.test.ts` - Format utility tests (Vitest)
+- ✅ `src/tests/services/mockMemberService.test.ts` - Mock service tests (Vitest)
+- ✅ `src/tests/features/console/pages/Members.test.tsx` - Members page tests (Vitest)
 
 ### 5. Test Utilities
-- `e2e/utils/driver.ts` - WebDriver setup/teardown
-- `e2e/utils/helpers.ts` - Selenium helper functions
+- `src/tests/e2e/utils/driver.ts` - Playwright browser/page setup/teardown
+- `src/tests/e2e/utils/helpers.ts` - Playwright helper functions
 
 ### 6. NPM Scripts Added
 - `npm run test` - Run unit/integration tests
@@ -53,7 +56,7 @@ Located in `e2e/tests/`:
 
 ### 8. Documentation
 - ✅ `TESTING.md` - Comprehensive testing guide
-- ✅ `e2e/README.md` - E2E testing specific guide
+- ✅ `src/tests/e2e/README.md` - E2E testing specific guide
 
 ## 📋 Next Steps
 
@@ -100,5 +103,5 @@ Adjust in `jest.config.cjs` as needed.
 
 - E2E tests require the application to be running
 - E2E tests run sequentially (maxWorkers: 1) to avoid conflicts
-- Screenshots are saved to `e2e/screenshots/` on test failures
+- Screenshots are saved to `src/tests/e2e/screenshots/` on test failures
 - Test coverage reports are generated in `coverage/` directory

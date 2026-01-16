@@ -1,4 +1,4 @@
-import Hub from "../Hub";
+import Hub from "../../../app/utils/Hub";
 
 describe("Hub", () => {
   beforeEach(() => {

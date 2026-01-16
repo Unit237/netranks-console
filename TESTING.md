@@ -10,7 +10,7 @@ This project uses multiple testing frameworks:
 
 ### Unit/Integration Tests (Jest)
 
-Located in `src/**/__tests__/**/*.test.ts` (excluding Vitest test files)
+Located in `src/tests/**/*.test.ts` (excluding Vitest test files)
 
 These tests cover:
 
@@ -23,17 +23,17 @@ These tests cover:
 
 ### Unit/Integration Tests (Vitest)
 
-Located in:
+Located in `src/tests/`:
 
-- `src/services/__tests__/mockMemberService.test.ts`
-- `src/features/console/pages/__tests__/Members.test.tsx`
-- `src/features/project/utils/__tests__/formatLastRun.test.ts`
+- `src/tests/services/mockMemberService.test.ts`
+- `src/tests/features/console/pages/Members.test.tsx`
+- `src/tests/features/project/utils/formatLastRun.test.ts`
 
 Run with: `npm run test:vitest`
 
 ### End-to-End Tests (Playwright)
 
-Located in `e2e/tests/**/*.test.ts`
+Located in `src/tests/e2e/tests/**/*.test.ts`
 
 These tests cover:
 
