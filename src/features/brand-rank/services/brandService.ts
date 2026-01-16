@@ -6,6 +6,208 @@ import {
 import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
 
+type SurveyRequestPayload =
+  | {
+      brandId?: string;
+      domain?: string;
+      name?: string;
+      icon?: string;
+    }
+  | string;
+
+interface SurveyFetchStrategy {
+  getLogPrefix(): string;
+  getTypeLabel(): "brand" | "query";
+  getEndpoint(): string;
+  buildPayload(): SurveyRequestPayload;
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData;
+}
+
+class BrandFetchStrategy implements SurveyFetchStrategy {
+  private readonly brand: BrandOption;
+
+  constructor(brand: BrandOption) {
+    this.brand = brand;
+  }
+
+  getLogPrefix() {
+    return "[fetchQuestions - Brand]";
+  }
+
+  getTypeLabel() {
+    return "brand" as const;
+  }
+
+  getEndpoint() {
+    return "api/CreateSurveyFromBrand";
+  }
+
+  buildPayload(): SurveyRequestPayload {
+    return {
+      brandId: this.brand.brandId,
+      domain: this.brand.domain,
+      name: this.brand.name,
+      icon: this.brand.icon,
+    };
+  }
+
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData {
+    return {
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? this.brand.name ?? null,
+      DescriptionOfTheBrand:
+        response?.DescriptionOfTheBrand ?? this.brand.description ?? null,
+      DescriptionOfTheBrandShort:
+        response?.DescriptionOfTheBrandShort ?? this.brand.description ?? null,
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort:
+        response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "brand",
+      Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? this.brand.domain ?? null,
+    };
+  }
+}
+
+class QueryFetchStrategy implements SurveyFetchStrategy {
+  private readonly query: string;
+
+  constructor(query: string) {
+    this.query = query;
+  }
+
+  getLogPrefix() {
+    return "[fetchQuestions - Query]";
+  }
+
+  getTypeLabel() {
+    return "query" as const;
+  }
+
+  getEndpoint() {
+    return "api/CreateSurveyFromQuery";
+  }
+
+  buildPayload(): SurveyRequestPayload {
+    return this.query;
+  }
+
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData {
+    return {
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? null,
+      DescriptionOfTheBrand:
+        response?.DescriptionOfTheBrand ?? `Survey about: ${this.query}`,
+      DescriptionOfTheBrandShort:
+        response?.DescriptionOfTheBrandShort ?? this.query.substring(0, 100),
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort:
+        response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "query",
+      Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
+    };
+  }
+}
+
+function createSurveyFetchStrategy(
+  input: BrandOption | string
+): SurveyFetchStrategy {
+  return typeof input === "string"
+    ? new QueryFetchStrategy(input)
+    : new BrandFetchStrategy(input);
+}
+
+type ParsedQuestions = {
+  questionsArray: string[];
+  questionIds: number[];
+};
+
+interface ResponseParsingStrategy {
+  parse(response: BrandData, endpoint: string): ParsedQuestions;
+}
+
+class ArrayResponseStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    return {
+      questionsArray: response as unknown as string[],
+      questionIds: [],
+    };
+  }
+}
+
+class ObjectArrayStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    const questionsAsObjects = response.Questions as unknown as Array<{
+      Id: number;
+      Text: string;
+    }>;
+    return {
+      questionsArray: questionsAsObjects.map((q) => q.Text),
+      questionIds: questionsAsObjects.map((q) => q.Id),
+    };
+  }
+}
+
+class StringArrayStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    return {
+      questionsArray: response.Questions as unknown as string[],
+      questionIds: [],
+    };
+  }
+}
+
+class FallbackParsingStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData, endpoint: string): ParsedQuestions {
+    console.warn(`Unexpected response format from ${endpoint}:`, response);
+    return { questionsArray: [], questionIds: [] };
+  }
+}
+
+function selectResponseParsingStrategy(
+  response: BrandData
+): ResponseParsingStrategy {
+  if (Array.isArray(response)) {
+    return new ArrayResponseStrategy();
+  }
+
+  if (response && Array.isArray(response.Questions)) {
+    const firstQuestion = response.Questions[0];
+    if (
+      response.Questions.length > 0 &&
+      typeof firstQuestion === "object" &&
+      firstQuestion !== null &&
+      "Id" in firstQuestion &&
+      "Text" in firstQuestion
+    ) {
+      return new ObjectArrayStrategy();
+    }
+
+    return new StringArrayStrategy();
+  }
+
+  return new FallbackParsingStrategy();
+}
+
 export const searchBrands = async (
   query: string,
   signal?: AbortSignal
@@ -77,10 +279,8 @@ export const fetchQuestions = async (
     // but is necessary to avoid circular dependency issues.
     const { AuthService } = await import("../../../app/auth/AuthManager");
 
-    const isBrand = typeof input !== "string";
-    const logPrefix = isBrand
-      ? "[fetchQuestions - Brand]"
-      : "[fetchQuestions - Query]";
+    const fetchStrategy = createSurveyFetchStrategy(input);
+    const logPrefix = fetchStrategy.getLogPrefix();
 
     if (!AuthService.getVisitorToken()) {
       console.log(`${logPrefix} No token found, creating visitor session...`);
@@ -88,17 +288,8 @@ export const fetchQuestions = async (
     }
 
     // Determine endpoint and payload based on input type
-    const endpoint = isBrand
-      ? `api/CreateSurveyFromBrand`
-      : `api/CreateSurveyFromQuery`;
-    const payload = isBrand
-      ? {
-          brandId: (input as BrandOption).brandId,
-          domain: (input as BrandOption).domain,
-          name: (input as BrandOption).name,
-          icon: (input as BrandOption).icon,
-        }
-      : (input as string);
+    const endpoint = fetchStrategy.getEndpoint();
+    const payload = fetchStrategy.buildPayload();
 
     const response = await apiClient.post<BrandData>(
       endpoint,
@@ -106,86 +297,20 @@ export const fetchQuestions = async (
       options
     );
 
-    // Handle different response formats - API might return array directly or wrapped
-    let questionsArray: string[] = [];
-    let questionIds: number[] = [];
-
-    if (Array.isArray(response)) {
-      questionsArray = response;
-    } else if (response && Array.isArray(response.Questions)) {
-      // Check if Questions is array of objects with Id and Text, or just strings
-      const firstQuestion = response.Questions[0];
-      if (
-        response.Questions.length > 0 &&
-        typeof firstQuestion === "object" &&
-        firstQuestion !== null &&
-        "Id" in firstQuestion &&
-        "Text" in firstQuestion
-      ) {
-        // Questions are objects with Id and Text - use type assertion since we've verified the structure
-        const questionsAsObjects = response.Questions as unknown as Array<{
-          Id: number;
-          Text: string;
-        }>;
-        questionsArray = questionsAsObjects.map((q) => q.Text);
-        questionIds = questionsAsObjects.map((q) => q.Id);
-      } else {
-        // Questions are just strings
-        questionsArray = response.Questions as string[];
-      }
-    } else if (typeof response === "object" && response !== null) {
-      // Try to extract questions from object
-      console.warn(`Unexpected response format from ${endpoint}:`, response);
-      questionsArray = [];
-    }
+    const parsingStrategy = selectResponseParsingStrategy(response);
+    const { questionsArray, questionIds } = parsingStrategy.parse(
+      response,
+      endpoint
+    );
 
     if (questionsArray.length === 0) throw new Error("No questions found");
 
     // Transform response to match BrandData format, using API response values when available
-    const brandData: BrandData = isBrand
-      ? {
-          Id: response?.Id ?? 0,
-          PasswordOne: response?.PasswordOne ?? null,
-          PasswordTwo: response?.PasswordTwo ?? null,
-          BrandName: response?.BrandName ?? (input as BrandOption).name ?? null,
-          DescriptionOfTheBrand:
-            response?.DescriptionOfTheBrand ??
-            (input as BrandOption).description ??
-            null,
-          DescriptionOfTheBrandShort:
-            response?.DescriptionOfTheBrandShort ??
-            (input as BrandOption).description ??
-            null,
-          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-          DescriptionOfTheQuestionShort:
-            response?.DescriptionOfTheQuestionShort ?? null,
-          QueryType: response?.QueryType ?? "brand",
-          Questions: questionsArray,
-          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-          WebsiteOfTheBrand:
-            response?.WebsiteOfTheBrand ??
-            (input as BrandOption).domain ??
-            null,
-        }
-      : {
-          Id: response?.Id ?? 0,
-          PasswordOne: response?.PasswordOne ?? null,
-          PasswordTwo: response?.PasswordTwo ?? null,
-          BrandName: response?.BrandName ?? null,
-          DescriptionOfTheBrand:
-            response?.DescriptionOfTheBrand ??
-            `Survey about: ${input as string}`,
-          DescriptionOfTheBrandShort:
-            response?.DescriptionOfTheBrandShort ??
-            (input as string).substring(0, 100),
-          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-          DescriptionOfTheQuestionShort:
-            response?.DescriptionOfTheQuestionShort ?? null,
-          QueryType: response?.QueryType ?? "query",
-          Questions: questionsArray,
-          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-          WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
-        };
+    const brandData: BrandData = fetchStrategy.buildBrandData(
+      response,
+      questionsArray,
+      questionIds
+    );
 
     return brandData;
   } catch (error) {
@@ -196,21 +321,10 @@ export const fetchQuestions = async (
 
     // If 401 Unauthorized, try to recreate token and retry once
     if (error instanceof ApiError && error.status === 401) {
-      const isBrand = typeof input !== "string";
-      const logPrefix = isBrand
-        ? "[fetchQuestions - Brand]"
-        : "[fetchQuestions - Query]";
-      const endpoint = isBrand
-        ? `api/CreateSurveyFromBrand`
-        : `api/CreateSurveyFromQuery`;
-      const payload = isBrand
-        ? {
-            brandId: (input as BrandOption).brandId,
-            domain: (input as BrandOption).domain,
-            name: (input as BrandOption).name,
-            icon: (input as BrandOption).icon,
-          }
-        : (input as string);
+      const fetchStrategy = createSurveyFetchStrategy(input);
+      const logPrefix = fetchStrategy.getLogPrefix();
+      const endpoint = fetchStrategy.getEndpoint();
+      const payload = fetchStrategy.buildPayload();
 
       console.warn(
         `${logPrefix} 401 Unauthorized, attempting to recreate token and retry...`
@@ -244,12 +358,10 @@ export const fetchQuestions = async (
       throw error;
     }
 
-    const isBrand = typeof input !== "string";
-    const logPrefix = isBrand
-      ? "[fetchQuestions - Brand]"
-      : "[fetchQuestions - Query]";
+    const fetchStrategy = createSurveyFetchStrategy(input);
+    const logPrefix = fetchStrategy.getLogPrefix();
     console.error(
-      `Failed to fetch ${isBrand ? "brand" : "query"} questions: ${logPrefix}`,
+      `Failed to fetch ${fetchStrategy.getTypeLabel()} questions: ${logPrefix}`,
       error
     );
     throw new ApiError(
