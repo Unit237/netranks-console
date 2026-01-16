@@ -5,6 +5,7 @@ import {
 } from "../../../app/lib/api";
 import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
+import { BrandRepository } from "./BrandRepository";
 import { SurveyRepository, type ParsedSurveyResponse } from "./SurveyRepository";
 
 interface SurveyFetchStrategy {
@@ -124,65 +125,13 @@ function createSurveyFetchStrategy(
 }
 
 const surveyRepository = new SurveyRepository();
+const brandRepository = new BrandRepository();
 
 export const searchBrands = async (
   query: string,
   signal?: AbortSignal
 ): Promise<BrandOption[]> => {
-  try {
-    // const brands = await brandFetchApi.get<BrandOption[]>(
-    //   `/search/${encodeURIComponent(query)}`
-    // );
-
-    // const brands = await brandFetchApi.get<BrandOption[]>(
-    //   `/search/${encodeURIComponent(query)}`,
-    //   { signal }
-    // );
-
-    const res = await fetch(
-      `https://api.brandfetch.io/v2/search/${encodeURIComponent(query)}`,
-      { signal }
-    );
-
-    if (!res.ok) throw new Error(res.statusText);
-
-    const brands: BrandOption[] = await res.json();
-    // If no results, return a custom fallback option
-    if (brands.length === 0) {
-      return [
-        {
-          brandId: "_custom",
-          icon: "",
-          name: query,
-          domain: "",
-          claimed: false,
-          qualityScore: 0,
-          verified: false,
-          _score: 0,
-          description: "",
-        },
-      ];
-    }
-
-    return brands;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to search brands:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to search brands. Please try again."
-    );
-  }
+  return brandRepository.searchBrands(query, signal);
 };
 
 export const fetchQuestions = async (
