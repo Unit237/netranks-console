@@ -5,21 +5,15 @@ import {
 } from "../../../app/lib/api";
 import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
-
-type SurveyRequestPayload =
-  | {
-      brandId?: string;
-      domain?: string;
-      name?: string;
-      icon?: string;
-    }
-  | string;
+import { SurveyRepository, type ParsedSurveyResponse } from "./SurveyRepository";
 
 interface SurveyFetchStrategy {
   getLogPrefix(): string;
   getTypeLabel(): "brand" | "query";
-  getEndpoint(): string;
-  buildPayload(): SurveyRequestPayload;
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse>;
   buildBrandData(
     response: BrandData,
     questionsArray: string[],
@@ -42,17 +36,11 @@ class BrandFetchStrategy implements SurveyFetchStrategy {
     return "brand" as const;
   }
 
-  getEndpoint() {
-    return "api/CreateSurveyFromBrand";
-  }
-
-  buildPayload(): SurveyRequestPayload {
-    return {
-      brandId: this.brand.brandId,
-      domain: this.brand.domain,
-      name: this.brand.name,
-      icon: this.brand.icon,
-    };
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse> {
+    return repository.createSurveyFromBrand(this.brand, options);
   }
 
   buildBrandData(
@@ -95,12 +83,11 @@ class QueryFetchStrategy implements SurveyFetchStrategy {
     return "query" as const;
   }
 
-  getEndpoint() {
-    return "api/CreateSurveyFromQuery";
-  }
-
-  buildPayload(): SurveyRequestPayload {
-    return this.query;
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse> {
+    return repository.createSurveyFromQuery(this.query, options);
   }
 
   buildBrandData(
@@ -136,77 +123,7 @@ function createSurveyFetchStrategy(
     : new BrandFetchStrategy(input);
 }
 
-type ParsedQuestions = {
-  questionsArray: string[];
-  questionIds: number[];
-};
-
-interface ResponseParsingStrategy {
-  parse(response: BrandData, endpoint: string): ParsedQuestions;
-}
-
-class ArrayResponseStrategy implements ResponseParsingStrategy {
-  parse(response: BrandData): ParsedQuestions {
-    return {
-      questionsArray: response as unknown as string[],
-      questionIds: [],
-    };
-  }
-}
-
-class ObjectArrayStrategy implements ResponseParsingStrategy {
-  parse(response: BrandData): ParsedQuestions {
-    const questionsAsObjects = response.Questions as unknown as Array<{
-      Id: number;
-      Text: string;
-    }>;
-    return {
-      questionsArray: questionsAsObjects.map((q) => q.Text),
-      questionIds: questionsAsObjects.map((q) => q.Id),
-    };
-  }
-}
-
-class StringArrayStrategy implements ResponseParsingStrategy {
-  parse(response: BrandData): ParsedQuestions {
-    return {
-      questionsArray: response.Questions as unknown as string[],
-      questionIds: [],
-    };
-  }
-}
-
-class FallbackParsingStrategy implements ResponseParsingStrategy {
-  parse(response: BrandData, endpoint: string): ParsedQuestions {
-    console.warn(`Unexpected response format from ${endpoint}:`, response);
-    return { questionsArray: [], questionIds: [] };
-  }
-}
-
-function selectResponseParsingStrategy(
-  response: BrandData
-): ResponseParsingStrategy {
-  if (Array.isArray(response)) {
-    return new ArrayResponseStrategy();
-  }
-
-  if (response && Array.isArray(response.Questions)) {
-    const firstQuestion = response.Questions[0];
-    if (
-      response.Questions.length > 0 &&
-      typeof firstQuestion === "object" &&
-      firstQuestion !== null &&
-      "Id" in firstQuestion &&
-      "Text" in firstQuestion
-    ) {
-      return new ObjectArrayStrategy();
-    }
-
-    return new StringArrayStrategy();
-  }
-
-  return new FallbackParsingStrategy();
-}
+const surveyRepository = new SurveyRepository();
 
 export const searchBrands = async (
   query: string,
@@ -287,21 +204,11 @@ export const fetchQuestions = async (
       await AuthService.ensureVisitorSession();
     }
 
-    // Determine endpoint and payload based on input type
-    const endpoint = fetchStrategy.getEndpoint();
-    const payload = fetchStrategy.buildPayload();
-
-    const response = await apiClient.post<BrandData>(
-      endpoint,
-      payload,
-      options
-    );
-
-    const parsingStrategy = selectResponseParsingStrategy(response);
-    const { questionsArray, questionIds } = parsingStrategy.parse(
+    const {
       response,
-      endpoint
-    );
+      questionsArray,
+      questionIds,
+    } = await fetchStrategy.createSurvey(surveyRepository, options);
 
     if (questionsArray.length === 0) throw new Error("No questions found");
 
@@ -323,8 +230,6 @@ export const fetchQuestions = async (
     if (error instanceof ApiError && error.status === 401) {
       const fetchStrategy = createSurveyFetchStrategy(input);
       const logPrefix = fetchStrategy.getLogPrefix();
-      const endpoint = fetchStrategy.getEndpoint();
-      const payload = fetchStrategy.buildPayload();
 
       console.warn(
         `${logPrefix} 401 Unauthorized, attempting to recreate token and retry...`
@@ -336,14 +241,12 @@ export const fetchQuestions = async (
         await onboardingModule.createOnboardingSession();
 
         // Retry the request once
-        const questions = await apiClient.post<BrandData>(
-          endpoint,
-          payload,
+        const retryResponse = await fetchStrategy.createSurvey(
+          surveyRepository,
           options
         );
-
-        if (!questions) throw new Error("No questions found");
-        return questions;
+        if (!retryResponse.response) throw new Error("No questions found");
+        return retryResponse.response;
       } catch (retryError) {
         console.error(
           `${logPrefix} Retry after token recreation failed:`,
@@ -392,43 +295,7 @@ export const startSurvey = async (
   questionIndices?: number[],
   options?: ApiRequestConfig
 ): Promise<string> => {
-  try {
-    let response: string;
-
-    if (questionIndices && questionIndices.length > 0) {
-      // 🔹 POST request with questionIndices
-      response = await apiClient.post<string>(
-        `api/StartSurvey/${surveyId}`,
-        { questionIndices },
-        options
-      );
-    } else {
-      // 🔹 GET request if no questionIndices
-      response = await apiClient.get<string>(
-        `api/StartSurvey/${surveyId}`,
-        options
-      );
-    }
-
-    return response;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to start survey:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to start survey. Please try again."
-    );
-  }
+  return surveyRepository.startSurvey(surveyId, questionIndices, options);
 };
 
 export const getSurveyRun = async (
@@ -436,30 +303,7 @@ export const getSurveyRun = async (
   p1?: string,
   p2?: string
 ) => {
-  try {
-    const surveyRun = await apiClient.get(
-      `api/GetSurveyRun/${surveyRunId}/${p1}/${p2}`
-    );
-
-    return surveyRun;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to get survey run:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to get survey run. Please try again."
-    );
-  }
+  return surveyRepository.getSurveyRun(surveyRunId, p1, p2);
 };
 
 export const addQuestion = async (
