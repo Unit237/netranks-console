@@ -136,6 +136,78 @@ function createSurveyFetchStrategy(
     : new BrandFetchStrategy(input);
 }
 
+type ParsedQuestions = {
+  questionsArray: string[];
+  questionIds: number[];
+};
+
+interface ResponseParsingStrategy {
+  parse(response: BrandData, endpoint: string): ParsedQuestions;
+}
+
+class ArrayResponseStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    return {
+      questionsArray: response as unknown as string[],
+      questionIds: [],
+    };
+  }
+}
+
+class ObjectArrayStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    const questionsAsObjects = response.Questions as unknown as Array<{
+      Id: number;
+      Text: string;
+    }>;
+    return {
+      questionsArray: questionsAsObjects.map((q) => q.Text),
+      questionIds: questionsAsObjects.map((q) => q.Id),
+    };
+  }
+}
+
+class StringArrayStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData): ParsedQuestions {
+    return {
+      questionsArray: response.Questions as unknown as string[],
+      questionIds: [],
+    };
+  }
+}
+
+class FallbackParsingStrategy implements ResponseParsingStrategy {
+  parse(response: BrandData, endpoint: string): ParsedQuestions {
+    console.warn(`Unexpected response format from ${endpoint}:`, response);
+    return { questionsArray: [], questionIds: [] };
+  }
+}
+
+function selectResponseParsingStrategy(
+  response: BrandData
+): ResponseParsingStrategy {
+  if (Array.isArray(response)) {
+    return new ArrayResponseStrategy();
+  }
+
+  if (response && Array.isArray(response.Questions)) {
+    const firstQuestion = response.Questions[0];
+    if (
+      response.Questions.length > 0 &&
+      typeof firstQuestion === "object" &&
+      firstQuestion !== null &&
+      "Id" in firstQuestion &&
+      "Text" in firstQuestion
+    ) {
+      return new ObjectArrayStrategy();
+    }
+
+    return new StringArrayStrategy();
+  }
+
+  return new FallbackParsingStrategy();
+}
+
 export const searchBrands = async (
   query: string,
   signal?: AbortSignal
@@ -225,38 +297,11 @@ export const fetchQuestions = async (
       options
     );
 
-    // Handle different response formats - API might return array directly or wrapped
-    let questionsArray: string[] = [];
-    let questionIds: number[] = [];
-
-    if (Array.isArray(response)) {
-      questionsArray = response;
-    } else if (response && Array.isArray(response.Questions)) {
-      // Check if Questions is array of objects with Id and Text, or just strings
-      const firstQuestion = response.Questions[0];
-      if (
-        response.Questions.length > 0 &&
-        typeof firstQuestion === "object" &&
-        firstQuestion !== null &&
-        "Id" in firstQuestion &&
-        "Text" in firstQuestion
-      ) {
-        // Questions are objects with Id and Text - use type assertion since we've verified the structure
-        const questionsAsObjects = response.Questions as unknown as Array<{
-          Id: number;
-          Text: string;
-        }>;
-        questionsArray = questionsAsObjects.map((q) => q.Text);
-        questionIds = questionsAsObjects.map((q) => q.Id);
-      } else {
-        // Questions are just strings
-        questionsArray = response.Questions as string[];
-      }
-    } else if (typeof response === "object" && response !== null) {
-      // Try to extract questions from object
-      console.warn(`Unexpected response format from ${endpoint}:`, response);
-      questionsArray = [];
-    }
+    const parsingStrategy = selectResponseParsingStrategy(response);
+    const { questionsArray, questionIds } = parsingStrategy.parse(
+      response,
+      endpoint
+    );
 
     if (questionsArray.length === 0) throw new Error("No questions found");
 
