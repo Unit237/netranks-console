@@ -13,12 +13,7 @@ import {
 } from "../services/brandService";
 
 const PricingAndQuestion: React.FC = () => {
-  const {
-    selectedBrand,
-    setSelectedBrand,
-    query,
-    setQuery: setQueryState,
-  } = useBrand();
+  const { selectedBrand, setSelectedBrand, query } = useBrand();
   const navigate = useNavigate();
   const { activeTabId, updateTabName } = useTabs();
 
