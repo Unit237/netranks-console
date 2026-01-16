@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { mockMemberService, type InviteMemberPayload } from '../mockMemberService';
+import { mockMemberService, type InviteMemberPayload } from '../../services/mockMemberService';
 
 describe('MockMemberService', () => {
   beforeEach(() => {
@@ -68,4 +68,3 @@ describe('MockMemberService', () => {
     expect(updatedInvite.Id).toBe(inviteToResend.Id);
   });
 });
-

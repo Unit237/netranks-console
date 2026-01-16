@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { formatLastRun } from '../formatLastRun';
+import { formatLastRun } from '../../../../features/project/utils/formatLastRun';
 
 describe('formatLastRun', () => {
   let mockNow: Date;
@@ -155,4 +155,3 @@ describe('formatLastRun', () => {
     });
   });
 });
-

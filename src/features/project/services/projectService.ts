@@ -58,7 +58,7 @@ export const createSurvey = async (
       throw error;
     }
 
-    console.error("Failed to schedule survey:", error);
+    console.error("Failed to create survey:", error);
     throw new ApiError(
       error instanceof Error
         ? error.message
