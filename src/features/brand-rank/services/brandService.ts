@@ -5,65 +5,135 @@ import {
 } from "../../../app/lib/api";
 import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
+import { BrandRepository } from "./BrandRepository";
+import { QuestionRepository } from "./QuestionRepository";
+import { SurveyRepository, type ParsedSurveyResponse } from "./SurveyRepository";
+
+interface SurveyFetchStrategy {
+  getLogPrefix(): string;
+  getTypeLabel(): "brand" | "query";
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse>;
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData;
+}
+
+class BrandFetchStrategy implements SurveyFetchStrategy {
+  private readonly brand: BrandOption;
+
+  constructor(brand: BrandOption) {
+    this.brand = brand;
+  }
+
+  getLogPrefix() {
+    return "[fetchQuestions - Brand]";
+  }
+
+  getTypeLabel() {
+    return "brand" as const;
+  }
+
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse> {
+    return repository.createSurveyFromBrand(this.brand, options);
+  }
+
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData {
+    return {
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? this.brand.name ?? null,
+      DescriptionOfTheBrand:
+        response?.DescriptionOfTheBrand ?? this.brand.description ?? null,
+      DescriptionOfTheBrandShort:
+        response?.DescriptionOfTheBrandShort ?? this.brand.description ?? null,
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort:
+        response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "brand",
+      Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? this.brand.domain ?? null,
+    };
+  }
+}
+
+class QueryFetchStrategy implements SurveyFetchStrategy {
+  private readonly query: string;
+
+  constructor(query: string) {
+    this.query = query;
+  }
+
+  getLogPrefix() {
+    return "[fetchQuestions - Query]";
+  }
+
+  getTypeLabel() {
+    return "query" as const;
+  }
+
+  createSurvey(
+    repository: SurveyRepository,
+    options?: ApiRequestConfig
+  ): Promise<ParsedSurveyResponse> {
+    return repository.createSurveyFromQuery(this.query, options);
+  }
+
+  buildBrandData(
+    response: BrandData,
+    questionsArray: string[],
+    questionIds: number[]
+  ): BrandData {
+    return {
+      Id: response?.Id ?? 0,
+      PasswordOne: response?.PasswordOne ?? null,
+      PasswordTwo: response?.PasswordTwo ?? null,
+      BrandName: response?.BrandName ?? null,
+      DescriptionOfTheBrand:
+        response?.DescriptionOfTheBrand ?? `Survey about: ${this.query}`,
+      DescriptionOfTheBrandShort:
+        response?.DescriptionOfTheBrandShort ?? this.query.substring(0, 100),
+      DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
+      DescriptionOfTheQuestionShort:
+        response?.DescriptionOfTheQuestionShort ?? null,
+      QueryType: response?.QueryType ?? "query",
+      Questions: questionsArray,
+      QuestionIds: questionIds.length > 0 ? questionIds : undefined,
+      WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
+    };
+  }
+}
+
+function createSurveyFetchStrategy(
+  input: BrandOption | string
+): SurveyFetchStrategy {
+  return typeof input === "string"
+    ? new QueryFetchStrategy(input)
+    : new BrandFetchStrategy(input);
+}
+
+const surveyRepository = new SurveyRepository();
+const brandRepository = new BrandRepository();
+const questionRepository = new QuestionRepository();
 
 export const searchBrands = async (
   query: string,
   signal?: AbortSignal
 ): Promise<BrandOption[]> => {
-  try {
-    // const brands = await brandFetchApi.get<BrandOption[]>(
-    //   `/search/${encodeURIComponent(query)}`
-    // );
-
-    // const brands = await brandFetchApi.get<BrandOption[]>(
-    //   `/search/${encodeURIComponent(query)}`,
-    //   { signal }
-    // );
-
-    const res = await fetch(
-      `https://api.brandfetch.io/v2/search/${encodeURIComponent(query)}`,
-      { signal }
-    );
-
-    if (!res.ok) throw new Error(res.statusText);
-
-    const brands: BrandOption[] = await res.json();
-    // If no results, return a custom fallback option
-    if (brands.length === 0) {
-      return [
-        {
-          brandId: "_custom",
-          icon: "",
-          name: query,
-          domain: "",
-          claimed: false,
-          qualityScore: 0,
-          verified: false,
-          _score: 0,
-          description: "",
-        },
-      ];
-    }
-
-    return brands;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to search brands:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to search brands. Please try again."
-    );
-  }
+  return brandRepository.searchBrands(query, signal);
 };
 
 export const fetchQuestions = async (
@@ -77,115 +147,28 @@ export const fetchQuestions = async (
     // but is necessary to avoid circular dependency issues.
     const { AuthService } = await import("../../../app/auth/AuthManager");
 
-    const isBrand = typeof input !== "string";
-    const logPrefix = isBrand
-      ? "[fetchQuestions - Brand]"
-      : "[fetchQuestions - Query]";
+    const fetchStrategy = createSurveyFetchStrategy(input);
+    const logPrefix = fetchStrategy.getLogPrefix();
 
     if (!AuthService.getVisitorToken()) {
       console.log(`${logPrefix} No token found, creating visitor session...`);
       await AuthService.ensureVisitorSession();
     }
 
-    // Determine endpoint and payload based on input type
-    const endpoint = isBrand
-      ? `api/CreateSurveyFromBrand`
-      : `api/CreateSurveyFromQuery`;
-    const payload = isBrand
-      ? {
-          brandId: (input as BrandOption).brandId,
-          domain: (input as BrandOption).domain,
-          name: (input as BrandOption).name,
-          icon: (input as BrandOption).icon,
-        }
-      : (input as string);
-
-    const response = await apiClient.post<BrandData>(
-      endpoint,
-      payload,
-      options
-    );
-
-    // Handle different response formats - API might return array directly or wrapped
-    let questionsArray: string[] = [];
-    let questionIds: number[] = [];
-
-    if (Array.isArray(response)) {
-      questionsArray = response;
-    } else if (response && Array.isArray(response.Questions)) {
-      // Check if Questions is array of objects with Id and Text, or just strings
-      const firstQuestion = response.Questions[0];
-      if (
-        response.Questions.length > 0 &&
-        typeof firstQuestion === "object" &&
-        firstQuestion !== null &&
-        "Id" in firstQuestion &&
-        "Text" in firstQuestion
-      ) {
-        // Questions are objects with Id and Text - use type assertion since we've verified the structure
-        const questionsAsObjects = response.Questions as unknown as Array<{
-          Id: number;
-          Text: string;
-        }>;
-        questionsArray = questionsAsObjects.map((q) => q.Text);
-        questionIds = questionsAsObjects.map((q) => q.Id);
-      } else {
-        // Questions are just strings
-        questionsArray = response.Questions as string[];
-      }
-    } else if (typeof response === "object" && response !== null) {
-      // Try to extract questions from object
-      console.warn(`Unexpected response format from ${endpoint}:`, response);
-      questionsArray = [];
-    }
+    const {
+      response,
+      questionsArray,
+      questionIds,
+    } = await fetchStrategy.createSurvey(surveyRepository, options);
 
     if (questionsArray.length === 0) throw new Error("No questions found");
 
     // Transform response to match BrandData format, using API response values when available
-    const brandData: BrandData = isBrand
-      ? {
-          Id: response?.Id ?? 0,
-          PasswordOne: response?.PasswordOne ?? null,
-          PasswordTwo: response?.PasswordTwo ?? null,
-          BrandName: response?.BrandName ?? (input as BrandOption).name ?? null,
-          DescriptionOfTheBrand:
-            response?.DescriptionOfTheBrand ??
-            (input as BrandOption).description ??
-            null,
-          DescriptionOfTheBrandShort:
-            response?.DescriptionOfTheBrandShort ??
-            (input as BrandOption).description ??
-            null,
-          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-          DescriptionOfTheQuestionShort:
-            response?.DescriptionOfTheQuestionShort ?? null,
-          QueryType: response?.QueryType ?? "brand",
-          Questions: questionsArray,
-          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-          WebsiteOfTheBrand:
-            response?.WebsiteOfTheBrand ??
-            (input as BrandOption).domain ??
-            null,
-        }
-      : {
-          Id: response?.Id ?? 0,
-          PasswordOne: response?.PasswordOne ?? null,
-          PasswordTwo: response?.PasswordTwo ?? null,
-          BrandName: response?.BrandName ?? null,
-          DescriptionOfTheBrand:
-            response?.DescriptionOfTheBrand ??
-            `Survey about: ${input as string}`,
-          DescriptionOfTheBrandShort:
-            response?.DescriptionOfTheBrandShort ??
-            (input as string).substring(0, 100),
-          DescriptionOfTheQuestion: response?.DescriptionOfTheQuestion ?? null,
-          DescriptionOfTheQuestionShort:
-            response?.DescriptionOfTheQuestionShort ?? null,
-          QueryType: response?.QueryType ?? "query",
-          Questions: questionsArray,
-          QuestionIds: questionIds.length > 0 ? questionIds : undefined,
-          WebsiteOfTheBrand: response?.WebsiteOfTheBrand ?? null,
-        };
+    const brandData: BrandData = fetchStrategy.buildBrandData(
+      response,
+      questionsArray,
+      questionIds
+    );
 
     return brandData;
   } catch (error) {
@@ -196,21 +179,8 @@ export const fetchQuestions = async (
 
     // If 401 Unauthorized, try to recreate token and retry once
     if (error instanceof ApiError && error.status === 401) {
-      const isBrand = typeof input !== "string";
-      const logPrefix = isBrand
-        ? "[fetchQuestions - Brand]"
-        : "[fetchQuestions - Query]";
-      const endpoint = isBrand
-        ? `api/CreateSurveyFromBrand`
-        : `api/CreateSurveyFromQuery`;
-      const payload = isBrand
-        ? {
-            brandId: (input as BrandOption).brandId,
-            domain: (input as BrandOption).domain,
-            name: (input as BrandOption).name,
-            icon: (input as BrandOption).icon,
-          }
-        : (input as string);
+      const fetchStrategy = createSurveyFetchStrategy(input);
+      const logPrefix = fetchStrategy.getLogPrefix();
 
       console.warn(
         `${logPrefix} 401 Unauthorized, attempting to recreate token and retry...`
@@ -222,14 +192,12 @@ export const fetchQuestions = async (
         await onboardingModule.createOnboardingSession();
 
         // Retry the request once
-        const questions = await apiClient.post<BrandData>(
-          endpoint,
-          payload,
+        const retryResponse = await fetchStrategy.createSurvey(
+          surveyRepository,
           options
         );
-
-        if (!questions) throw new Error("No questions found");
-        return questions;
+        if (!retryResponse.response) throw new Error("No questions found");
+        return retryResponse.response;
       } catch (retryError) {
         console.error(
           `${logPrefix} Retry after token recreation failed:`,
@@ -244,12 +212,10 @@ export const fetchQuestions = async (
       throw error;
     }
 
-    const isBrand = typeof input !== "string";
-    const logPrefix = isBrand
-      ? "[fetchQuestions - Brand]"
-      : "[fetchQuestions - Query]";
+    const fetchStrategy = createSurveyFetchStrategy(input);
+    const logPrefix = fetchStrategy.getLogPrefix();
     console.error(
-      `Failed to fetch ${isBrand ? "brand" : "query"} questions: ${logPrefix}`,
+      `Failed to fetch ${fetchStrategy.getTypeLabel()} questions: ${logPrefix}`,
       error
     );
     throw new ApiError(
@@ -280,43 +246,7 @@ export const startSurvey = async (
   questionIndices?: number[],
   options?: ApiRequestConfig
 ): Promise<string> => {
-  try {
-    let response: string;
-
-    if (questionIndices && questionIndices.length > 0) {
-      // 🔹 POST request with questionIndices
-      response = await apiClient.post<string>(
-        `api/StartSurvey/${surveyId}`,
-        { questionIndices },
-        options
-      );
-    } else {
-      // 🔹 GET request if no questionIndices
-      response = await apiClient.get<string>(
-        `api/StartSurvey/${surveyId}`,
-        options
-      );
-    }
-
-    return response;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to start survey:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to start survey. Please try again."
-    );
-  }
+  return surveyRepository.startSurvey(surveyId, questionIndices, options);
 };
 
 export const getSurveyRun = async (
@@ -324,117 +254,25 @@ export const getSurveyRun = async (
   p1?: string,
   p2?: string
 ) => {
-  try {
-    const surveyRun = await apiClient.get(
-      `api/GetSurveyRun/${surveyRunId}/${p1}/${p2}`
-    );
-
-    return surveyRun;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to get survey run:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to get survey run. Please try again."
-    );
-  }
+  return surveyRepository.getSurveyRun(surveyRunId, p1, p2);
 };
 
 export const addQuestion = async (
   surveyId: number,
   question: string
 ): Promise<number> => {
-  try {
-    const newQuestionId: number = await apiClient.post(`api/AddQuestion`, {
-      SurveyId: surveyId,
-      Question: question,
-    });
-
-    return newQuestionId;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to add question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to add questions. Please try again."
-    );
-  }
+  return questionRepository.addQuestion(surveyId, question);
 };
 
 export const deleteQuestion = async (questionId: string): Promise<void> => {
-  try {
-    await apiClient.delete(`api/DeleteQuestion/${questionId}`);
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to delete question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to delete questions. Please try again."
-    );
-  }
+  return questionRepository.deleteQuestion(questionId);
 };
 
 export const editQuestion = async (
   questionId: number,
   question: string
 ): Promise<number> => {
-  try {
-    const editQuestionId: number = await apiClient.put(
-      `api/EditQuestion/${questionId}`,
-      {
-        question,
-      }
-    );
-
-    return editQuestionId;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to edit question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to edit questions. Please try again."
-    );
-  }
+  return questionRepository.editQuestion(questionId, question);
 };
 
 export const createProject = async (projectName: string) => {
