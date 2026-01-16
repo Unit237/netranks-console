@@ -6,6 +6,7 @@ import {
 import { BRAND_DATA } from "../../../app/utils/constant";
 import type { BrandData, BrandOption } from "../@types";
 import { BrandRepository } from "./BrandRepository";
+import { QuestionRepository } from "./QuestionRepository";
 import { SurveyRepository, type ParsedSurveyResponse } from "./SurveyRepository";
 
 interface SurveyFetchStrategy {
@@ -126,6 +127,7 @@ function createSurveyFetchStrategy(
 
 const surveyRepository = new SurveyRepository();
 const brandRepository = new BrandRepository();
+const questionRepository = new QuestionRepository();
 
 export const searchBrands = async (
   query: string,
@@ -259,87 +261,18 @@ export const addQuestion = async (
   surveyId: number,
   question: string
 ): Promise<number> => {
-  try {
-    const newQuestionId: number = await apiClient.post(`api/AddQuestion`, {
-      SurveyId: surveyId,
-      Question: question,
-    });
-
-    return newQuestionId;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to add question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to add questions. Please try again."
-    );
-  }
+  return questionRepository.addQuestion(surveyId, question);
 };
 
 export const deleteQuestion = async (questionId: string): Promise<void> => {
-  try {
-    await apiClient.delete(`api/DeleteQuestion/${questionId}`);
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to delete question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to delete questions. Please try again."
-    );
-  }
+  return questionRepository.deleteQuestion(questionId);
 };
 
 export const editQuestion = async (
   questionId: number,
   question: string
 ): Promise<number> => {
-  try {
-    const editQuestionId: number = await apiClient.put(
-      `api/EditQuestion/${questionId}`,
-      {
-        question,
-      }
-    );
-
-    return editQuestionId;
-  } catch (error) {
-    // Re-throw canceled requests
-    if (error instanceof ApiError && error.isCanceled) {
-      throw error;
-    }
-
-    // Re-throw ApiError as-is
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    console.error("Failed to edit question:", error);
-    throw new ApiError(
-      error instanceof Error
-        ? error.message
-        : "Unable to edit questions. Please try again."
-    );
-  }
+  return questionRepository.editQuestion(questionId, question);
 };
 
 export const createProject = async (projectName: string) => {
